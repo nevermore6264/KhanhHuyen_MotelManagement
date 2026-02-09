@@ -1,0 +1,48 @@
+package com.motelmanagement.domain;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+public class Invoice {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    private Room room;
+
+    @ManyToOne
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
+
+    private int month;
+    private int year;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal roomCost;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal electricityCost;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal waterCost;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal total;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private InvoiceStatus status = InvoiceStatus.UNPAID;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+}
