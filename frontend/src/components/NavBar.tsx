@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
 
@@ -86,8 +87,13 @@ const roleMenus: Record<string, MenuGroup[]> = {
 
 export default function NavBar() {
   const router = useRouter();
-  const role = getRole() || "ADMIN";
-  const name = getName() || "User";
+  const [role, setRole] = useState("ADMIN");
+  const [name, setName] = useState("User");
+
+  useEffect(() => {
+    setRole(getRole() || "ADMIN");
+    setName(getName() || "User");
+  }, []);
 
   const logout = () => {
     clearAuth();

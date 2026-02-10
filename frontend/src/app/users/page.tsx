@@ -16,6 +16,35 @@ type User = {
   active: boolean;
 };
 
+const roleLabel = (value?: string) => {
+  switch (value) {
+    case "ADMIN":
+      return "Quản trị";
+    case "STAFF":
+      return "Nhân viên";
+    case "TENANT":
+      return "Khách thuê";
+    default:
+      return value || "-";
+  }
+};
+
+const statusBadge = (active: boolean) =>
+  active ? "status-available" : "status-maintenance";
+
+const roleBadge = (value?: string) => {
+  switch (value) {
+    case "ADMIN":
+      return "status-occupied";
+    case "STAFF":
+      return "status-available";
+    case "TENANT":
+      return "status-maintenance";
+    default:
+      return "status-unknown";
+  }
+};
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [username, setUsername] = useState("");
@@ -23,6 +52,7 @@ export default function UsersPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("STAFF");
+  const [roleFilter, setRoleFilter] = useState("");
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -131,7 +161,9 @@ export default function UsersPage() {
     try {
       await api.put(`/users/${user.id}/${user.active ? "lock" : "unlock"}`);
       notify(
-        user.active ? "Khóa tài khoản thành công" : "Mở khóa tài khoản thành công",
+        user.active
+          ? "Khóa tài khoản thành công"
+          : "Mở khóa tài khoản thành công",
         "success",
       );
     } catch (err: any) {
@@ -148,12 +180,13 @@ export default function UsersPage() {
 
   const filtered = users.filter((u) => {
     const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      u.username?.toLowerCase().includes(q) ||
-      u.fullName?.toLowerCase().includes(q) ||
-      u.role?.toLowerCase().includes(q)
-    );
+    const matchesQuery = !q
+      ? true
+      : u.username?.toLowerCase().includes(q) ||
+        u.fullName?.toLowerCase().includes(q) ||
+        u.role?.toLowerCase().includes(q);
+    const matchesRole = roleFilter ? u.role === roleFilter : true;
+    return matchesQuery && matchesRole;
   });
 
   return (
@@ -162,12 +195,21 @@ export default function UsersPage() {
       <div className="container">
         <h2>Quản lý người dùng</h2>
         <div className="card">
-          <div className="grid grid-2">
+          <div className="grid grid-3">
             <input
-              placeholder="Tìm kiếm theo tài khoản, họ tên, role..."
+              placeholder="Tìm kiếm theo tài khoản, họ tên, chức vụ..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <option value="">Tất cả chức vụ</option>
+              <option value="ADMIN">Quản trị</option>
+              <option value="STAFF">Nhân viên</option>
+              <option value="TENANT">Khách thuê</option>
+            </select>
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
@@ -189,8 +231,22 @@ export default function UsersPage() {
               { header: "ID", render: (u) => u.id },
               { header: "Tài khoản", render: (u) => u.username },
               { header: "Họ tên", render: (u) => u.fullName },
-              { header: "Role", render: (u) => u.role },
-              { header: "Active", render: (u) => (u.active ? "Yes" : "No") },
+              {
+                header: "Chức vụ",
+                render: (u) => (
+                  <span className={`status-badge ${roleBadge(u.role)}`}>
+                    {roleLabel(u.role)}
+                  </span>
+                ),
+              },
+              {
+                header: "Trạng thái",
+                render: (u) => (
+                  <span className={`status-badge ${statusBadge(u.active)}`}>
+                    {u.active ? "Hoạt động" : "Đã khóa"}
+                  </span>
+                ),
+              },
               ...(isAdmin
                 ? [
                     {
@@ -228,7 +284,7 @@ export default function UsersPage() {
                 <div>
                   <label className="field-label">Tài khoản</label>
                   <input
-                    placeholder="username"
+                    placeholder="Nhập tài khoản"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
@@ -236,7 +292,7 @@ export default function UsersPage() {
                 <div>
                   <label className="field-label">Mật khẩu</label>
                   <input
-                    placeholder="password"
+                    placeholder="Nhập mật khẩu"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

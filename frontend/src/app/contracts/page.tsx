@@ -50,17 +50,33 @@ export default function ContractsPage() {
   const [confirmEndId, setConfirmEndId] = useState<number | null>(null);
   const role = getRole();
   const isAdmin = role === "ADMIN";
+  const isTenant = role === "TENANT";
   const { notify } = useToast();
 
   const load = async () => {
-    const [cRes, rRes, tRes] = await Promise.all([
-      api.get("/contracts"),
-      api.get("/rooms"),
-      api.get("/tenants"),
-    ]);
-    setContracts(cRes.data);
-    setRooms(rRes.data);
-    setTenants(tRes.data);
+    try {
+      if (isTenant) {
+        const res = await api.get("/contracts/me");
+        setContracts(res.data);
+        setRooms([]);
+        setTenants([]);
+        return;
+      }
+      const [cRes, rRes, tRes] = await Promise.all([
+        api.get("/contracts"),
+        api.get("/rooms"),
+        api.get("/tenants"),
+      ]);
+      setContracts(cRes.data);
+      setRooms(rRes.data);
+      setTenants(tRes.data);
+    } catch (err: any) {
+      const message =
+        err?.response?.status === 403
+          ? "Bạn không có quyền xem danh sách hợp đồng"
+          : "Tải dữ liệu hợp đồng thất bại";
+      notify(message, "error");
+    }
   };
 
   useEffect(() => {
@@ -71,6 +87,26 @@ export default function ContractsPage() {
     e.preventDefault();
     if (!roomId || !tenantId) {
       setError("Vui lòng chọn phòng và khách thuê");
+      return;
+    }
+    if (!startDate) {
+      setError("Vui lòng chọn ngày bắt đầu");
+      return;
+    }
+    if (!endDate) {
+      setError("Vui lòng chọn ngày kết thúc");
+      return;
+    }
+    if (new Date(endDate) < new Date(startDate)) {
+      setError("Ngày kết thúc phải sau ngày bắt đầu");
+      return;
+    }
+    if (deposit && Number(deposit) < 0) {
+      setError("Tiền cọc không hợp lệ");
+      return;
+    }
+    if (rent && Number(rent) < 0) {
+      setError("Giá thuê không hợp lệ");
       return;
     }
     setError("");
@@ -168,6 +204,52 @@ export default function ContractsPage() {
     setConfirmEndId(null);
   };
 
+  const downloadContractDoc = (contract: Contract) => {
+    const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Hợp đồng thuê phòng</title>
+  <style>
+    body { font-family: "Times New Roman", serif; line-height: 1.6; }
+    h1 { text-align: center; font-size: 20px; margin-bottom: 4px; }
+    .meta { text-align: center; font-size: 12px; margin-bottom: 16px; }
+    .section { margin: 12px 0; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>HỢP ĐỒNG THUÊ PHÒNG</h1>
+  <div class="meta">Mã hợp đồng: ${contract.id || ""}</div>
+  <div class="section">
+    <div><span class="label">Phòng:</span> ${contract.room?.code || ""}</div>
+    <div><span class="label">Khách thuê:</span> ${contract.tenant?.fullName || ""}</div>
+  </div>
+  <div class="section">
+    <div><span class="label">Ngày bắt đầu:</span> ${contract.startDate || ""}</div>
+    <div><span class="label">Ngày kết thúc:</span> ${contract.endDate || ""}</div>
+    <div><span class="label">Trạng thái:</span> ${contractStatusLabel(contract.status)}</div>
+  </div>
+  <div class="section">
+    <div class="label">Điều khoản cơ bản</div>
+    <div>- Bên thuê cam kết thanh toán đúng hạn.</div>
+    <div>- Bên cho thuê đảm bảo phòng ở đúng thông tin đã thỏa thuận.</div>
+  </div>
+  <div class="section">
+    <div>Đại diện bên cho thuê ______________________</div>
+    <div>Đại diện bên thuê ______________________</div>
+  </div>
+</body>
+</html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hop-dong-${contract.id || "phong"}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <ProtectedPage>
       <NavBar />
@@ -190,7 +272,9 @@ export default function ContractsPage() {
           </div>
           {!isAdmin && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              Bạn chỉ có quyền xem dữ liệu.
+              {isTenant
+                ? "Bạn chỉ có thể xem hợp đồng của chính mình."
+                : "Bạn chỉ có quyền xem dữ liệu."}
             </div>
           )}
         </div>
@@ -206,6 +290,17 @@ export default function ContractsPage() {
               {
                 header: "Trạng thái",
                 render: (c) => contractStatusLabel(c.status),
+              },
+              {
+                header: "Tải file",
+                render: (c: Contract) => (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => downloadContractDoc(c)}
+                  >
+                    Tải Word
+                  </button>
+                ),
               },
               ...(isAdmin
                 ? [
@@ -242,7 +337,9 @@ export default function ContractsPage() {
               </div>
               <form onSubmit={create} className="form-grid">
                 <div>
-                  <label className="field-label">Phòng</label>
+                  <label className="field-label">
+                    Phòng <span className="required">*</span>
+                  </label>
                   <select
                     value={roomId}
                     onChange={(e) => setRoomId(e.target.value)}
@@ -256,7 +353,9 @@ export default function ContractsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="field-label">Khách thuê</label>
+                  <label className="field-label">
+                    Khách thuê <span className="required">*</span>
+                  </label>
                   <select
                     value={tenantId}
                     onChange={(e) => setTenantId(e.target.value)}
@@ -270,7 +369,9 @@ export default function ContractsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="field-label">Ngày bắt đầu</label>
+                  <label className="field-label">
+                    Ngày bắt đầu <span className="required">*</span>
+                  </label>
                   <input
                     type="date"
                     value={startDate}
@@ -278,7 +379,9 @@ export default function ContractsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">Ngày kết thúc</label>
+                  <label className="field-label">
+                    Ngày kết thúc <span className="required">*</span>
+                  </label>
                   <input
                     type="date"
                     value={endDate}
@@ -289,6 +392,7 @@ export default function ContractsPage() {
                   <label className="field-label">Tiền cọc</label>
                   <input
                     placeholder="Tiền cọc"
+                    inputMode="numeric"
                     value={deposit}
                     onChange={(e) => setDeposit(e.target.value)}
                   />
@@ -297,6 +401,7 @@ export default function ContractsPage() {
                   <label className="field-label">Giá thuê</label>
                   <input
                     placeholder="Giá thuê"
+                    inputMode="numeric"
                     value={rent}
                     onChange={(e) => setRent(e.target.value)}
                   />

@@ -5,7 +5,7 @@ import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
-import { getRole } from "@/lib/auth";
+import { getRole, getToken } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
 
 type Tenant = {
@@ -32,7 +32,10 @@ const validateTenant = (data: {
   if (!data.idNumber.trim()) return "Vui lòng nhập CCCD/CMND";
   if (!/^\d{9,12}$/.test(data.idNumber.trim())) return "CCCD/CMND không hợp lệ";
   if (!data.address.trim()) return "Vui lòng nhập địa chỉ";
-  if (data.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+  if (
+    data.email.trim() &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
+  ) {
     return "Email không hợp lệ";
   }
   return "";
@@ -64,22 +67,46 @@ export default function TenantsPage() {
   const [showEditUserPicker, setShowEditUserPicker] = useState(false);
   const [userQuery, setUserQuery] = useState("");
   const [editUserQuery, setEditUserQuery] = useState("");
-  const role = getRole();
+  const [role, setRole] = useState<string | null>(null);
   const isAdmin = role === "ADMIN";
+  const isTenant = role === "TENANT";
+  const isRoleReady = role !== null;
   const { notify } = useToast();
 
   const load = async () => {
-    const [tRes, uRes] = await Promise.all([
-      api.get("/tenants"),
-      api.get("/users"),
-    ]);
-    setTenants(tRes.data);
-    setUsers(uRes.data.filter((u: User) => u.role === "TENANT"));
+    if (!getToken()) {
+      return;
+    }
+    try {
+      if (isTenant) {
+        const res = await api.get("/tenants/me");
+        setTenants(res.data ? [res.data] : []);
+        setUsers([]);
+        return;
+      }
+      const [tRes, uRes] = await Promise.all([
+        api.get("/tenants"),
+        api.get("/users"),
+      ]);
+      setTenants(tRes.data);
+      setUsers(uRes.data.filter((u: User) => u.role === "TENANT"));
+    } catch (err: any) {
+      const message =
+        err?.response?.status === 403
+          ? "Bạn không có quyền xem danh sách khách thuê"
+          : "Tải dữ liệu khách thuê thất bại";
+      notify(message, "error");
+    }
   };
 
   useEffect(() => {
-    load();
+    setRole(getRole());
   }, []);
+
+  useEffect(() => {
+    if (!isRoleReady) return;
+    load();
+  }, [isRoleReady, isTenant]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,9 +292,11 @@ export default function TenantsPage() {
               </div>
             )}
           </div>
-          {!isAdmin && (
+          {isRoleReady && !isAdmin && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              Bạn chỉ có quyền xem dữ liệu.
+              {isTenant
+                ? "Bạn chỉ có thể xem thông tin của chính mình."
+                : "Bạn chỉ có quyền xem dữ liệu."}
             </div>
           )}
         </div>
@@ -423,7 +452,9 @@ export default function TenantsPage() {
                 />
                 <div className="picker-list">
                   {filteredUsers.length === 0 && (
-                    <div className="empty-state">Không có tài khoản phù hợp</div>
+                    <div className="empty-state">
+                      Không có tài khoản phù hợp
+                    </div>
                   )}
                   {filteredUsers.map((u) => (
                     <button
@@ -563,7 +594,9 @@ export default function TenantsPage() {
                 />
                 <div className="picker-list">
                   {filteredEditUsers.length === 0 && (
-                    <div className="empty-state">Không có tài khoản phù hợp</div>
+                    <div className="empty-state">
+                      Không có tài khoản phù hợp
+                    </div>
                   )}
                   {filteredEditUsers.map((u) => (
                     <button
