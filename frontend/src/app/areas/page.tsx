@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { useToast } from "@/components/ToastProvider";
 
 type Area = {
   id: number;
@@ -31,6 +32,7 @@ export default function AreasPage() {
   const [showCreate, setShowCreate] = useState(false);
   const role = getRole();
   const isAdmin = role === "ADMIN";
+  const { notify } = useToast();
 
   const load = async () => {
     const res = await api.get("/areas");
@@ -57,12 +59,14 @@ export default function AreasPage() {
         address: trimmedAddress,
         description: trimmedDescription,
       });
+      notify("Thêm khu thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Thêm khu thất bại",
-      );
+          : "Thêm khu thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setName("");
@@ -103,12 +107,14 @@ export default function AreasPage() {
         address: trimmedAddress,
         description: trimmedDescription,
       });
+      notify("Cập nhật khu thành công", "success");
     } catch (err: any) {
-      setEditError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại",
-      );
+          : "Cập nhật thất bại";
+      setEditError(message);
+      notify(message, "error");
       return;
     }
     setEditing(null);
@@ -132,14 +138,16 @@ export default function AreasPage() {
     }
     try {
       await api.delete(`/areas/${confirmId}`);
+      notify("Xóa khu thành công", "success");
     } catch (err: any) {
       setConfirmId(null);
       setConfirmName("");
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Xóa thất bại",
-      );
+          : "Xóa thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setConfirmId(null);

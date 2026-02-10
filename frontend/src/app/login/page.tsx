@@ -45,11 +45,29 @@ export default function LoginPage() {
             <img src="/logo.svg" alt="iTro" />
             <span>iTro</span>
           </div>
-          <h1>Quản lý nhà trọ thông minh</h1>
-          <p>
-            Theo dõi phòng, hợp đồng, điện nước và hóa đơn nhanh gọn trong một
-            nền tảng duy nhất.
-          </p>
+          <div className="login-hero-list">
+            <div className="login-hero-item">
+              <span className="login-hero-dot" />
+              <div>
+                <strong>Quản lý tập trung</strong>
+                <p>Tất cả phòng, hợp đồng và hóa đơn trong một màn hình.</p>
+              </div>
+            </div>
+            <div className="login-hero-item">
+              <span className="login-hero-dot" />
+              <div>
+                <strong>Nhắc nhở tự động</strong>
+                <p>Hạn hợp đồng và hóa đơn luôn được theo dõi sát.</p>
+              </div>
+            </div>
+            <div className="login-hero-item">
+              <span className="login-hero-dot" />
+              <div>
+                <strong>Báo cáo trực quan</strong>
+                <p>Biểu đồ rõ ràng giúp ra quyết định nhanh.</p>
+              </div>
+            </div>
+          </div>
           <div className="login-hero-stats">
             <div>
               <strong>24/7</strong>
@@ -64,6 +82,11 @@ export default function LoginPage() {
               <span>Xuất hóa đơn</span>
             </div>
           </div>
+          <div className="login-trust">
+            <span>Chuẩn hóa dữ liệu</span>
+            <span>Bảo mật nhiều lớp</span>
+            <span>Vận hành thông minh</span>
+          </div>
         </div>
 
         <div className="login-card">
@@ -73,7 +96,6 @@ export default function LoginPage() {
             </div>
             <div>
               <h2>Đăng nhập</h2>
-              <p>Chào mừng trở lại! Hãy tiếp tục công việc.</p>
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { useToast } from "@/components/ToastProvider";
 
 type Tenant = {
   id: number;
@@ -17,6 +18,25 @@ type Tenant = {
   user?: { id: number; username: string };
 };
 type User = { id: number; username: string; role: string };
+
+const validateTenant = (data: {
+  fullName: string;
+  phone: string;
+  idNumber: string;
+  address: string;
+  email: string;
+}) => {
+  if (!data.fullName.trim()) return "Vui lòng nhập họ tên";
+  if (!data.phone.trim()) return "Vui lòng nhập số điện thoại";
+  if (!/^\d{9,11}$/.test(data.phone.trim())) return "SĐT không hợp lệ";
+  if (!data.idNumber.trim()) return "Vui lòng nhập CCCD/CMND";
+  if (!/^\d{9,12}$/.test(data.idNumber.trim())) return "CCCD/CMND không hợp lệ";
+  if (!data.address.trim()) return "Vui lòng nhập địa chỉ";
+  if (data.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+    return "Email không hợp lệ";
+  }
+  return "";
+};
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -40,8 +60,13 @@ export default function TenantsPage() {
   const [editError, setEditError] = useState("");
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [confirmName, setConfirmName] = useState("");
+  const [showUserPicker, setShowUserPicker] = useState(false);
+  const [showEditUserPicker, setShowEditUserPicker] = useState(false);
+  const [userQuery, setUserQuery] = useState("");
+  const [editUserQuery, setEditUserQuery] = useState("");
   const role = getRole();
   const isAdmin = role === "ADMIN";
+  const { notify } = useToast();
 
   const load = async () => {
     const [tRes, uRes] = await Promise.all([
@@ -58,27 +83,35 @@ export default function TenantsPage() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedName = fullName.trim();
-    if (!trimmedName) {
-      setError("Vui lòng nhập họ tên");
+    const message = validateTenant({
+      fullName,
+      phone,
+      idNumber,
+      address,
+      email,
+    });
+    if (message) {
+      setError(message);
       return;
     }
     setError("");
     try {
       await api.post("/tenants", {
-        fullName: trimmedName,
+        fullName: fullName.trim(),
         phone: phone.trim() || null,
         idNumber: idNumber.trim() || null,
         address: address.trim() || null,
         email: email.trim() || null,
         user: userId ? { id: Number(userId) } : null,
       });
+      notify("Thêm khách thuê thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Thêm khách thuê thất bại",
-      );
+          : "Thêm khách thuê thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setFullName("");
@@ -87,6 +120,7 @@ export default function TenantsPage() {
     setAddress("");
     setEmail("");
     setUserId("");
+    setUserQuery("");
     setShowCreate(false);
     load();
   };
@@ -104,27 +138,35 @@ export default function TenantsPage() {
 
   const saveEdit = async () => {
     if (!editing) return;
-    const trimmedName = editFullName.trim();
-    if (!trimmedName) {
-      setEditError("Vui lòng nhập họ tên");
+    const message = validateTenant({
+      fullName: editFullName,
+      phone: editPhone,
+      idNumber: editIdNumber,
+      address: editAddress,
+      email: editEmail,
+    });
+    if (message) {
+      setEditError(message);
       return;
     }
     setEditError("");
     try {
       await api.put(`/tenants/${editing.id}`, {
-        fullName: trimmedName,
+        fullName: editFullName.trim(),
         phone: editPhone.trim() || null,
         idNumber: editIdNumber.trim() || null,
         address: editAddress.trim() || null,
         email: editEmail.trim() || null,
         user: editUserId ? { id: Number(editUserId) } : null,
       });
+      notify("Cập nhật khách thuê thành công", "success");
     } catch (err: any) {
-      setEditError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại",
-      );
+          : "Cập nhật thất bại";
+      setEditError(message);
+      notify(message, "error");
       return;
     }
     setEditing(null);
@@ -134,6 +176,7 @@ export default function TenantsPage() {
     setEditAddress("");
     setEditEmail("");
     setEditUserId("");
+    setEditUserQuery("");
     load();
   };
 
@@ -145,6 +188,7 @@ export default function TenantsPage() {
     setEditAddress("");
     setEditEmail("");
     setEditUserId("");
+    setEditUserQuery("");
     setEditError("");
   };
 
@@ -157,14 +201,16 @@ export default function TenantsPage() {
     if (confirmId == null) return;
     try {
       await api.delete(`/tenants/${confirmId}`);
+      notify("Xóa khách thuê thành công", "success");
     } catch (err: any) {
       setConfirmId(null);
       setConfirmName("");
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Xóa thất bại",
-      );
+          : "Xóa thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setConfirmId(null);
@@ -189,6 +235,15 @@ export default function TenantsPage() {
       t.user?.username?.toLowerCase().includes(q)
     );
   });
+
+  const filteredUsers = users.filter((u) =>
+    u.username.toLowerCase().includes(userQuery.trim().toLowerCase()),
+  );
+  const filteredEditUsers = users.filter((u) =>
+    u.username.toLowerCase().includes(editUserQuery.trim().toLowerCase()),
+  );
+  const selectedUser = users.find((u) => String(u.id) === userId);
+  const selectedEditUser = users.find((u) => String(u.id) === editUserId);
 
   return (
     <ProtectedPage>
@@ -260,7 +315,9 @@ export default function TenantsPage() {
               </div>
               <form onSubmit={create} className="form-grid">
                 <div>
-                  <label className="field-label">Họ tên</label>
+                  <label className="field-label">
+                    Họ tên <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="Nguyễn Văn A"
                     value={fullName}
@@ -268,7 +325,9 @@ export default function TenantsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">SĐT</label>
+                  <label className="field-label">
+                    SĐT <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="0987xxxxxx"
                     value={phone}
@@ -276,7 +335,9 @@ export default function TenantsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">CCCD/CMND</label>
+                  <label className="field-label">
+                    CCCD/CMND <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="0123456789"
                     value={idNumber}
@@ -292,7 +353,9 @@ export default function TenantsPage() {
                   />
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Địa chỉ</label>
+                  <label className="field-label">
+                    Địa chỉ <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="Địa chỉ"
                     value={address}
@@ -301,17 +364,29 @@ export default function TenantsPage() {
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">Gán tài khoản</label>
-                  <select
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                  >
-                    <option value="">Chọn tài khoản</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="account-picker">
+                    <div className="account-chip">
+                      {selectedUser?.username || "Chưa gán tài khoản"}
+                    </div>
+                    <div className="picker-actions">
+                      <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={() => setShowUserPicker(true)}
+                      >
+                        Chọn tài khoản
+                      </button>
+                      {userId && (
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => setUserId("")}
+                        >
+                          Bỏ chọn
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 {error && <div className="form-error">{error}</div>}
                 <div className="form-actions">
@@ -331,13 +406,62 @@ export default function TenantsPage() {
           </div>
         )}
 
+        {showUserPicker && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card">
+              <div className="card-header">
+                <div>
+                  <h3>Chọn tài khoản</h3>
+                  <p className="card-subtitle">Tài khoản vai trò TENANT</p>
+                </div>
+              </div>
+              <div className="form-grid">
+                <input
+                  placeholder="Tìm theo tên tài khoản..."
+                  value={userQuery}
+                  onChange={(e) => setUserQuery(e.target.value)}
+                />
+                <div className="picker-list">
+                  {filteredUsers.length === 0 && (
+                    <div className="empty-state">Không có tài khoản phù hợp</div>
+                  )}
+                  {filteredUsers.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className="picker-item"
+                      onClick={() => {
+                        setUserId(String(u.id));
+                        setShowUserPicker(false);
+                      }}
+                    >
+                      <span>{u.username}</span>
+                      <span className="picker-meta">#{u.id}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowUserPicker(false)}
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {editing && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <h3>Chỉnh sửa khách thuê</h3>
               <div className="form-grid">
                 <div>
-                  <label className="field-label">Họ tên</label>
+                  <label className="field-label">
+                    Họ tên <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="Họ tên"
                     value={editFullName}
@@ -345,7 +469,9 @@ export default function TenantsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">SĐT</label>
+                  <label className="field-label">
+                    SĐT <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="SĐT"
                     value={editPhone}
@@ -353,7 +479,9 @@ export default function TenantsPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">CCCD/CMND</label>
+                  <label className="field-label">
+                    CCCD/CMND <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="CCCD/CMND"
                     value={editIdNumber}
@@ -369,7 +497,9 @@ export default function TenantsPage() {
                   />
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Địa chỉ</label>
+                  <label className="field-label">
+                    Địa chỉ <span className="required">*</span>
+                  </label>
                   <input
                     placeholder="Địa chỉ"
                     value={editAddress}
@@ -378,17 +508,29 @@ export default function TenantsPage() {
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">Gán tài khoản</label>
-                  <select
-                    value={editUserId}
-                    onChange={(e) => setEditUserId(e.target.value)}
-                  >
-                    <option value="">Chọn tài khoản</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="account-picker">
+                    <div className="account-chip">
+                      {selectedEditUser?.username || "Chưa gán tài khoản"}
+                    </div>
+                    <div className="picker-actions">
+                      <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={() => setShowEditUserPicker(true)}
+                      >
+                        Chọn tài khoản
+                      </button>
+                      {editUserId && (
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => setEditUserId("")}
+                        >
+                          Bỏ chọn
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 {editError && <div className="form-error">{editError}</div>}
               </div>
@@ -398,6 +540,53 @@ export default function TenantsPage() {
                 </button>
                 <button className="btn" onClick={saveEdit}>
                   Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showEditUserPicker && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card">
+              <div className="card-header">
+                <div>
+                  <h3>Chọn tài khoản</h3>
+                  <p className="card-subtitle">Tài khoản vai trò TENANT</p>
+                </div>
+              </div>
+              <div className="form-grid">
+                <input
+                  placeholder="Tìm theo tên tài khoản..."
+                  value={editUserQuery}
+                  onChange={(e) => setEditUserQuery(e.target.value)}
+                />
+                <div className="picker-list">
+                  {filteredEditUsers.length === 0 && (
+                    <div className="empty-state">Không có tài khoản phù hợp</div>
+                  )}
+                  {filteredEditUsers.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className="picker-item"
+                      onClick={() => {
+                        setEditUserId(String(u.id));
+                        setShowEditUserPicker(false);
+                      }}
+                    >
+                      <span>{u.username}</span>
+                      <span className="picker-meta">#{u.id}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowEditUserPicker(false)}
+                >
+                  Đóng
                 </button>
               </div>
             </div>

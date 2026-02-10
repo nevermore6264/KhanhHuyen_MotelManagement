@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { useToast } from "@/components/ToastProvider";
 
 type User = {
   id: number;
@@ -33,6 +34,7 @@ export default function UsersPage() {
   const [editError, setEditError] = useState("");
   const roleCurrent = getRole();
   const isAdmin = roleCurrent === "ADMIN";
+  const { notify } = useToast();
 
   const load = async () => {
     const res = await api.get("/users");
@@ -60,12 +62,14 @@ export default function UsersPage() {
         role,
         active: true,
       });
+      notify("Tạo tài khoản thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Tạo tài khoản thất bại",
-      );
+          : "Tạo tài khoản thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setUsername("");
@@ -96,12 +100,14 @@ export default function UsersPage() {
         active: editing.active,
         password: editPassword.trim() || null,
       });
+      notify("Cập nhật người dùng thành công", "success");
     } catch (err: any) {
-      setEditError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại",
-      );
+          : "Cập nhật thất bại";
+      setEditError(message);
+      notify(message, "error");
       return;
     }
     setEditing(null);
@@ -124,12 +130,17 @@ export default function UsersPage() {
   const toggleLock = async (user: User) => {
     try {
       await api.put(`/users/${user.id}/${user.active ? "lock" : "unlock"}`);
+      notify(
+        user.active ? "Khóa tài khoản thành công" : "Mở khóa tài khoản thành công",
+        "success",
+      );
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại",
-      );
+          : "Cập nhật thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     load();

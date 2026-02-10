@@ -18,6 +18,19 @@ type Invoice = {
   status?: string;
 };
 
+const invoiceStatusLabel = (value?: string) => {
+  switch (value) {
+    case "UNPAID":
+      return "Chưa thanh toán";
+    case "PARTIAL":
+      return "Thanh toán một phần";
+    case "PAID":
+      return "Đã thanh toán";
+    default:
+      return value || "-";
+  }
+};
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -135,7 +148,10 @@ export default function InvoicesPage() {
               { header: "Khách", render: (i) => i.tenant?.fullName },
               { header: "Tháng/Năm", render: (i) => `${i.month}/${i.year}` },
               { header: "Tổng", render: (i) => i.total },
-              { header: "Trạng thái", render: (i) => i.status },
+              {
+                header: "Trạng thái",
+                render: (i) => invoiceStatusLabel(i.status),
+              },
             ]}
           />
         </div>

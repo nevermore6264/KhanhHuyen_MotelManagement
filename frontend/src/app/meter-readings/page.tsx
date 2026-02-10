@@ -5,6 +5,7 @@ import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
+import { useToast } from "@/components/ToastProvider";
 
 type Area = { id: number; name: string };
 type Room = { id: number; code: string };
@@ -34,6 +35,7 @@ export default function MeterReadingsPage() {
   const [oldWater, setOldWater] = useState("");
   const [newWater, setNewWater] = useState("");
   const [error, setError] = useState("");
+  const { notify } = useToast();
 
   const load = async () => {
     const [rRes, rmRes, aRes] = await Promise.all([
@@ -82,15 +84,26 @@ export default function MeterReadingsPage() {
       return;
     }
     setError("");
-    await api.post("/meter-readings", {
-      room: roomId ? { id: Number(roomId) } : null,
-      month: Number(month),
-      year: Number(year),
-      oldElectric: Number(oldElectric || 0),
-      newElectric: Number(newElectric || 0),
-      oldWater: Number(oldWater || 0),
-      newWater: Number(newWater || 0),
-    });
+    try {
+      await api.post("/meter-readings", {
+        room: roomId ? { id: Number(roomId) } : null,
+        month: Number(month),
+        year: Number(year),
+        oldElectric: Number(oldElectric || 0),
+        newElectric: Number(newElectric || 0),
+        oldWater: Number(oldWater || 0),
+        newWater: Number(newWater || 0),
+      });
+      notify("Lưu chỉ số thành công", "success");
+    } catch (err: any) {
+      const message =
+        err?.response?.status === 403
+          ? "Bạn không có quyền thao tác"
+          : "Lưu chỉ số thất bại";
+      setError(message);
+      notify(message, "error");
+      return;
+    }
     setRoomId("");
     setMonth("");
     setYear("");

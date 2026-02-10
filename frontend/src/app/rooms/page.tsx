@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { useToast } from "@/components/ToastProvider";
 
 type Area = { id: number; name: string };
 type Room = {
@@ -16,6 +17,46 @@ type Room = {
   area?: Area;
   currentPrice?: number;
 };
+
+const formatCurrencyInput = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+};
+
+const parseCurrencyInput = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return digits ? Number(digits) : null;
+};
+
+const statusLabel = (value?: string) => {
+  switch (value) {
+    case "AVAILABLE":
+      return "Trống";
+    case "OCCUPIED":
+      return "Đang thuê";
+    case "MAINTENANCE":
+      return "Bảo trì";
+    default:
+      return value || "-";
+  }
+};
+
+const statusClass = (value?: string) => {
+  switch (value) {
+    case "AVAILABLE":
+      return "status-available";
+    case "OCCUPIED":
+      return "status-occupied";
+    case "MAINTENANCE":
+      return "status-maintenance";
+    default:
+      return "status-unknown";
+  }
+};
+
+const isLockedStatus = (value?: string) =>
+  value === "OCCUPIED" || value === "MAINTENANCE";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -37,8 +78,10 @@ export default function RoomsPage() {
   const [editError, setEditError] = useState("");
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [confirmName, setConfirmName] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const role = getRole();
   const isAdmin = role === "ADMIN";
+  const { notify } = useToast();
 
   const load = async () => {
     const [roomRes, areaRes] = await Promise.all([
@@ -56,7 +99,8 @@ export default function RoomsPage() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedCode = code.trim();
-    if (!trimmedCode || !areaId || !price) {
+    const priceValue = parseCurrencyInput(price);
+    if (!trimmedCode || !areaId || !priceValue) {
       setError("Vui lòng nhập Mã phòng, Khu và Giá phòng");
       return;
     }
@@ -66,15 +110,17 @@ export default function RoomsPage() {
         code: trimmedCode,
         floor: floor.trim() || null,
         status,
-        currentPrice: price ? Number(price) : null,
+        currentPrice: priceValue,
         area: areaId ? { id: Number(areaId) } : null,
       });
+      notify("Thêm phòng thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Thêm phòng thất bại",
-      );
+          : "Thêm phòng thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setCode("");
@@ -97,7 +143,8 @@ export default function RoomsPage() {
   const saveEdit = async () => {
     if (!editing) return;
     const trimmedCode = editCode.trim();
-    if (!trimmedCode || !editAreaId || !editPrice) {
+    const editPriceValue = parseCurrencyInput(editPrice);
+    if (!trimmedCode || !editAreaId || !editPriceValue) {
       setEditError("Vui lòng nhập Mã phòng, Khu và Giá phòng");
       return;
     }
@@ -107,15 +154,17 @@ export default function RoomsPage() {
         code: trimmedCode,
         floor: editFloor.trim() || null,
         status: editStatus,
-        currentPrice: editPrice ? Number(editPrice) : null,
+        currentPrice: editPriceValue,
         area: editAreaId ? { id: Number(editAreaId) } : null,
       });
+      notify("Cập nhật phòng thành công", "success");
     } catch (err: any) {
-      setEditError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại",
-      );
+          : "Cập nhật thất bại";
+      setEditError(message);
+      notify(message, "error");
       return;
     }
     setEditing(null);
@@ -136,22 +185,35 @@ export default function RoomsPage() {
   };
 
   const askRemove = (room: Room) => {
+    if (isLockedStatus(room.status)) {
+      notify("Phòng đang cho thuê/bảo trì, không thể xóa", "error");
+      return;
+    }
     setConfirmId(room.id);
     setConfirmName(room.code);
   };
 
   const confirmRemove = async () => {
     if (confirmId == null) return;
+    const room = rooms.find((r) => r.id === confirmId);
+    if (isLockedStatus(room?.status)) {
+      notify("Phòng đang cho thuê/bảo trì, không thể xóa", "error");
+      setConfirmId(null);
+      setConfirmName("");
+      return;
+    }
     try {
       await api.delete(`/rooms/${confirmId}`);
+      notify("Xóa phòng thành công", "success");
     } catch (err: any) {
       setConfirmId(null);
       setConfirmName("");
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Xóa thất bại",
-      );
+          : "Xóa thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setConfirmId(null);
@@ -166,17 +228,19 @@ export default function RoomsPage() {
 
   const filtered = rooms.filter((room) => {
     const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      room.code?.toLowerCase().includes(q) ||
-      room.floor?.toLowerCase().includes(q) ||
-      room.status?.toLowerCase().includes(q) ||
-      room.area?.name?.toLowerCase().includes(q)
-    );
+    const matchesQuery = !q
+      ? true
+      : room.code?.toLowerCase().includes(q) ||
+        room.floor?.toLowerCase().includes(q) ||
+        room.status?.toLowerCase().includes(q) ||
+        room.area?.name?.toLowerCase().includes(q);
+    const matchesStatus = statusFilter ? room.status === statusFilter : true;
+    return matchesQuery && matchesStatus;
   });
 
   const formatNumber = (value?: number) =>
     value == null ? "" : new Intl.NumberFormat("vi-VN").format(value);
+  const isEditLocked = editing ? isLockedStatus(editing.status) : false;
 
   return (
     <ProtectedPage>
@@ -184,12 +248,21 @@ export default function RoomsPage() {
       <div className="container">
         <h2>Quản lý phòng</h2>
         <div className="card">
-          <div className="grid grid-2">
+          <div className="grid grid-3">
             <input
               placeholder="Tìm kiếm theo mã, tầng, khu, trạng thái..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="AVAILABLE">Trống</option>
+              <option value="OCCUPIED">Đang thuê</option>
+              <option value="MAINTENANCE">Bảo trì</option>
+            </select>
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
@@ -211,26 +284,50 @@ export default function RoomsPage() {
               { header: "ID", render: (r) => r.id },
               { header: "Mã", render: (r) => r.code },
               { header: "Tầng", render: (r) => r.floor },
-              { header: "Trạng thái", render: (r) => r.status },
+              {
+                header: "Trạng thái",
+                render: (r) => (
+                  <span className={`status-badge ${statusClass(r.status)}`}>
+                    {statusLabel(r.status)}
+                  </span>
+                ),
+              },
               { header: "Khu", render: (r) => r.area?.name },
-              { header: "Giá", render: (r) => formatNumber(r.currentPrice) },
+              {
+                header: "Giá",
+                render: (r) =>
+                  r.currentPrice == null
+                    ? ""
+                    : `${formatNumber(r.currentPrice)} VNĐ`,
+              },
               ...(isAdmin
                 ? [
                     {
                       header: "Thao tác",
-                      render: (r: Room) => (
-                        <div className="table-actions">
-                          <button className="btn" onClick={() => startEdit(r)}>
-                            Sửa
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => askRemove(r)}
-                          >
-                            Xóa
-                          </button>
-                        </div>
-                      ),
+                      render: (r: Room) => {
+                        const locked = isLockedStatus(r.status);
+                        return (
+                          <div className="table-actions">
+                            <button
+                              className="btn"
+                              onClick={() => startEdit(r)}
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              className={`btn btn-secondary ${locked ? "btn-disabled" : ""}`}
+                              onClick={() => askRemove(r)}
+                              title={
+                                locked
+                                  ? "Phòng đang cho thuê/bảo trì, không thể xóa"
+                                  : undefined
+                              }
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        );
+                      },
                     },
                   ]
                 : []),
@@ -299,11 +396,16 @@ export default function RoomsPage() {
                   <label className="field-label">
                     Giá phòng <span className="required">*</span>
                   </label>
-                  <input
-                    placeholder="Ví dụ: 2500000"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Ví dụ: 2.500.000"
+                      value={price}
+                      onChange={(e) =>
+                        setPrice(formatCurrencyInput(e.target.value))
+                      }
+                    />
+                    <span>VNĐ</span>
+                  </div>
                 </div>
                 {error && <div className="form-error">{error}</div>}
                 <div className="form-actions">
@@ -336,6 +438,7 @@ export default function RoomsPage() {
                     placeholder="Mã phòng"
                     value={editCode}
                     onChange={(e) => setEditCode(e.target.value)}
+                    disabled={isEditLocked}
                   />
                 </div>
                 <div>
@@ -344,6 +447,7 @@ export default function RoomsPage() {
                     placeholder="Tầng"
                     value={editFloor}
                     onChange={(e) => setEditFloor(e.target.value)}
+                    disabled={isEditLocked}
                   />
                 </div>
                 <div>
@@ -366,6 +470,7 @@ export default function RoomsPage() {
                   <select
                     value={editAreaId}
                     onChange={(e) => setEditAreaId(e.target.value)}
+                    disabled={isEditLocked}
                   >
                     <option value="">Chọn khu</option>
                     {areas.map((a) => (
@@ -379,12 +484,23 @@ export default function RoomsPage() {
                   <label className="field-label">
                     Giá phòng <span className="required">*</span>
                   </label>
-                  <input
-                    placeholder="Giá phòng"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
-                  />
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Giá phòng"
+                      value={editPrice}
+                      onChange={(e) =>
+                        setEditPrice(formatCurrencyInput(e.target.value))
+                      }
+                      disabled={isEditLocked}
+                    />
+                    <span>VNĐ</span>
+                  </div>
                 </div>
+                {isEditLocked && (
+                  <div className="form-error">
+                    Phòng đang cho thuê/bảo trì, chỉ cho phép đổi trạng thái.
+                  </div>
+                )}
                 {editError && <div className="form-error">{editError}</div>}
               </div>
               <div className="modal-actions">

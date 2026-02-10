@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { useToast } from "@/components/ToastProvider";
 
 type Room = { id: number; code: string };
 type Tenant = { id: number; fullName: string };
@@ -16,6 +17,19 @@ type Contract = {
   startDate?: string;
   endDate?: string;
   status?: string;
+};
+
+const contractStatusLabel = (value?: string) => {
+  switch (value) {
+    case "ACTIVE":
+      return "Đang hiệu lực";
+    case "ENDED":
+      return "Đã kết thúc";
+    case "TERMINATED":
+      return "Đã hủy";
+    default:
+      return value || "-";
+  }
 };
 
 export default function ContractsPage() {
@@ -36,6 +50,7 @@ export default function ContractsPage() {
   const [confirmEndId, setConfirmEndId] = useState<number | null>(null);
   const role = getRole();
   const isAdmin = role === "ADMIN";
+  const { notify } = useToast();
 
   const load = async () => {
     const [cRes, rRes, tRes] = await Promise.all([
@@ -68,12 +83,14 @@ export default function ContractsPage() {
         deposit: deposit ? Number(deposit) : null,
         rent: rent ? Number(rent) : null,
       });
+      notify("Tạo hợp đồng thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Tạo hợp đồng thất bại",
-      );
+          : "Tạo hợp đồng thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setRoomId("");
@@ -105,12 +122,14 @@ export default function ContractsPage() {
     if (!extendId || !extendDate) return;
     try {
       await api.put(`/contracts/${extendId}/extend`, { endDate: extendDate });
+      notify("Gia hạn hợp đồng thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Gia hạn thất bại",
-      );
+          : "Gia hạn thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setExtendId(null);
@@ -131,12 +150,14 @@ export default function ContractsPage() {
     if (!confirmEndId) return;
     try {
       await api.put(`/contracts/${confirmEndId}/end`);
+      notify("Kết thúc hợp đồng thành công", "success");
     } catch (err: any) {
-      setError(
+      const message =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Kết thúc thất bại",
-      );
+          : "Kết thúc thất bại";
+      setError(message);
+      notify(message, "error");
       return;
     }
     setConfirmEndId(null);
@@ -182,7 +203,10 @@ export default function ContractsPage() {
               { header: "Khách", render: (c) => c.tenant?.fullName },
               { header: "Bắt đầu", render: (c) => c.startDate },
               { header: "Kết thúc", render: (c) => c.endDate },
-              { header: "Trạng thái", render: (c) => c.status },
+              {
+                header: "Trạng thái",
+                render: (c) => contractStatusLabel(c.status),
+              },
               ...(isAdmin
                 ? [
                     {
