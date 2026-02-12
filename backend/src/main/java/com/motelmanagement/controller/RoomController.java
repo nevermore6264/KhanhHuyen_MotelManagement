@@ -5,6 +5,7 @@ import com.motelmanagement.domain.Room;
 import com.motelmanagement.domain.RoomStatus;
 import com.motelmanagement.repository.AreaRepository;
 import com.motelmanagement.repository.RoomRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,15 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/rooms")
 public class RoomController {
     private final RoomRepository roomRepository;
     private final AreaRepository areaRepository;
-
-    public RoomController(RoomRepository roomRepository, AreaRepository areaRepository) {
-        this.roomRepository = roomRepository;
-        this.areaRepository = areaRepository;
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

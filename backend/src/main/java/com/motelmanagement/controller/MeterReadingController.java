@@ -7,6 +7,7 @@ import com.motelmanagement.repository.MeterReadingRepository;
 import com.motelmanagement.repository.RoomRepository;
 import com.motelmanagement.repository.ServicePriceRepository;
 import com.motelmanagement.service.BillingService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,22 +17,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/meter-readings")
 public class MeterReadingController {
     private final MeterReadingRepository meterReadingRepository;
     private final RoomRepository roomRepository;
     private final ServicePriceRepository servicePriceRepository;
     private final BillingService billingService;
-
-    public MeterReadingController(MeterReadingRepository meterReadingRepository,
-                                  RoomRepository roomRepository,
-                                  ServicePriceRepository servicePriceRepository,
-                                  BillingService billingService) {
-        this.meterReadingRepository = meterReadingRepository;
-        this.roomRepository = roomRepository;
-        this.servicePriceRepository = servicePriceRepository;
-        this.billingService = billingService;
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

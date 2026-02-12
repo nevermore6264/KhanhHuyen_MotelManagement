@@ -205,7 +205,14 @@ export default function AreasPage() {
               { header: "ID", render: (r) => r.id },
               { header: "Tên", render: (r) => r.name },
               { header: "Địa chỉ", render: (r) => r.address },
-              { header: "Mô tả", render: (r) => r.description },
+              {
+                header: "Mô tả",
+                render: (r) => (
+                  <span className="table-ellipsis" title={r.description || ""}>
+                    {r.description || ""}
+                  </span>
+                ),
+              },
               ...(isAdmin
                 ? [
                     {

@@ -10,6 +10,7 @@ import com.motelmanagement.repository.ContractRepository;
 import com.motelmanagement.repository.RoomRepository;
 import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.service.CurrentUserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,22 +18,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/contracts")
 public class ContractController {
     private final ContractRepository contractRepository;
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
     private final CurrentUserService currentUserService;
-
-    public ContractController(ContractRepository contractRepository,
-                              RoomRepository roomRepository,
-                              TenantRepository tenantRepository,
-                              CurrentUserService currentUserService) {
-        this.contractRepository = contractRepository;
-        this.roomRepository = roomRepository;
-        this.tenantRepository = tenantRepository;
-        this.currentUserService = currentUserService;
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

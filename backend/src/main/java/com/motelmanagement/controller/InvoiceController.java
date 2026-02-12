@@ -7,6 +7,7 @@ import com.motelmanagement.domain.User;
 import com.motelmanagement.repository.InvoiceRepository;
 import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.service.CurrentUserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,19 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/invoices")
 public class InvoiceController {
     private final InvoiceRepository invoiceRepository;
     private final TenantRepository tenantRepository;
     private final CurrentUserService currentUserService;
-
-    public InvoiceController(InvoiceRepository invoiceRepository,
-                             TenantRepository tenantRepository,
-                             CurrentUserService currentUserService) {
-        this.invoiceRepository = invoiceRepository;
-        this.tenantRepository = tenantRepository;
-        this.currentUserService = currentUserService;
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

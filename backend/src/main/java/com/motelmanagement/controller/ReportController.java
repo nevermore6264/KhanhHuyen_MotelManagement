@@ -5,6 +5,7 @@ import com.motelmanagement.domain.InvoiceStatus;
 import com.motelmanagement.domain.RoomStatus;
 import com.motelmanagement.repository.InvoiceRepository;
 import com.motelmanagement.repository.RoomRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,15 +14,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/reports")
 public class ReportController {
     private final InvoiceRepository invoiceRepository;
     private final RoomRepository roomRepository;
-
-    public ReportController(InvoiceRepository invoiceRepository, RoomRepository roomRepository) {
-        this.invoiceRepository = invoiceRepository;
-        this.roomRepository = roomRepository;
-    }
 
     @GetMapping("/revenue")
     @PreAuthorize("hasRole('ADMIN')")

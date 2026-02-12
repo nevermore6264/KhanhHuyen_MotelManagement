@@ -2,24 +2,18 @@ package com.motelmanagement.service;
 
 import com.motelmanagement.domain.*;
 import com.motelmanagement.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Service
+@RequiredArgsConstructor
 public class BillingService {
     private final InvoiceRepository invoiceRepository;
     private final ServicePriceRepository servicePriceRepository;
     private final ContractRepository contractRepository;
-
-    public BillingService(InvoiceRepository invoiceRepository,
-                          ServicePriceRepository servicePriceRepository,
-                          ContractRepository contractRepository) {
-        this.invoiceRepository = invoiceRepository;
-        this.servicePriceRepository = servicePriceRepository;
-        this.contractRepository = contractRepository;
-    }
 
     public Invoice createOrUpdateInvoiceFromReading(MeterReading reading) {
         Invoice invoice = invoiceRepository

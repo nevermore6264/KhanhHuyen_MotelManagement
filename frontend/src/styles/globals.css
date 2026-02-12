@@ -1631,6 +1631,20 @@ td {
   text-align: left;
 }
 
+.table td {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.table-ellipsis {
+  display: inline-block;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
 th {
   font-size: 13px;
   color: #3b4b6b;
@@ -1712,7 +1726,7 @@ tbody tr:hover {
 .nav-dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 2px);
   left: 0;
   min-width: 180px;
   background: #fff;
@@ -1722,6 +1736,15 @@ tbody tr:hover {
   box-shadow: 0 12px 30px rgba(79, 124, 255, 0.2);
   border: 1px solid var(--blue-200);
   animation: dropdownIn 0.15s ease-out both;
+}
+
+.nav-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
 }
 
 .nav-dropdown a {

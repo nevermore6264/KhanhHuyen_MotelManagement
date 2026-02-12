@@ -5,6 +5,7 @@ import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
+import { useToast } from "@/components/ToastProvider";
 
 type ServicePrice = {
   id: number;
@@ -20,6 +21,9 @@ export default function ServicePricesPage() {
   const [electricityPrice, setElectricityPrice] = useState("");
   const [waterPrice, setWaterPrice] = useState("");
   const [effectiveFrom, setEffectiveFrom] = useState("");
+  const [error, setError] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const { notify } = useToast();
 
   const load = async () => {
     const res = await api.get("/service-prices");
@@ -32,16 +36,23 @@ export default function ServicePricesPage() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!roomPrice || !electricityPrice || !waterPrice || !effectiveFrom) {
+      setError("Vui lòng nhập đầy đủ giá phòng, điện, nước và ngày hiệu lực");
+      return;
+    }
+    setError("");
     await api.post("/service-prices", {
-      roomPrice: roomPrice ? Number(roomPrice) : null,
-      electricityPrice: electricityPrice ? Number(electricityPrice) : null,
-      waterPrice: waterPrice ? Number(waterPrice) : null,
+      roomPrice: Number(roomPrice),
+      electricityPrice: Number(electricityPrice),
+      waterPrice: Number(waterPrice),
       effectiveFrom,
     });
+    notify("Cập nhật bảng giá thành công", "success");
     setRoomPrice("");
     setElectricityPrice("");
     setWaterPrice("");
     setEffectiveFrom("");
+    setShowCreate(false);
     load();
   };
 
@@ -51,31 +62,19 @@ export default function ServicePricesPage() {
       <div className="container">
         <h2>Bảng giá dịch vụ</h2>
         <div className="card">
-          <form onSubmit={create} className="grid grid-3">
-            <input
-              placeholder="Giá phòng"
-              value={roomPrice}
-              onChange={(e) => setRoomPrice(e.target.value)}
-            />
-            <input
-              placeholder="Giá điện"
-              value={electricityPrice}
-              onChange={(e) => setElectricityPrice(e.target.value)}
-            />
-            <input
-              placeholder="Giá nước"
-              value={waterPrice}
-              onChange={(e) => setWaterPrice(e.target.value)}
-            />
-            <input
-              type="date"
-              value={effectiveFrom}
-              onChange={(e) => setEffectiveFrom(e.target.value)}
-            />
-            <button className="btn" type="submit">
-              Cập nhật giá
-            </button>
-          </form>
+          <div className="grid grid-2">
+            <div>
+              <h3>Bảng giá hiện hành</h3>
+              <p className="card-subtitle">
+                Cập nhật giá phòng, điện, nước theo kỳ.
+              </p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button className="btn" onClick={() => setShowCreate(true)}>
+                Thêm bảng giá
+              </button>
+            </div>
+          </div>
         </div>
         <div className="card">
           <SimpleTable
@@ -89,6 +88,86 @@ export default function ServicePricesPage() {
             ]}
           />
         </div>
+
+        {showCreate && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card">
+              <div className="card-header">
+                <div>
+                  <h3>Thêm bảng giá</h3>
+                  <p className="card-subtitle">Thiết lập giá dịch vụ</p>
+                </div>
+              </div>
+              <form onSubmit={create} className="form-grid">
+                <div>
+                  <label className="field-label">
+                    Giá phòng <span className="required">*</span>
+                  </label>
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Giá phòng"
+                      inputMode="numeric"
+                      value={roomPrice}
+                      onChange={(e) => setRoomPrice(e.target.value)}
+                    />
+                    <span>VNĐ</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="field-label">
+                    Giá điện <span className="required">*</span>
+                  </label>
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Giá điện"
+                      inputMode="numeric"
+                      value={electricityPrice}
+                      onChange={(e) => setElectricityPrice(e.target.value)}
+                    />
+                    <span>VNĐ</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="field-label">
+                    Giá nước <span className="required">*</span>
+                  </label>
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Giá nước"
+                      inputMode="numeric"
+                      value={waterPrice}
+                      onChange={(e) => setWaterPrice(e.target.value)}
+                    />
+                    <span>VNĐ</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="field-label">
+                    Ngày hiệu lực <span className="required">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={effectiveFrom}
+                    onChange={(e) => setEffectiveFrom(e.target.value)}
+                  />
+                </div>
+                {error && <div className="form-error">{error}</div>}
+                <div className="form-actions">
+                  <button
+                    className="btn btn-secondary"
+                    type="button"
+                    onClick={() => setShowCreate(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button className="btn" type="submit">
+                    Lưu bảng giá
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedPage>
   );

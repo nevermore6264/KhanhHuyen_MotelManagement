@@ -6,20 +6,17 @@ import com.motelmanagement.dto.AuthResponse;
 import com.motelmanagement.dto.RegisterRequest;
 import com.motelmanagement.repository.UserRepository;
 import com.motelmanagement.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
 
     public AuthResponse login(AuthRequest request) {
         User user = userRepository.findByUsername(request.getUsername())

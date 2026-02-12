@@ -5,6 +5,7 @@ import com.motelmanagement.domain.InvoiceStatus;
 import com.motelmanagement.domain.Payment;
 import com.motelmanagement.repository.InvoiceRepository;
 import com.motelmanagement.repository.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,15 +14,11 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/payments")
 public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final InvoiceRepository invoiceRepository;
-
-    public PaymentController(PaymentRepository paymentRepository, InvoiceRepository invoiceRepository) {
-        this.paymentRepository = paymentRepository;
-        this.invoiceRepository = invoiceRepository;
-    }
 
     @GetMapping("/invoice/{invoiceId}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")

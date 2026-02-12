@@ -6,6 +6,7 @@ import com.motelmanagement.domain.User;
 import com.motelmanagement.repository.SupportRequestRepository;
 import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.service.CurrentUserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,19 +14,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/support-requests")
 public class SupportRequestController {
     private final SupportRequestRepository supportRequestRepository;
     private final TenantRepository tenantRepository;
     private final CurrentUserService currentUserService;
-
-    public SupportRequestController(SupportRequestRepository supportRequestRepository,
-                                    TenantRepository tenantRepository,
-                                    CurrentUserService currentUserService) {
-        this.supportRequestRepository = supportRequestRepository;
-        this.tenantRepository = tenantRepository;
-        this.currentUserService = currentUserService;
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
@@ -35,14 +29,18 @@ public class SupportRequestController {
 
     @PostMapping
     @PreAuthorize("hasRole('TENANT')")
-    public ResponseEntity<SupportRequest> create(@RequestBody SupportRequest request) {
+    public ResponseEntity<?> create(@RequestBody SupportRequest request) {
         User user = currentUserService.getCurrentUser();
         if (user == null) {
             return ResponseEntity.badRequest().build();
         }
         Tenant tenant = tenantRepository.findByUserId(user.getId());
         if (tenant == null) {
-            return ResponseEntity.badRequest().build();
+            Tenant created = new Tenant();
+            created.setFullName(user.getFullName());
+            created.setPhone(user.getPhone());
+            created.setUser(user);
+            tenant = tenantRepository.save(created);
         }
         request.setTenant(tenant);
         return ResponseEntity.ok(supportRequestRepository.save(request));

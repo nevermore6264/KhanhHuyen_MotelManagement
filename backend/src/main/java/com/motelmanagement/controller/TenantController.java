@@ -5,6 +5,7 @@ import com.motelmanagement.domain.User;
 import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.repository.UserRepository;
 import com.motelmanagement.service.CurrentUserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,20 +13,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/tenants")
 public class TenantController {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
 
-    public TenantController(TenantRepository tenantRepository, UserRepository userRepository, CurrentUserService currentUserService) {
-        this.tenantRepository = tenantRepository;
-        this.userRepository = userRepository;
-        this.currentUserService = currentUserService;
-    }
-
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_STAFF')")
     public List<Tenant> list(@RequestParam(required = false) String q) {
         if (q != null && !q.isBlank()) {
             return tenantRepository.findByFullNameContainingIgnoreCase(q);
@@ -34,7 +30,7 @@ public class TenantController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('TENANT')")
+    @PreAuthorize("hasAuthority('ROLE_TENANT')")
     public ResponseEntity<Tenant> me() {
         User user = currentUserService.getCurrentUser();
         if (user == null) {

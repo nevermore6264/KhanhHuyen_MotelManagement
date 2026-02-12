@@ -7,6 +7,7 @@ import com.motelmanagement.domain.User;
 import com.motelmanagement.repository.InvoiceRepository;
 import com.motelmanagement.repository.NotificationRepository;
 import com.motelmanagement.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -14,18 +15,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
     private final InvoiceRepository invoiceRepository;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-
-    public NotificationService(InvoiceRepository invoiceRepository,
-                               NotificationRepository notificationRepository,
-                               UserRepository userRepository) {
-        this.invoiceRepository = invoiceRepository;
-        this.notificationRepository = notificationRepository;
-        this.userRepository = userRepository;
-    }
 
     @Scheduled(cron = "0 0 9 * * ?")
     public void remindPaymentDue() {

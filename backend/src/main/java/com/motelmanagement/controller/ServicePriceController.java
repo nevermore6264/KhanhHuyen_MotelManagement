@@ -2,6 +2,7 @@ package com.motelmanagement.controller;
 
 import com.motelmanagement.domain.ServicePrice;
 import com.motelmanagement.repository.ServicePriceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -9,13 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/service-prices")
 public class ServicePriceController {
     private final ServicePriceRepository servicePriceRepository;
-
-    public ServicePriceController(ServicePriceRepository servicePriceRepository) {
-        this.servicePriceRepository = servicePriceRepository;
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

@@ -74,23 +74,38 @@ export default function TenantsPage() {
   const { notify } = useToast();
 
   const load = async () => {
-    if (!getToken()) {
+    const token = getToken();
+    if (!token) {
       return;
     }
+    const authHeader = { Authorization: `Bearer ${token}` };
     try {
       if (isTenant) {
-        const res = await api.get("/tenants/me");
+        const res = await api.get("/tenants/me", { headers: authHeader });
         setTenants(res.data ? [res.data] : []);
         setUsers([]);
         return;
       }
       const [tRes, uRes] = await Promise.all([
-        api.get("/tenants"),
-        api.get("/users"),
+        api.get("/tenants", { headers: authHeader }),
+        api.get("/users", { headers: authHeader }),
       ]);
       setTenants(tRes.data);
       setUsers(uRes.data.filter((u: User) => u.role === "TENANT"));
     } catch (err: any) {
+      if (err?.response?.status === 403) {
+        try {
+          const res = await api.get("/tenants/me", { headers: authHeader });
+          if (res.data) {
+            setTenants([res.data]);
+            setUsers([]);
+            notify("Bạn chỉ có thể xem thông tin của chính mình.", "info");
+            return;
+          }
+        } catch {
+          // fall through to error message
+        }
+      }
       const message =
         err?.response?.status === 403
           ? "Bạn không có quyền xem danh sách khách thuê"
