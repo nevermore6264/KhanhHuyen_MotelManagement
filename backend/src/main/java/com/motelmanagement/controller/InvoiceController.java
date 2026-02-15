@@ -4,15 +4,18 @@ import com.motelmanagement.domain.Invoice;
 import com.motelmanagement.domain.InvoiceStatus;
 import com.motelmanagement.domain.Tenant;
 import com.motelmanagement.domain.User;
+import com.motelmanagement.dto.RemindRequest;
 import com.motelmanagement.repository.InvoiceRepository;
 import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.service.CurrentUserService;
+import com.motelmanagement.service.InvoiceReminderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,11 +24,12 @@ public class InvoiceController {
     private final InvoiceRepository invoiceRepository;
     private final TenantRepository tenantRepository;
     private final CurrentUserService currentUserService;
+    private final InvoiceReminderService invoiceReminderService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<Invoice> list() {
-        return invoiceRepository.findAll();
+        return invoiceRepository.findAllWithTenantAndRoom();
     }
 
     @GetMapping("/me")
@@ -57,5 +61,16 @@ public class InvoiceController {
                     return ResponseEntity.ok(invoiceRepository.save(existing));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/remind")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<?> remind(@PathVariable("id") Long id, @RequestBody RemindRequest request) {
+        String channel = request != null && request.getChannel() != null ? request.getChannel().trim() : "";
+        java.util.Optional<String> error = invoiceReminderService.sendReminder(id, channel);
+        if (error.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", error.get()));
+        }
+        return ResponseEntity.ok(Map.of("message", "Đã gửi nhắc nợ thành công."));
     }
 }

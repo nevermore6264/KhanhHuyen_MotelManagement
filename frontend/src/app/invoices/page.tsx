@@ -9,7 +9,7 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
 
 type Room = { id: number; code: string };
-type Tenant = { id: number; fullName: string };
+type Tenant = { id: number; fullName: string; email?: string; phone?: string };
 type Invoice = {
   id: number;
   room?: Room;
@@ -21,11 +21,23 @@ type Invoice = {
   waterCost?: number;
   total?: number;
   status?: string;
+  lastReminderEmailAt?: string | null;
+  lastReminderSmsAt?: string | null;
 };
 
 const formatMoney = (n?: number | null) => {
   if (n == null || isNaN(Number(n))) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
+};
+
+const formatReminderDate = (dateStr?: string | null) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 const invoiceStatusLabel = (value?: string) => {
@@ -69,10 +81,38 @@ export default function InvoicesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRoomId, setFilterRoomId] = useState("");
+  const [remindingId, setRemindingId] = useState<number | null>(null);
   const role = getRole();
   const isTenant = role === "TENANT";
   const isAdmin = role === "ADMIN";
+  const canRemind = (isAdmin || role === "STAFF") && !isTenant;
   const { notify } = useToast();
+
+  const sendReminder = async (invoiceId: number, channel: "email" | "sms") => {
+    setRemindingId(invoiceId);
+    try {
+      const res = await api.post<{ message?: string }>(
+        `/invoices/${invoiceId}/remind`,
+        {
+          channel,
+        },
+      );
+      notify(res.data?.message || "Đã gửi nhắc nợ thành công.", "success");
+      load();
+    } catch (err: unknown) {
+      const ax = err as {
+        response?: { data?: { message?: string }; status?: number };
+      };
+      const message =
+        ax?.response?.data?.message ||
+        (ax?.response?.status === 403
+          ? "Bạn không có quyền gửi nhắc nợ."
+          : "Gửi nhắc nợ thất bại.");
+      notify(message, "error");
+    } finally {
+      setRemindingId(null);
+    }
+  };
 
   const load = async () => {
     try {
@@ -259,6 +299,84 @@ export default function InvoicesPage() {
                   </span>
                 ),
               },
+              {
+                header: "Đã nhắc nợ",
+                render: (i: Invoice) => {
+                  const emailAt = i.lastReminderEmailAt
+                    ? formatReminderDate(i.lastReminderEmailAt)
+                    : "";
+                  const smsAt = i.lastReminderSmsAt
+                    ? formatReminderDate(i.lastReminderSmsAt)
+                    : "";
+                  if (!emailAt && !smsAt) return "—";
+                  const parts: string[] = [];
+                  if (emailAt) parts.push(`Email ✓ ${emailAt}`);
+                  if (smsAt) parts.push(`SMS ✓ ${smsAt}`);
+                  return (
+                    <span style={{ whiteSpace: "nowrap" }}>
+                      {parts.join(" · ")}
+                    </span>
+                  );
+                },
+              },
+              ...(canRemind
+                ? [
+                    {
+                      header: "Nhắc nợ",
+                      render: (i: Invoice) => {
+                        const unpaid =
+                          i.status === "UNPAID" || i.status === "PARTIAL";
+                        const hasEmail = !!(
+                          i.tenant?.email && String(i.tenant.email).trim()
+                        );
+                        const hasPhone = !!(
+                          i.tenant?.phone && String(i.tenant.phone).trim()
+                        );
+                        const loading = remindingId === i.id;
+                        return (
+                          <span
+                            style={{
+                              display: "flex",
+                              gap: "6px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary"
+                              disabled={!unpaid || !hasEmail || loading}
+                              title={
+                                !unpaid
+                                  ? "Chỉ nhắc hóa đơn chưa thanh toán"
+                                  : !hasEmail
+                                    ? "Khách thuê chưa có email"
+                                    : "Gửi nhắc nợ qua email"
+                              }
+                              onClick={() => sendReminder(i.id, "email")}
+                            >
+                              {loading ? "..." : "Email"}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              disabled={!unpaid || !hasPhone || loading}
+                              title={
+                                !unpaid
+                                  ? "Chỉ nhắc hóa đơn chưa thanh toán"
+                                  : !hasPhone
+                                    ? "Khách thuê chưa có SĐT"
+                                    : "Gửi nhắc nợ qua SMS"
+                              }
+                              onClick={() => sendReminder(i.id, "sms")}
+                            >
+                              {loading ? "..." : "SMS"}
+                            </button>
+                          </span>
+                        );
+                      },
+                    },
+                  ]
+                : []),
             ]}
           />
         </div>

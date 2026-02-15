@@ -45,4 +45,10 @@ public class Invoice {
     private InvoiceStatus status = InvoiceStatus.UNPAID;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    /** Thời điểm gửi nhắc nợ qua email gần nhất (null = chưa gửi). */
+    private LocalDateTime lastReminderEmailAt;
+
+    /** Thời điểm gửi nhắc nợ qua SMS gần nhất (null = chưa gửi). */
+    private LocalDateTime lastReminderSmsAt;
 }

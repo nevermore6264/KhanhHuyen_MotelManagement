@@ -12,6 +12,10 @@ import java.util.Optional;
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     Optional<Invoice> findByRoomIdAndMonthAndYear(Long roomId, int month, int year);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "tenant", "room" })
+    @Query("select i from Invoice i")
+    List<Invoice> findAllWithTenantAndRoom();
+
     List<Invoice> findByTenant(Tenant tenant);
 
     List<Invoice> findByStatus(InvoiceStatus status);
