@@ -6,13 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
 public class BillingService {
     private final InvoiceRepository invoiceRepository;
-    private final ServicePriceRepository servicePriceRepository;
     private final ContractRepository contractRepository;
 
     public Invoice createOrUpdateInvoiceFromReading(MeterReading reading) {
@@ -24,15 +22,9 @@ public class BillingService {
         invoice.setMonth(reading.getMonth());
         invoice.setYear(reading.getYear());
 
-        ServicePrice servicePrice = servicePriceRepository
-                .findFirstByEffectiveFromLessThanEqualOrderByEffectiveFromDesc(
-                        LocalDate.of(reading.getYear(), reading.getMonth(), 1))
-                .orElse(null);
-
-        BigDecimal roomPrice = servicePrice != null && servicePrice.getRoomPrice() != null
-                ? servicePrice.getRoomPrice()
-                : reading.getRoom().getCurrentPrice() != null ? reading.getRoom().getCurrentPrice() : BigDecimal.ZERO;
-
+        // Giá phòng lấy theo từng phòng (Room.currentPrice), không dùng bảng giá dịch vụ
+        BigDecimal roomPrice = reading.getRoom().getCurrentPrice() != null
+                ? reading.getRoom().getCurrentPrice() : BigDecimal.ZERO;
         invoice.setRoomCost(roomPrice);
         invoice.setElectricityCost(reading.getElectricityCost());
         invoice.setWaterCost(reading.getWaterCost());

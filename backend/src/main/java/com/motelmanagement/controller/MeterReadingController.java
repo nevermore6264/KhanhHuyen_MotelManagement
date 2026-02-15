@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @RestController
@@ -31,10 +32,20 @@ public class MeterReadingController {
         return meterReadingRepository.findAll();
     }
 
+    /** Chỉ cho phép nhập chỉ số tháng hiện tại hoặc tháng trước đó */
+    private static boolean isMonthAllowed(int month, int year) {
+        YearMonth now = YearMonth.now();
+        YearMonth reading = YearMonth.of(year, month);
+        return reading.equals(now) || reading.equals(now.minusMonths(1));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<MeterReading> create(@RequestBody MeterReading reading) {
         if (reading.getRoom() == null || reading.getRoom().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (!isMonthAllowed(reading.getMonth(), reading.getYear())) {
             return ResponseEntity.badRequest().build();
         }
         Room room = roomRepository.findById(reading.getRoom().getId()).orElse(null);

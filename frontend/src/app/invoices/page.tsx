@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
@@ -16,8 +16,16 @@ type Invoice = {
   tenant?: Tenant;
   month: number;
   year: number;
+  roomCost?: number;
+  electricityCost?: number;
+  waterCost?: number;
   total?: number;
   status?: string;
+};
+
+const formatMoney = (n?: number | null) => {
+  if (n == null || isNaN(Number(n))) return "—";
+  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
 };
 
 const invoiceStatusLabel = (value?: string) => {
@@ -59,6 +67,8 @@ export default function InvoicesPage() {
   const [waterCost, setWaterCost] = useState("");
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterRoomId, setFilterRoomId] = useState("");
   const role = getRole();
   const isTenant = role === "TENANT";
   const isAdmin = role === "ADMIN";
@@ -93,6 +103,17 @@ export default function InvoicesPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const filteredInvoices = useMemo(() => {
+    let list = invoices;
+    if (filterStatus) {
+      list = list.filter((i) => i.status === filterStatus);
+    }
+    if (filterRoomId) {
+      list = list.filter((i) => String(i.room?.id) === filterRoomId);
+    }
+    return list;
+  }, [invoices, filterStatus, filterRoomId]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,17 +183,75 @@ export default function InvoicesPage() {
           )}
         </div>
         <div className="card">
+          <p className="text-muted mb-3" style={{ fontSize: "0.9rem" }}>
+            {isTenant
+              ? "Hóa đơn của bạn theo kỳ (tháng/năm)."
+              : "Danh sách hóa đơn theo phòng và kỳ. Dùng bộ lọc để tìm nhanh."}
+          </p>
+          {isAdmin && !isTenant && (
+            <div
+              className="form-grid"
+              style={{ marginBottom: 16, maxWidth: 500 }}
+            >
+              <div>
+                <label className="field-label">Lọc theo trạng thái</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="">Tất cả</option>
+                  <option value="UNPAID">Chưa thanh toán</option>
+                  <option value="PARTIAL">Thanh toán một phần</option>
+                  <option value="PAID">Đã thanh toán</option>
+                </select>
+              </div>
+              <div>
+                <label className="field-label">Lọc theo phòng</label>
+                <select
+                  value={filterRoomId}
+                  onChange={(e) => setFilterRoomId(e.target.value)}
+                >
+                  <option value="">Tất cả phòng</option>
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.code}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
           <SimpleTable
-            data={invoices}
+            data={filteredInvoices}
             columns={[
-              { header: "ID", render: (i) => i.id },
-              { header: "Phòng", render: (i) => i.room?.code },
-              { header: "Khách", render: (i) => i.tenant?.fullName },
-              { header: "Tháng/Năm", render: (i) => `${i.month}/${i.year}` },
-              { header: "Tổng", render: (i) => i.total },
+              { header: "Phòng", render: (i: Invoice) => i.room?.code ?? "—" },
+              {
+                header: "Khách thuê",
+                render: (i: Invoice) => i.tenant?.fullName ?? "—",
+              },
+              {
+                header: "Kỳ",
+                render: (i: Invoice) => `${i.month}/${i.year}`,
+              },
+              {
+                header: "Tiền phòng",
+                render: (i: Invoice) => formatMoney(i.roomCost),
+              },
+              {
+                header: "Tiền điện",
+                render: (i: Invoice) => formatMoney(i.electricityCost),
+              },
+              {
+                header: "Tiền nước",
+                render: (i: Invoice) => formatMoney(i.waterCost),
+              },
+              {
+                header: "Tổng",
+                render: (i: Invoice) => formatMoney(i.total),
+              },
               {
                 header: "Trạng thái",
-                render: (i) => (
+                render: (i: Invoice) => (
                   <span
                     className={`status-badge ${invoiceStatusBadge(i.status)}`}
                   >

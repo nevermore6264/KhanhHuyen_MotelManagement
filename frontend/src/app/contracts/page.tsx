@@ -10,7 +10,12 @@ import { useToast } from "@/components/ToastProvider";
 import { buildContractDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 
-type Room = { id: number; code: string; currentPrice?: number };
+type Room = {
+  id: number;
+  code: string;
+  currentPrice?: number;
+  status?: string;
+};
 type Tenant = {
   id: number;
   fullName: string;
@@ -103,10 +108,14 @@ export default function ContractsPage() {
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
-  const role = getRole();
+  const [role, setRole] = useState<string | null>(null);
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
   const { notify } = useToast();
+
+  useEffect(() => {
+    setRole(getRole());
+  }, []);
 
   const load = async () => {
     try {
@@ -135,8 +144,8 @@ export default function ContractsPage() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (role !== null) load();
+  }, [role]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -480,12 +489,21 @@ export default function ContractsPage() {
                     }}
                   >
                     <option value="">Chọn phòng</option>
-                    {rooms.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.code}
-                      </option>
-                    ))}
+                    {rooms
+                      .filter((r) => r.status === "AVAILABLE")
+                      .map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.code}
+                        </option>
+                      ))}
                   </select>
+                  {rooms.filter((r) => r.status === "AVAILABLE").length ===
+                    0 && (
+                    <p className="card-subtitle" style={{ marginTop: 4 }}>
+                      Không có phòng trống. Chỉ hiển thị phòng chưa có người
+                      thuê.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="field-label">

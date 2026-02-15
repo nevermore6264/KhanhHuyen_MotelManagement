@@ -8,7 +8,7 @@ import api from "@/lib/api";
 import { useToast } from "@/components/ToastProvider";
 
 type Area = { id: number; name: string };
-type Room = { id: number; code: string };
+type Room = { id: number; code: string; area?: Area };
 type MeterReading = {
   id: number;
   room?: Room;
@@ -19,6 +19,23 @@ type MeterReading = {
   oldWater: number;
   newWater: number;
   totalCost?: number;
+};
+
+const formatMoney = (n?: number | null) => {
+  if (n == null || isNaN(n)) return "—";
+  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
+};
+
+/** Chỉ cho phép tháng hiện tại hoặc tháng trước đó */
+const isMonthAllowed = (month: number, year: number): boolean => {
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  if (year === currentYear && month === currentMonth) return true;
+  if (currentMonth === 1) {
+    return year === currentYear - 1 && month === 12;
+  }
+  return year === currentYear && month === currentMonth - 1;
 };
 
 export default function MeterReadingsPage() {
@@ -35,6 +52,8 @@ export default function MeterReadingsPage() {
   const [oldWater, setOldWater] = useState("");
   const [newWater, setNewWater] = useState("");
   const [error, setError] = useState("");
+  const [filterAreaId, setFilterAreaId] = useState("");
+  const [filterRoomId, setFilterRoomId] = useState("");
   const { notify } = useToast();
 
   const load = async () => {
@@ -52,26 +71,43 @@ export default function MeterReadingsPage() {
     load();
   }, []);
 
-  useEffect(() => {
-    if (!selectedRoom) {
-      return;
-    }
-    setRoomId(String(selectedRoom.id));
-    const now = new Date();
-    setMonth(String(now.getMonth() + 1));
-    setYear(String(now.getFullYear()));
-    const roomReadings = readings
+  const roomsByArea = useMemo(() => {
+    if (!areaId) return rooms;
+    return rooms.filter((r) => String(r.area?.id) === areaId);
+  }, [rooms, areaId]);
+
+  const roomHistory = useMemo(() => {
+    if (!selectedRoom) return [];
+    return readings
       .filter((r) => r.room?.id === selectedRoom.id)
       .sort((a, b) =>
         a.year === b.year ? b.month - a.month : b.year - a.year,
       );
-    const latest = roomReadings[0];
+  }, [readings, selectedRoom]);
+
+  const filteredReadings = useMemo(() => {
+    if (!filterRoomId) return readings;
+    return readings.filter((r) => String(r.room?.id) === filterRoomId);
+  }, [readings, filterRoomId]);
+
+  const roomsByFilterArea = useMemo(() => {
+    if (!filterAreaId) return rooms;
+    return rooms.filter((r) => String(r.area?.id) === filterAreaId);
+  }, [rooms, filterAreaId]);
+
+  useEffect(() => {
+    if (!selectedRoom) return;
+    setRoomId(String(selectedRoom.id));
+    const now = new Date();
+    setMonth(String(now.getMonth() + 1));
+    setYear(String(now.getFullYear()));
+    const latest = roomHistory[0];
     setOldElectric(latest ? String(latest.newElectric ?? 0) : "");
     setOldWater(latest ? String(latest.newWater ?? 0) : "");
     setNewElectric("");
     setNewWater("");
     setError("");
-  }, [selectedRoom, readings]);
+  }, [selectedRoom, roomHistory]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,10 +119,16 @@ export default function MeterReadingsPage() {
       setError("Vui lòng nhập tháng và năm");
       return;
     }
+    const m = Number(month);
+    const y = Number(year);
+    if (!isMonthAllowed(m, y)) {
+      setError("Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó.");
+      return;
+    }
     setError("");
     try {
       await api.post("/meter-readings", {
-        room: roomId ? { id: Number(roomId) } : null,
+        room: { id: Number(roomId) },
         month: Number(month),
         year: Number(year),
         oldElectric: Number(oldElectric || 0),
@@ -95,39 +137,28 @@ export default function MeterReadingsPage() {
         newWater: Number(newWater || 0),
       });
       notify("Lưu chỉ số thành công", "success");
-    } catch (err: any) {
+      setRoomId("");
+      setMonth("");
+      setYear("");
+      setOldElectric("");
+      setNewElectric("");
+      setOldWater("");
+      setNewWater("");
+      setSelectedRoom(null);
+      load();
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const status = ax?.response?.status;
       const message =
-        err?.response?.status === 403
+        status === 403
           ? "Bạn không có quyền thao tác"
-          : "Lưu chỉ số thất bại";
+          : status === 400
+            ? "Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó."
+            : "Lưu chỉ số thất bại";
       setError(message);
       notify(message, "error");
-      return;
     }
-    setRoomId("");
-    setMonth("");
-    setYear("");
-    setOldElectric("");
-    setNewElectric("");
-    setOldWater("");
-    setNewWater("");
-    setSelectedRoom(null);
-    load();
   };
-
-  const roomsByArea = useMemo(() => {
-    if (!areaId) return rooms;
-    return rooms.filter((r: any) => String(r.area?.id) === areaId);
-  }, [rooms, areaId]);
-
-  const roomHistory = useMemo(() => {
-    if (!selectedRoom) return [];
-    return readings
-      .filter((r) => r.room?.id === selectedRoom.id)
-      .sort((a, b) =>
-        a.year === b.year ? b.month - a.month : b.year - a.year,
-      );
-  }, [readings, selectedRoom]);
 
   return (
     <ProtectedPage>
@@ -202,7 +233,7 @@ export default function MeterReadingsPage() {
                         {r.oldWater}-{r.newWater}
                       </div>
                       <div className="history-total">
-                        Tổng: {r.totalCost ?? 0}
+                        Tổng: {formatMoney(r.totalCost)}
                       </div>
                     </div>
                   ))}
@@ -267,19 +298,70 @@ export default function MeterReadingsPage() {
             </div>
           </div>
         )}
+
         <div className="card">
+          <div
+            className="form-grid"
+            style={{ marginBottom: 16, maxWidth: 400 }}
+          >
+            <div>
+              <label className="field-label">Lọc theo khu</label>
+              <select
+                value={filterAreaId}
+                onChange={(e) => {
+                  setFilterAreaId(e.target.value);
+                  setFilterRoomId("");
+                }}
+              >
+                <option value="">Tất cả khu</option>
+                {areas.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="field-label">Lọc theo phòng</label>
+              <select
+                value={filterRoomId}
+                onChange={(e) => setFilterRoomId(e.target.value)}
+              >
+                <option value="">Tất cả phòng</option>
+                {roomsByFilterArea.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.code}
+                    {r.area?.name ? ` (${r.area.name})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <SimpleTable
-            data={readings}
+            data={filteredReadings}
             columns={[
-              { header: "ID", render: (r) => r.id },
-              { header: "Phòng", render: (r) => r.room?.code },
-              { header: "Tháng/Năm", render: (r) => `${r.month}/${r.year}` },
+              { header: "ID", render: (r: MeterReading) => r.id },
               {
-                header: "Điện",
-                render: (r) => `${r.oldElectric}-${r.newElectric}`,
+                header: "Phòng",
+                render: (r: MeterReading) => r.room?.code ?? "—",
               },
-              { header: "Nước", render: (r) => `${r.oldWater}-${r.newWater}` },
-              { header: "Tổng", render: (r) => r.totalCost },
+              {
+                header: "Tháng/Năm",
+                render: (r: MeterReading) => `${r.month}/${r.year}`,
+              },
+              {
+                header: "Điện (cũ → mới)",
+                render: (r: MeterReading) =>
+                  `${r.oldElectric} → ${r.newElectric}`,
+              },
+              {
+                header: "Nước (cũ → mới)",
+                render: (r: MeterReading) => `${r.oldWater} → ${r.newWater}`,
+              },
+              {
+                header: "Tổng tiền",
+                render: (r: MeterReading) => formatMoney(r.totalCost),
+              },
             ]}
           />
         </div>
