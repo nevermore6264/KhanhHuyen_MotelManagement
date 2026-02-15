@@ -21,8 +21,13 @@ public class TenantController {
     private final CurrentUserService currentUserService;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_STAFF')")
-    public List<Tenant> list(@RequestParam(required = false) String q) {
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public List<Tenant> list(@RequestParam(value = "q", required = false) String q) {
+        User user = currentUserService.getCurrentUser();
+        if (user != null && user.getRole() == com.motelmanagement.domain.Role.TENANT) {
+            Tenant tenant = tenantRepository.findByUserId(user.getId());
+            return tenant != null ? List.of(tenant) : List.of();
+        }
         if (q != null && !q.isBlank()) {
             return tenantRepository.findByFullNameContainingIgnoreCase(q);
         }
@@ -30,7 +35,7 @@ public class TenantController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAuthority('ROLE_TENANT')")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<Tenant> me() {
         User user = currentUserService.getCurrentUser();
         if (user == null) {
@@ -41,17 +46,25 @@ public class TenantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public Tenant create(@RequestBody Tenant tenant) {
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<?> create(@RequestBody Tenant tenant) {
+        User user = currentUserService.getCurrentUser();
+        if (user == null || user.getRole() != com.motelmanagement.domain.Role.ADMIN) {
+            return ResponseEntity.status(403).build();
+        }
         if (tenant.getUser() != null && tenant.getUser().getId() != null) {
             tenant.setUser(userRepository.findById(tenant.getUser().getId()).orElse(null));
         }
-        return tenantRepository.save(tenant);
+        return ResponseEntity.ok(tenantRepository.save(tenant));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Tenant> update(@PathVariable("id") Long id, @RequestBody Tenant tenant) {
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody Tenant tenant) {
+        User user = currentUserService.getCurrentUser();
+        if (user == null || user.getRole() != com.motelmanagement.domain.Role.ADMIN) {
+            return ResponseEntity.status(403).build();
+        }
         return tenantRepository.findById(id)
                 .map(existing -> {
                     existing.setFullName(tenant.getFullName());
@@ -68,8 +81,12 @@ public class TenantController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<?> delete(@PathVariable("id") Long id) {
+        User user = currentUserService.getCurrentUser();
+        if (user == null || user.getRole() != com.motelmanagement.domain.Role.ADMIN) {
+            return ResponseEntity.status(403).build();
+        }
         tenantRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }

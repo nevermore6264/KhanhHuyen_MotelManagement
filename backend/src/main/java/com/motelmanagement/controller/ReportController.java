@@ -22,7 +22,7 @@ public class ReportController {
 
     @GetMapping("/revenue")
     @PreAuthorize("hasRole('ADMIN')")
-    public Map<String, Object> revenue(@RequestParam int month, @RequestParam int year) {
+    public Map<String, Object> revenue(@RequestParam(value = "month") int month, @RequestParam(value = "year") int year) {
         Double revenue = invoiceRepository.sumRevenueByMonth(month, year);
         Map<String, Object> result = new HashMap<>();
         result.put("month", month);

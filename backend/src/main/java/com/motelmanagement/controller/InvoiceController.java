@@ -50,7 +50,7 @@ public class InvoiceController {
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<Invoice> updateStatus(@PathVariable("id") Long id, @RequestParam InvoiceStatus status) {
+    public ResponseEntity<Invoice> updateStatus(@PathVariable("id") Long id, @RequestParam(value = "status") InvoiceStatus status) {
         return invoiceRepository.findById(id)
                 .map(existing -> {
                     existing.setStatus(status);
