@@ -144,7 +144,7 @@ export default function TenantsPage() {
         idNumber: idNumber.trim() || null,
         address: address.trim() || null,
         email: email.trim() || null,
-        user: userId ? { id: Number(userId) } : null,
+        userId: userId ? Number(userId) : null,
       });
       notify("Thêm khách thuê thành công", "success");
     } catch (err: any) {

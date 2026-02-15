@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
+import { buildContractDocx } from "@/lib/contractDocx";
+import { renderAsync } from "docx-preview";
 
-type Room = { id: number; code: string };
-type Tenant = { id: number; fullName: string };
+type Room = { id: number; code: string; currentPrice?: number };
+type Tenant = {
+  id: number;
+  fullName: string;
+  phone?: string;
+  idNumber?: string;
+  address?: string;
+  email?: string;
+};
 type Contract = {
   id: number;
   room?: Room;
@@ -17,6 +26,8 @@ type Contract = {
   startDate?: string;
   endDate?: string;
   status?: string;
+  deposit?: number;
+  rent?: number;
 };
 
 const contractStatusLabel = (value?: string) => {
@@ -30,6 +41,47 @@ const contractStatusLabel = (value?: string) => {
     default:
       return value || "-";
   }
+};
+
+const contractStatusBadge = (value?: string) => {
+  switch (value) {
+    case "ACTIVE":
+      return "status-available";
+    case "ENDED":
+      return "status-maintenance";
+    case "TERMINATED":
+      return "status-occupied";
+    default:
+      return "status-unknown";
+  }
+};
+
+/** Định dạng ngày thành dd/MM/yyyy */
+const formatDateDMY = (dateStr?: string) => {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+/** Định dạng tiền cho in hợp đồng (1.000.000 VNĐ) */
+const formatMoneyDoc = (n?: number | null) => {
+  if (n == null || isNaN(n)) return "—";
+  return `${new Intl.NumberFormat("vi-VN").format(Math.round(n))} VNĐ`;
+};
+
+const formatCurrencyInput = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+};
+
+const parseCurrencyInput = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return digits ? Number(digits) : null;
 };
 
 export default function ContractsPage() {
@@ -48,6 +100,9 @@ export default function ContractsPage() {
   const [extendId, setExtendId] = useState<number | null>(null);
   const [extendDate, setExtendDate] = useState("");
   const [confirmEndId, setConfirmEndId] = useState<number | null>(null);
+  const [previewContract, setPreviewContract] = useState<Contract | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
   const role = getRole();
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
@@ -101,12 +156,16 @@ export default function ContractsPage() {
       setError("Ngày kết thúc phải sau ngày bắt đầu");
       return;
     }
-    if (deposit && Number(deposit) < 0) {
-      setError("Tiền cọc không hợp lệ");
+    const selectedRoom = rooms.find((r) => Number(roomId) === r.id);
+    const rentValue =
+      parseCurrencyInput(rent) ?? selectedRoom?.currentPrice ?? null;
+    if (rentValue != null && rentValue < 0) {
+      setError("Giá thuê không hợp lệ");
       return;
     }
-    if (rent && Number(rent) < 0) {
-      setError("Giá thuê không hợp lệ");
+    const depositValue = parseCurrencyInput(deposit);
+    if (depositValue != null && depositValue < 0) {
+      setError("Tiền cọc không hợp lệ");
       return;
     }
     setError("");
@@ -116,8 +175,8 @@ export default function ContractsPage() {
         tenant: tenantId ? { id: Number(tenantId) } : null,
         startDate,
         endDate,
-        deposit: deposit ? Number(deposit) : null,
-        rent: rent ? Number(rent) : null,
+        deposit: depositValue,
+        rent: rentValue,
       });
       notify("Tạo hợp đồng thành công", "success");
     } catch (err: any) {
@@ -204,50 +263,33 @@ export default function ContractsPage() {
     setConfirmEndId(null);
   };
 
-  const downloadContractDoc = (contract: Contract) => {
-    const html = `<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <title>Hợp đồng thuê phòng</title>
-  <style>
-    body { font-family: "Times New Roman", serif; line-height: 1.6; }
-    h1 { text-align: center; font-size: 20px; margin-bottom: 4px; }
-    .meta { text-align: center; font-size: 12px; margin-bottom: 16px; }
-    .section { margin: 12px 0; }
-    .label { font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h1>HỢP ĐỒNG THUÊ PHÒNG</h1>
-  <div class="meta">Mã hợp đồng: ${contract.id || ""}</div>
-  <div class="section">
-    <div><span class="label">Phòng:</span> ${contract.room?.code || ""}</div>
-    <div><span class="label">Khách thuê:</span> ${contract.tenant?.fullName || ""}</div>
-  </div>
-  <div class="section">
-    <div><span class="label">Ngày bắt đầu:</span> ${contract.startDate || ""}</div>
-    <div><span class="label">Ngày kết thúc:</span> ${contract.endDate || ""}</div>
-    <div><span class="label">Trạng thái:</span> ${contractStatusLabel(contract.status)}</div>
-  </div>
-  <div class="section">
-    <div class="label">Điều khoản cơ bản</div>
-    <div>- Bên thuê cam kết thanh toán đúng hạn.</div>
-    <div>- Bên cho thuê đảm bảo phòng ở đúng thông tin đã thỏa thuận.</div>
-  </div>
-  <div class="section">
-    <div>Đại diện bên cho thuê ______________________</div>
-    <div>Đại diện bên thuê ______________________</div>
-  </div>
-</body>
-</html>`;
-    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `hop-dong-${contract.id || "phong"}.doc`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const viewContractDoc = (contract: Contract) => {
+    setPreviewContract(contract);
+  };
+
+  useEffect(() => {
+    if (!previewContract || !previewContainerRef.current) return;
+    const el = previewContainerRef.current;
+    setPreviewLoading(true);
+    el.innerHTML = "";
+    buildContractDocx(previewContract)
+      .then((blob) => renderAsync(blob, el))
+      .then(() => setPreviewLoading(false))
+      .catch(() => setPreviewLoading(false));
+  }, [previewContract?.id]);
+
+  const downloadContractDoc = async (contract: Contract) => {
+    try {
+      const blob = await buildContractDocx(contract);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hop-dong-thue-nha-tro-${contract.room?.code || contract.id || "phong"}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      notify("Tải file thất bại", "error");
+    }
   };
 
   return (
@@ -285,21 +327,37 @@ export default function ContractsPage() {
               { header: "ID", render: (c) => c.id },
               { header: "Phòng", render: (c) => c.room?.code },
               { header: "Khách", render: (c) => c.tenant?.fullName },
-              { header: "Bắt đầu", render: (c) => c.startDate },
-              { header: "Kết thúc", render: (c) => c.endDate },
+              { header: "Bắt đầu", render: (c) => formatDateDMY(c.startDate) },
+              { header: "Kết thúc", render: (c) => formatDateDMY(c.endDate) },
               {
                 header: "Trạng thái",
-                render: (c) => contractStatusLabel(c.status),
+                render: (c) => (
+                  <span
+                    className={`status-badge ${contractStatusBadge(c.status)}`}
+                  >
+                    {contractStatusLabel(c.status)}
+                  </span>
+                ),
               },
               {
-                header: "Tải file",
+                header: "Hợp đồng",
                 render: (c: Contract) => (
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => downloadContractDoc(c)}
-                  >
-                    Tải Word
-                  </button>
+                  <div className="table-actions">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => viewContractDoc(c)}
+                      title="Xem nội dung hợp đồng"
+                    >
+                      Xem
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => downloadContractDoc(c)}
+                      title="Tải file Word"
+                    >
+                      Tải Word
+                    </button>
+                  </div>
                 ),
               },
               ...(isAdmin
@@ -326,6 +384,74 @@ export default function ContractsPage() {
           />
         </div>
 
+        {previewContract && (
+          <div className="modal-backdrop">
+            <div
+              className="modal-card"
+              style={{
+                position: "relative",
+                maxWidth: "90vw",
+                width: 800,
+                maxHeight: "calc(90vh - 48px)",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                  flexShrink: 0,
+                  paddingRight: 8,
+                }}
+              >
+                <h3 style={{ margin: 0 }}>
+                  Xem hợp đồng — Phòng {previewContract.room?.code}
+                </h3>
+                <button
+                  className="btn btn-secondary"
+                  type="button"
+                  onClick={() => {
+                    setPreviewContract(null);
+                    setPreviewLoading(false);
+                  }}
+                  style={{ flexShrink: 0 }}
+                >
+                  Đóng
+                </button>
+              </div>
+              <div
+                ref={previewContainerRef}
+                style={{
+                  flex: 1,
+                  overflow: "auto",
+                  minHeight: 400,
+                  padding: 16,
+                  backgroundColor: "var(--bg-secondary)",
+                  borderRadius: 8,
+                }}
+              />
+              {previewLoading && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(255,255,255,0.8)",
+                    borderRadius: 8,
+                  }}
+                >
+                  Đang tải...
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {showCreate && isAdmin && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
@@ -342,7 +468,16 @@ export default function ContractsPage() {
                   </label>
                   <select
                     value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setRoomId(id);
+                      const room = rooms.find((r) => Number(id) === r.id);
+                      setRent(
+                        room?.currentPrice != null
+                          ? formatCurrencyInput(String(room.currentPrice))
+                          : "",
+                      );
+                    }}
                   >
                     <option value="">Chọn phòng</option>
                     {rooms.map((r) => (
@@ -390,21 +525,31 @@ export default function ContractsPage() {
                 </div>
                 <div>
                   <label className="field-label">Tiền cọc</label>
-                  <input
-                    placeholder="Tiền cọc"
-                    inputMode="numeric"
-                    value={deposit}
-                    onChange={(e) => setDeposit(e.target.value)}
-                  />
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Ví dụ: 1.000.000"
+                      value={deposit}
+                      onChange={(e) =>
+                        setDeposit(formatCurrencyInput(e.target.value))
+                      }
+                    />
+                    <span>VNĐ</span>
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">Giá thuê</label>
-                  <input
-                    placeholder="Giá thuê"
-                    inputMode="numeric"
-                    value={rent}
-                    onChange={(e) => setRent(e.target.value)}
-                  />
+                  <div className="input-suffix">
+                    <input
+                      placeholder="Chọn phòng để lấy giá"
+                      value={rent}
+                      readOnly
+                      style={{
+                        backgroundColor: "var(--bg-secondary)",
+                        cursor: "not-allowed",
+                      }}
+                    />
+                    <span>VNĐ</span>
+                  </div>
                 </div>
                 {error && <div className="form-error">{error}</div>}
                 <div className="form-actions">

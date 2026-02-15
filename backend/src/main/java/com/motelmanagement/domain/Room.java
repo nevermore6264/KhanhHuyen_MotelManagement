@@ -32,4 +32,7 @@ public class Room {
 
     @Column(precision = 12, scale = 2)
     private BigDecimal currentPrice;
+
+    @Column(precision = 8, scale = 2)
+    private BigDecimal areaSize;
 }

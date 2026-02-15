@@ -33,6 +33,19 @@ const invoiceStatusLabel = (value?: string) => {
   }
 };
 
+const invoiceStatusBadge = (value?: string) => {
+  switch (value) {
+    case "PAID":
+      return "status-available";
+    case "PARTIAL":
+      return "status-maintenance";
+    case "UNPAID":
+      return "status-occupied";
+    default:
+      return "status-unknown";
+  }
+};
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -159,7 +172,13 @@ export default function InvoicesPage() {
               { header: "Tổng", render: (i) => i.total },
               {
                 header: "Trạng thái",
-                render: (i) => invoiceStatusLabel(i.status),
+                render: (i) => (
+                  <span
+                    className={`status-badge ${invoiceStatusBadge(i.status)}`}
+                  >
+                    {invoiceStatusLabel(i.status)}
+                  </span>
+                ),
               },
             ]}
           />

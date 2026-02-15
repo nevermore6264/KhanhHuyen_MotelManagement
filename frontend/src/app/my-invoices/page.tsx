@@ -8,6 +8,23 @@ import api from '@/lib/api';
 
 type Invoice = { id: number; room?: { code: string }; month: number; year: number; total?: number; status?: string };
 
+const invoiceStatusLabel = (value?: string) => {
+  switch (value) {
+    case "UNPAID": return "Chưa thanh toán";
+    case "PARTIAL": return "Thanh toán một phần";
+    case "PAID": return "Đã thanh toán";
+    default: return value || "-";
+  }
+};
+const invoiceStatusBadge = (value?: string) => {
+  switch (value) {
+    case "PAID": return "status-available";
+    case "PARTIAL": return "status-maintenance";
+    case "UNPAID": return "status-occupied";
+    default: return "status-unknown";
+  }
+};
+
 export default function MyInvoicesPage() {
   const [items, setItems] = useState<Invoice[]>([]);
 
@@ -28,7 +45,11 @@ export default function MyInvoicesPage() {
               { header: 'Phòng', render: (i) => i.room?.code },
               { header: 'Tháng/Năm', render: (i) => `${i.month}/${i.year}` },
               { header: 'Tổng', render: (i) => i.total },
-              { header: 'Trạng thái', render: (i) => i.status }
+              { header: 'Trạng thái', render: (i) => (
+                <span className={`status-badge ${invoiceStatusBadge(i.status)}`}>
+                  {invoiceStatusLabel(i.status)}
+                </span>
+              ) }
             ]}
           />
         </div>

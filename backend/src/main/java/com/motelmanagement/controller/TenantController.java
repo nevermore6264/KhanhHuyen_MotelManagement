@@ -2,6 +2,7 @@ package com.motelmanagement.controller;
 
 import com.motelmanagement.domain.Tenant;
 import com.motelmanagement.domain.User;
+import com.motelmanagement.dto.TenantCreateDto;
 import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.repository.UserRepository;
 import com.motelmanagement.service.CurrentUserService;
@@ -47,15 +48,17 @@ public class TenantController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<?> create(@RequestBody Tenant tenant) {
-        User user = currentUserService.getCurrentUser();
-        if (user == null || user.getRole() != com.motelmanagement.domain.Role.ADMIN) {
-            return ResponseEntity.status(403).build();
+    public Tenant create(@RequestBody TenantCreateDto dto) {
+        Tenant tenant = new Tenant();
+        tenant.setFullName(dto.getFullName());
+        tenant.setPhone(dto.getPhone());
+        tenant.setIdNumber(dto.getIdNumber());
+        tenant.setAddress(dto.getAddress());
+        tenant.setEmail(dto.getEmail());
+        if (dto.getUserId() != null) {
+            tenant.setUser(userRepository.findById(dto.getUserId()).orElse(null));
         }
-        if (tenant.getUser() != null && tenant.getUser().getId() != null) {
-            tenant.setUser(userRepository.findById(tenant.getUser().getId()).orElse(null));
-        }
-        return ResponseEntity.ok(tenantRepository.save(tenant));
+        return tenantRepository.save(tenant);
     }
 
     @PutMapping("/{id}")

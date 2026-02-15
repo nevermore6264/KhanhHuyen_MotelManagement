@@ -1180,7 +1180,8 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  z-index: 40;
+  padding-top: 72px; /* Tránh bị navbar che nút Đóng */
+  z-index: 1000;
 }
 
 .modal-card {

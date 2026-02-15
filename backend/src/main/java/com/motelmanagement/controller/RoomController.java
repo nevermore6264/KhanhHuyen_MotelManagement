@@ -50,6 +50,7 @@ public class RoomController {
                     existing.setFloor(room.getFloor());
                     existing.setStatus(room.getStatus());
                     existing.setCurrentPrice(room.getCurrentPrice());
+                    existing.setAreaSize(room.getAreaSize());
                     if (room.getArea() != null && room.getArea().getId() != null) {
                         existing.setArea(areaRepository.findById(room.getArea().getId()).orElse(null));
                     }

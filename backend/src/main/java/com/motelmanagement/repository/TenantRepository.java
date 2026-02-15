@@ -9,4 +9,7 @@ public interface TenantRepository extends JpaRepository<Tenant, Long> {
     List<Tenant> findByFullNameContainingIgnoreCase(String keyword);
 
     Tenant findByUserId(Long userId);
+
+    /** Khách thuê chưa gắn tài khoản (để chọn khi tạo tài khoản TENANT). */
+    List<Tenant> findByUserIsNull();
 }

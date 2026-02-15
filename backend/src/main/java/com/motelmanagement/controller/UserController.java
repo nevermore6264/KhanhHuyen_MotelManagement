@@ -1,6 +1,11 @@
 package com.motelmanagement.controller;
 
+import com.motelmanagement.domain.Role;
+import com.motelmanagement.domain.Tenant;
 import com.motelmanagement.domain.User;
+import com.motelmanagement.dto.UserCreateDto;
+import com.motelmanagement.dto.UserTenantLinkDto;
+import com.motelmanagement.repository.TenantRepository;
 import com.motelmanagement.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +20,7 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
     private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
 
     @GetMapping
@@ -25,9 +31,22 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public User create(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+    public User create(@RequestBody UserCreateDto dto) {
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setFullName(dto.getFullName() != null ? dto.getFullName() : "");
+        user.setPhone(dto.getPhone());
+        user.setRole(dto.getRole() != null ? dto.getRole() : Role.STAFF);
+        user.setActive(dto.isActive());
+        User savedUser = userRepository.save(user);
+        if (dto.getTenantId() != null && savedUser.getRole() == Role.TENANT) {
+            tenantRepository.findById(dto.getTenantId()).ifPresent(tenant -> {
+                tenant.setUser(savedUser);
+                tenantRepository.save(tenant);
+            });
+        }
+        return savedUser;
     }
 
     @PutMapping("/{id}")
@@ -67,5 +86,27 @@ public class UserController {
                     return ResponseEntity.ok(userRepository.save(existing));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /** Chỉ gắn hoặc bỏ gắn tài khoản với khách thuê. tenantId = null để bỏ gắn. */
+    @PutMapping("/{id}/tenant")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> linkTenant(@PathVariable("id") Long userId, @RequestBody UserTenantLinkDto dto) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Tenant current = tenantRepository.findByUserId(userId);
+        if (current != null) {
+            current.setUser(null);
+            tenantRepository.save(current);
+        }
+        if (dto.getTenantId() != null) {
+            tenantRepository.findById(dto.getTenantId()).ifPresent(tenant -> {
+                tenant.setUser(user);
+                tenantRepository.save(tenant);
+            });
+        }
+        return ResponseEntity.ok().build();
     }
 }
