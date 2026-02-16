@@ -23,6 +23,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByMonthAndYear(int month, int year);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "room", "tenant", "room.area" })
+    @Query("SELECT i FROM Invoice i WHERE i.status = ?1")
     List<Invoice> findByStatusWithRoomAndTenant(InvoiceStatus status);
 
     @Query("select sum(i.total) from Invoice i where i.status = 'PAID' and i.month = ?1 and i.year = ?2")
