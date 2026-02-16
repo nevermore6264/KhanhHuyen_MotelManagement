@@ -540,40 +540,33 @@ export default function UsersPage() {
 
         {linkUserModal && (
           <div className="modal-backdrop">
-            <div className="modal-card form-card">
-              <h3>Gắn người dùng với khách thuê</h3>
-              <p className="card-subtitle">
-                Tài khoản: <strong>{linkUserModal.username}</strong>
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 16,
-                  marginTop: 16,
-                  marginBottom: 16,
-                }}
-              >
-                <label
-                  style={{ display: "flex", alignItems: "center", gap: 8 }}
-                >
+            <div className="modal-card form-card link-tenant-modal">
+              <div className="card-header">
+                <div>
+                  <h3>Gắn người dùng với khách thuê</h3>
+                  <p className="card-subtitle">
+                    Tài khoản: <strong>{linkUserModal.username}</strong>
+                  </p>
+                </div>
+              </div>
+              <div className="link-mode-radios">
+                <label className="link-mode-radio">
                   <input
                     type="radio"
                     name="linkMode"
                     checked={linkMode === "existing"}
                     onChange={() => setLinkMode("existing")}
                   />
-                  Chọn khách thuê có sẵn
+                  <span>Chọn khách thuê có sẵn</span>
                 </label>
-                <label
-                  style={{ display: "flex", alignItems: "center", gap: 8 }}
-                >
+                <label className="link-mode-radio">
                   <input
                     type="radio"
                     name="linkMode"
                     checked={linkMode === "new"}
                     onChange={() => setLinkMode("new")}
                   />
-                  Tạo khách thuê mới
+                  <span>Tạo khách thuê mới</span>
                 </label>
               </div>
 

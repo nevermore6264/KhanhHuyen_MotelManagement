@@ -1211,6 +1211,37 @@ textarea:focus {
   margin-top: 12px;
 }
 
+/* Modal gắn người dùng với khách thuê */
+.link-tenant-modal {
+  max-width: 540px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.link-mode-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin: 16px 0;
+}
+
+.link-mode-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.link-mode-radio input {
+  margin: 0;
+}
+
+.link-mode-radio span {
+  font-size: 14px;
+  color: #334155;
+}
+
 .table-actions {
   display: inline-flex;
   gap: 8px;
