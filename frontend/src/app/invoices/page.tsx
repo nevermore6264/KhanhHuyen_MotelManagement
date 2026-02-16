@@ -115,25 +115,34 @@ export default function InvoicesPage() {
   };
 
   const load = async () => {
+    if (role == null) {
+      setInvoices([]);
+      return;
+    }
     try {
-      if (isTenant) {
+      if (role === "TENANT") {
         const res = await api.get("/invoices/me");
         setInvoices(res.data);
         setRooms([]);
         setTenants([]);
         return;
       }
-      const [iRes, rRes, tRes] = await Promise.all([
-        api.get("/invoices"),
-        api.get("/rooms"),
-        api.get("/tenants"),
-      ]);
-      setInvoices(iRes.data);
-      setRooms(rRes.data);
-      setTenants(tRes.data);
-    } catch (err: any) {
+      if (role === "ADMIN" || role === "STAFF") {
+        const [iRes, rRes, tRes] = await Promise.all([
+          api.get("/invoices"),
+          api.get("/rooms"),
+          api.get("/tenants"),
+        ]);
+        setInvoices(iRes.data);
+        setRooms(rRes.data);
+        setTenants(tRes.data);
+        return;
+      }
+      setInvoices([]);
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
       const message =
-        err?.response?.status === 403
+        ax?.response?.status === 403
           ? "Bạn không có quyền xem danh sách hóa đơn"
           : "Tải dữ liệu hóa đơn thất bại";
       notify(message, "error");
@@ -142,7 +151,7 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [role]);
 
   const filteredInvoices = useMemo(() => {
     let list = invoices;
