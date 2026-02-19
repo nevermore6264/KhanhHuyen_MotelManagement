@@ -1215,6 +1215,68 @@ textarea:focus {
   margin-top: 12px;
 }
 
+/* Modal tạo hợp đồng - rộng hơn, có section, tránh vỡ layout */
+.contract-create-modal {
+  max-width: 600px;
+}
+
+.contract-create-modal .card-header {
+  padding-bottom: 20px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--blue-200);
+}
+
+.contract-create-modal .card-header h3 {
+  font-size: 1.35rem;
+  color: #102a5c;
+}
+
+.contract-create-modal .form-section {
+  margin-bottom: 20px;
+}
+
+.contract-create-modal .form-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blue-600);
+  margin: 0 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--blue-200);
+}
+
+.contract-create-modal .form-section-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.contract-create-modal .form-section-fields select,
+.contract-create-modal .form-section-fields input {
+  min-width: 0;
+  width: 100%;
+}
+
+.contract-create-modal .form-section-fields > .form-section-full {
+  grid-column: 1 / -1;
+}
+
+.contract-create-modal .form-section-fields.form-section-full {
+  grid-column: 1 / -1;
+}
+
+.contract-create-modal .form-actions {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--blue-200);
+}
+
+.contract-create-modal .btn-primary {
+  min-width: 140px;
+  font-weight: 600;
+}
+
 /* Modal gắn người dùng với khách thuê */
 .link-tenant-modal {
   max-width: 540px;
@@ -1272,6 +1334,18 @@ textarea:focus {
   gap: 8px;
 }
 
+.picker-search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  grid-column: 1 / -1;
+}
+
+.picker-search-row input {
+  flex: 1;
+  min-width: 0;
+}
+
 .picker-list {
   display: grid;
   gap: 8px;
@@ -1281,6 +1355,7 @@ textarea:focus {
   border-radius: 12px;
   padding: 8px;
   background: #fff;
+  grid-column: 1 / -1;
 }
 
 .picker-item {

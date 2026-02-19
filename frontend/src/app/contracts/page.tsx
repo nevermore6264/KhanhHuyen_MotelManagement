@@ -89,6 +89,26 @@ const parseCurrencyInput = (value: string) => {
   return digits ? Number(digits) : null;
 };
 
+/** Nhãn khách thuê để phân biệt khi trùng tên: "Họ tên — SĐT" hoặc "Họ tên — CCCD" */
+const tenantOptionLabel = (t: Tenant) => {
+  const name = t.fullName || `Khách ${t.id}`;
+  const extra = t.phone || t.idNumber;
+  return extra ? `${name} — ${extra}` : name;
+};
+
+/** Tính ngày kết thúc = ngày bắt đầu + N tháng, trừ 1 ngày (hết hạn vào ngày cuối) */
+const addMonthsToDate = (startYMD: string, months: number): string => {
+  if (!startYMD || months < 1) return "";
+  const d = new Date(startYMD + "T12:00:00");
+  if (isNaN(d.getTime())) return "";
+  d.setMonth(d.getMonth() + months);
+  d.setDate(d.getDate() - 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -96,6 +116,9 @@ export default function ContractsPage() {
   const [roomId, setRoomId] = useState("");
   const [tenantId, setTenantId] = useState("");
   const [startDate, setStartDate] = useState("");
+  const [durationMonths, setDurationMonths] = useState<"" | "6" | "12" | "24">(
+    "",
+  );
   const [endDate, setEndDate] = useState("");
   const [deposit, setDeposit] = useState("");
   const [rent, setRent] = useState("");
@@ -146,6 +169,14 @@ export default function ContractsPage() {
   useEffect(() => {
     if (role !== null) load();
   }, [role]);
+
+  useEffect(() => {
+    if (!showCreate) return;
+    const months = durationMonths === "" ? 0 : Number(durationMonths);
+    if (months >= 1 && startDate) {
+      setEndDate(addMonthsToDate(startDate, months));
+    }
+  }, [showCreate, startDate, durationMonths]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,6 +231,7 @@ export default function ContractsPage() {
     setRoomId("");
     setTenantId("");
     setStartDate("");
+    setDurationMonths("");
     setEndDate("");
     setDeposit("");
     setRent("");
@@ -216,6 +248,17 @@ export default function ContractsPage() {
       c.status?.toLowerCase().includes(q)
     );
   });
+
+  /** Khách thuê đang có hợp đồng ACTIVE thì không cho chọn khi tạo hợp đồng mới */
+  const tenantIdsWithActiveContract = new Set(
+    contracts
+      .filter((c) => c.status === "ACTIVE")
+      .map((c) => c.tenant?.id)
+      .filter((id): id is number => id != null),
+  );
+  const availableTenantsForNewContract = tenants.filter(
+    (t) => !tenantIdsWithActiveContract.has(t.id),
+  );
 
   const openExtend = (contract: Contract) => {
     setExtendId(contract.id);
@@ -463,114 +506,161 @@ export default function ContractsPage() {
 
         {showCreate && isAdmin && (
           <div className="modal-backdrop">
-            <div className="modal-card form-card">
+            <div className="modal-card form-card contract-create-modal">
               <div className="card-header">
                 <div>
                   <h3>Tạo hợp đồng</h3>
-                  <p className="card-subtitle">Chọn phòng và khách thuê</p>
+                  <p className="card-subtitle">
+                    Chọn phòng, khách thuê và điền thông tin hợp đồng
+                  </p>
                 </div>
               </div>
               <form onSubmit={create} className="form-grid">
-                <div>
-                  <label className="field-label">
-                    Phòng <span className="required">*</span>
-                  </label>
-                  <select
-                    value={roomId}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      setRoomId(id);
-                      const room = rooms.find((r) => Number(id) === r.id);
-                      setRent(
-                        room?.currentPrice != null
-                          ? formatCurrencyInput(String(room.currentPrice))
-                          : "",
-                      );
-                    }}
-                  >
-                    <option value="">Chọn phòng</option>
-                    {rooms
-                      .filter((r) => r.status === "AVAILABLE")
-                      .map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.code}
+                <div className="form-section form-span-2">
+                  <h4 className="form-section-title">Phòng &amp; Khách thuê</h4>
+                  <div className="form-section-fields">
+                    <div>
+                      <label className="field-label">
+                        Phòng <span className="required">*</span>
+                      </label>
+                      <select
+                        value={roomId}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          setRoomId(id);
+                          const room = rooms.find((r) => Number(id) === r.id);
+                          setRent(
+                            room?.currentPrice != null
+                              ? formatCurrencyInput(String(room.currentPrice))
+                              : "",
+                          );
+                        }}
+                      >
+                        <option value="">Chọn phòng</option>
+                        {rooms
+                          .filter((r) => r.status === "AVAILABLE")
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.code}
+                            </option>
+                          ))}
+                      </select>
+                      {rooms.filter((r) => r.status === "AVAILABLE").length ===
+                        0 && (
+                        <p className="card-subtitle" style={{ marginTop: 4 }}>
+                          Không có phòng trống.
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="field-label">
+                        Khách thuê <span className="required">*</span>
+                      </label>
+                      <select
+                        value={tenantId}
+                        onChange={(e) => setTenantId(e.target.value)}
+                      >
+                        <option value="">Chọn khách thuê</option>
+                        {availableTenantsForNewContract.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {tenantOptionLabel(t)}
+                          </option>
+                        ))}
+                      </select>
+                      {availableTenantsForNewContract.length === 0 && (
+                        <p className="card-subtitle" style={{ marginTop: 4 }}>
+                          Tất cả khách thuê đều đang có hợp đồng hiệu lực.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section form-span-2">
+                  <h4 className="form-section-title">Thời hạn hợp đồng</h4>
+                  <div className="form-section-fields">
+                    <div>
+                      <label className="field-label">
+                        Ngày bắt đầu <span className="required">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="field-label">
+                        Khoảng thời gian thuê
+                      </label>
+                      <select
+                        value={durationMonths}
+                        onChange={(e) =>
+                          setDurationMonths(
+                            (e.target.value || "") as "" | "6" | "12" | "24",
+                          )
+                        }
+                      >
+                        <option value="">
+                          Tùy chọn (tự nhập ngày kết thúc)
                         </option>
-                      ))}
-                  </select>
-                  {rooms.filter((r) => r.status === "AVAILABLE").length ===
-                    0 && (
-                    <p className="card-subtitle" style={{ marginTop: 4 }}>
-                      Không có phòng trống. Chỉ hiển thị phòng chưa có người
-                      thuê.
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="field-label">
-                    Khách thuê <span className="required">*</span>
-                  </label>
-                  <select
-                    value={tenantId}
-                    onChange={(e) => setTenantId(e.target.value)}
-                  >
-                    <option value="">Chọn khách thuê</option>
-                    {tenants.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.fullName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">
-                    Ngày bắt đầu <span className="required">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">
-                    Ngày kết thúc <span className="required">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Tiền cọc</label>
-                  <div className="input-suffix">
-                    <input
-                      placeholder="Ví dụ: 1.000.000"
-                      value={deposit}
-                      onChange={(e) =>
-                        setDeposit(formatCurrencyInput(e.target.value))
-                      }
-                    />
-                    <span>VNĐ</span>
+                        <option value="6">6 tháng</option>
+                        <option value="12">1 năm</option>
+                        <option value="24">2 năm</option>
+                      </select>
+                    </div>
+                    <div className="form-section-full">
+                      <label className="field-label">
+                        Ngày kết thúc <span className="required">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => {
+                          setEndDate(e.target.value);
+                          if (durationMonths) setDurationMonths("");
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="field-label">Giá thuê</label>
-                  <div className="input-suffix">
-                    <input
-                      placeholder="Chọn phòng để lấy giá"
-                      value={rent}
-                      readOnly
-                      style={{
-                        backgroundColor: "var(--bg-secondary)",
-                        cursor: "not-allowed",
-                      }}
-                    />
-                    <span>VNĐ</span>
+
+                <div className="form-section form-span-2">
+                  <h4 className="form-section-title">Tài chính</h4>
+                  <div className="form-section-fields">
+                    <div>
+                      <label className="field-label">Tiền cọc</label>
+                      <div className="input-suffix">
+                        <input
+                          placeholder="Ví dụ: 1.000.000"
+                          value={deposit}
+                          onChange={(e) =>
+                            setDeposit(formatCurrencyInput(e.target.value))
+                          }
+                        />
+                        <span>VNĐ</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="field-label">Giá thuê</label>
+                      <div className="input-suffix">
+                        <input
+                          placeholder="Chọn phòng để lấy giá"
+                          value={rent}
+                          readOnly
+                          style={{
+                            backgroundColor: "var(--bg-secondary)",
+                            cursor: "not-allowed",
+                          }}
+                        />
+                        <span>VNĐ</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {error && <div className="form-error">{error}</div>}
-                <div className="form-actions">
+
+                {error && <div className="form-error form-span-2">{error}</div>}
+                <div className="form-actions form-span-2">
                   <button
                     className="btn btn-secondary"
                     type="button"
@@ -578,7 +668,7 @@ export default function ContractsPage() {
                   >
                     Hủy
                   </button>
-                  <button className="btn" type="submit">
+                  <button className="btn btn-primary" type="submit">
                     Tạo hợp đồng
                   </button>
                 </div>

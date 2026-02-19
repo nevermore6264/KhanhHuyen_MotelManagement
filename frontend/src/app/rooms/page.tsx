@@ -130,13 +130,20 @@ export default function RoomsPage() {
     load();
   };
 
+  const formatNumber = (value?: number) =>
+    value == null ? "" : new Intl.NumberFormat("vi-VN").format(value);
+
   const startEdit = (room: Room) => {
     setEditing(room);
     setEditCode(room.code || "");
     setEditFloor(room.floor || "");
     setEditStatus(room.status || "AVAILABLE");
     setEditAreaId(room.area?.id ? String(room.area.id) : "");
-    setEditPrice(room.currentPrice != null ? String(room.currentPrice) : "");
+    setEditPrice(
+      room.currentPrice != null
+        ? formatCurrencyInput(String(room.currentPrice))
+        : "",
+    );
     setEditError("");
   };
 
@@ -238,8 +245,6 @@ export default function RoomsPage() {
     return matchesQuery && matchesStatus;
   });
 
-  const formatNumber = (value?: number) =>
-    value == null ? "" : new Intl.NumberFormat("vi-VN").format(value);
   const isEditLocked = editing ? isLockedStatus(editing.status) : false;
 
   return (

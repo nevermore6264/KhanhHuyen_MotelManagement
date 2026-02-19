@@ -67,6 +67,13 @@ export default function TenantsPage() {
   const [showEditUserPicker, setShowEditUserPicker] = useState(false);
   const [userQuery, setUserQuery] = useState("");
   const [editUserQuery, setEditUserQuery] = useState("");
+  const [showCreateUserForm, setShowCreateUserForm] = useState(false);
+  const [createUserForPicker, setCreateUserForPicker] = useState<
+    "create" | "edit" | null
+  >(null);
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newUserError, setNewUserError] = useState("");
   const [role, setRole] = useState<string | null>(null);
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
@@ -265,6 +272,62 @@ export default function TenantsPage() {
     setConfirmName("");
   };
 
+  const openCreateUserForm = (forPicker: "create" | "edit") => {
+    setCreateUserForPicker(forPicker);
+    setNewUsername("");
+    setNewPassword("");
+    setNewUserError("");
+    setShowCreateUserForm(true);
+  };
+
+  const closeCreateUserForm = () => {
+    setShowCreateUserForm(false);
+    setCreateUserForPicker(null);
+    setNewUsername("");
+    setNewPassword("");
+    setNewUserError("");
+  };
+
+  const submitCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedUsername = newUsername.trim();
+    if (!trimmedUsername) {
+      setNewUserError("Vui lòng nhập tên đăng nhập");
+      return;
+    }
+    if (!newPassword.trim()) {
+      setNewUserError("Vui lòng nhập mật khẩu");
+      return;
+    }
+    setNewUserError("");
+    try {
+      const res = await api.post("/users", {
+        username: trimmedUsername,
+        password: newPassword,
+        role: "TENANT",
+        active: true,
+      });
+      await load();
+      const newId = res.data?.id;
+      if (createUserForPicker === "create" && newId != null) {
+        setUserId(String(newId));
+        setShowUserPicker(false);
+      } else if (createUserForPicker === "edit" && newId != null) {
+        setEditUserId(String(newId));
+        setShowEditUserPicker(false);
+      }
+      notify("Tạo tài khoản thành công", "success");
+      closeCreateUserForm();
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.response?.status === 403
+          ? "Bạn không có quyền thao tác"
+          : "Tạo tài khoản thất bại";
+      setNewUserError(message);
+      notify(message, "error");
+    }
+  };
+
   const filtered = tenants.filter((t) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
@@ -278,10 +341,20 @@ export default function TenantsPage() {
     );
   });
 
-  const filteredUsers = users.filter((u) =>
+  const linkedUserIds = new Set(
+    tenants.map((t) => t.user?.id).filter((id): id is number => id != null),
+  );
+  const availableUsers = users.filter((u) => !linkedUserIds.has(u.id));
+  const availableEditUsers = users.filter(
+    (u) =>
+      !linkedUserIds.has(u.id) ||
+      (editing != null && u.id === editing.user?.id),
+  );
+
+  const filteredUsers = availableUsers.filter((u) =>
     u.username.toLowerCase().includes(userQuery.trim().toLowerCase()),
   );
-  const filteredEditUsers = users.filter((u) =>
+  const filteredEditUsers = availableEditUsers.filter((u) =>
     u.username.toLowerCase().includes(editUserQuery.trim().toLowerCase()),
   );
   const selectedUser = users.find((u) => String(u.id) === userId);
@@ -460,11 +533,20 @@ export default function TenantsPage() {
                 </div>
               </div>
               <div className="form-grid">
-                <input
-                  placeholder="Tìm theo tên tài khoản..."
-                  value={userQuery}
-                  onChange={(e) => setUserQuery(e.target.value)}
-                />
+                <div className="picker-search-row">
+                  <input
+                    placeholder="Tìm theo tên tài khoản..."
+                    value={userQuery}
+                    onChange={(e) => setUserQuery(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => openCreateUserForm("create")}
+                  >
+                    Tạo tài khoản
+                  </button>
+                </div>
                 <div className="picker-list">
                   {filteredUsers.length === 0 && (
                     <div className="empty-state">
@@ -602,11 +684,20 @@ export default function TenantsPage() {
                 </div>
               </div>
               <div className="form-grid">
-                <input
-                  placeholder="Tìm theo tên tài khoản..."
-                  value={editUserQuery}
-                  onChange={(e) => setEditUserQuery(e.target.value)}
-                />
+                <div className="picker-search-row">
+                  <input
+                    placeholder="Tìm theo tên tài khoản..."
+                    value={editUserQuery}
+                    onChange={(e) => setEditUserQuery(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => openCreateUserForm("edit")}
+                  >
+                    Tạo tài khoản
+                  </button>
+                </div>
                 <div className="picker-list">
                   {filteredEditUsers.length === 0 && (
                     <div className="empty-state">
@@ -637,6 +728,61 @@ export default function TenantsPage() {
                   Đóng
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {showCreateUserForm && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card">
+              <div className="card-header">
+                <div>
+                  <h3>Tạo tài khoản</h3>
+                  <p className="card-subtitle">
+                    Tài khoản mới với vai trò TENANT
+                  </p>
+                </div>
+              </div>
+              <form onSubmit={submitCreateUser} className="form-grid">
+                <div>
+                  <label className="field-label">
+                    Tên đăng nhập <span className="required">*</span>
+                  </label>
+                  <input
+                    placeholder="Ví dụ: tenant2"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    autoComplete="username"
+                  />
+                </div>
+                <div>
+                  <label className="field-label">
+                    Mật khẩu <span className="required">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Nhập mật khẩu"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </div>
+                {newUserError && (
+                  <div className="form-error form-span-2">{newUserError}</div>
+                )}
+                <div className="form-actions form-span-2">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeCreateUserForm}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn">
+                    Tạo tài khoản
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

@@ -9,7 +9,13 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
 
 type Room = { id: number; code: string };
-type Tenant = { id: number; fullName: string; email?: string; phone?: string };
+type Tenant = {
+  id: number;
+  fullName: string;
+  email?: string;
+  phone?: string;
+  idNumber?: string;
+};
 type Invoice = {
   id: number;
   room?: Room;
@@ -28,6 +34,13 @@ type Invoice = {
 const formatMoney = (n?: number | null) => {
   if (n == null || isNaN(Number(n))) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
+};
+
+/** Nhãn khách thuê để phân biệt khi trùng tên: "Họ tên — SĐT" hoặc "Họ tên — CCCD" */
+const tenantOptionLabel = (t: Tenant) => {
+  const name = t.fullName || `Khách ${t.id}`;
+  const extra = t.phone || t.idNumber;
+  return extra ? `${name} — ${extra}` : name;
 };
 
 const formatReminderDate = (dateStr?: string | null) => {
@@ -427,7 +440,7 @@ export default function InvoicesPage() {
                     <option value="">Chọn khách thuê</option>
                     {tenants.map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.fullName}
+                        {tenantOptionLabel(t)}
                       </option>
                     ))}
                   </select>
