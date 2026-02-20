@@ -3,8 +3,13 @@ import {
   Packer,
   Paragraph,
   TextRun,
+  Table,
+  TableRow,
+  TableCell,
   AlignmentType,
   HeadingLevel,
+  TableBorders,
+  TableLayoutType,
 } from "docx";
 
 export type ContractForDocx = {
@@ -316,37 +321,65 @@ export async function buildContractDocx(
           }),
           new Paragraph({ text: "" }),
           new Paragraph({ text: "" }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [
-              new TextRun({
-                text: "Bên cho thuê (Bên A)",
-                bold: true,
-                italics: true,
-                size: 22,
+          new Table({
+            width: { size: 100, type: "pct" },
+            borders: TableBorders.NONE,
+            layout: TableLayoutType.FIXED,
+            columnWidths: [4535, 4535],
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: "Bên cho thuê (Bên A)",
+                            bold: true,
+                            italics: true,
+                            size: 22,
+                          }),
+                        ],
+                      }),
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: "(Ký, ghi rõ họ tên)",
+                            size: 20,
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: "Bên thuê (Bên B)",
+                            bold: true,
+                            italics: true,
+                            size: 22,
+                          }),
+                        ],
+                      }),
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                          new TextRun({
+                            text: "(Ký, ghi rõ họ tên)",
+                            size: 20,
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
               }),
             ],
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: "(Ký, ghi rõ họ tên)", size: 20 })],
-          }),
-          new Paragraph({ text: "" }),
-          new Paragraph({ text: "" }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [
-              new TextRun({
-                text: "Bên thuê (Bên B)",
-                bold: true,
-                italics: true,
-                size: 22,
-              }),
-            ],
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: "(Ký, ghi rõ họ tên)", size: 20 })],
           }),
         ],
       },

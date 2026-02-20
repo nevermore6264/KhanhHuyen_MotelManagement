@@ -8,12 +8,14 @@ type Column<T> = {
 export default function SimpleTable<T>({
   columns,
   data,
+  className,
 }: {
   columns: Column<T>[];
   data: T[];
+  className?: string;
 }) {
   return (
-    <div className="table-wrap">
+    <div className={`table-wrap ${className ?? ""}`.trim()}>
       <table className="table">
         <thead>
           <tr>

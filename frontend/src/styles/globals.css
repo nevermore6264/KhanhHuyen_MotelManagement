@@ -109,7 +109,7 @@ a {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 28px;
   animation: fadeIn 0.4s ease-out both;
@@ -1727,8 +1727,18 @@ table {
 .table-wrap {
   border: 1px solid var(--blue-200);
   border-radius: 14px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: #fff;
+}
+
+.table-wrap.table-nowrap .table {
+  min-width: 1000px;
+}
+
+.table-wrap.table-nowrap .table td,
+.table-wrap.table-nowrap .table th {
+  white-space: nowrap;
 }
 
 .table thead th {
