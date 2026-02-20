@@ -18,6 +18,8 @@ type User = {
 type Tenant = {
   id: number;
   fullName: string;
+  phone?: string;
+  idNumber?: string;
   user?: { id: number };
 };
 
@@ -76,8 +78,6 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
   const [role, setRole] = useState("STAFF");
   const [tenantId, setTenantId] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -88,7 +88,6 @@ export default function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null);
   const [editFullName, setEditFullName] = useState("");
   const [editPhone, setEditPhone] = useState("");
-  const [editRole, setEditRole] = useState("STAFF");
   const [editTenantId, setEditTenantId] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [editError, setEditError] = useState("");
@@ -122,6 +121,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     load();
+    loadTenants();
   }, []);
 
   const create = async (e: React.FormEvent) => {
@@ -136,8 +136,6 @@ export default function UsersPage() {
       await api.post("/users", {
         username: trimmedUsername,
         password,
-        fullName: fullName.trim(),
-        phone: phone.trim(),
         role,
         active: true,
         tenantId: role === "TENANT" && tenantId ? Number(tenantId) : null,
@@ -154,8 +152,6 @@ export default function UsersPage() {
     }
     setUsername("");
     setPassword("");
-    setFullName("");
-    setPhone("");
     setRole("STAFF");
     setTenantId("");
     setShowCreate(false);
@@ -166,7 +162,6 @@ export default function UsersPage() {
     setEditing(user);
     setEditFullName(user.fullName || "");
     setEditPhone((user as any).phone || "");
-    setEditRole(user.role || "STAFF");
     setEditTenantId("");
     setEditPassword("");
     setEditError("");
@@ -186,7 +181,7 @@ export default function UsersPage() {
       await api.put(`/users/${editing.id}`, {
         fullName: editFullName.trim(),
         phone: editPhone.trim(),
-        role: editRole,
+        role: editing.role,
         active: editing.active,
         password: editPassword.trim() || null,
       });
@@ -206,7 +201,6 @@ export default function UsersPage() {
     setEditing(null);
     setEditFullName("");
     setEditPhone("");
-    setEditRole("STAFF");
     setEditTenantId("");
     setEditPassword("");
     load();
@@ -303,7 +297,6 @@ export default function UsersPage() {
     setEditing(null);
     setEditFullName("");
     setEditPhone("");
-    setEditRole("STAFF");
     setEditTenantId("");
     setEditPassword("");
     setEditError("");
@@ -388,7 +381,27 @@ export default function UsersPage() {
             columns={[
               { header: "ID", render: (u) => u.id },
               { header: "Tài khoản", render: (u) => u.username },
-              { header: "Họ tên", render: (u) => u.fullName },
+              {
+                header: "Họ tên",
+                render: (u) => {
+                  const linked = tenants.find((t) => t.user?.id === u.id);
+                  return linked?.fullName ?? u.fullName ?? "—";
+                },
+              },
+              {
+                header: "SĐT",
+                render: (u) => {
+                  const linked = tenants.find((t) => t.user?.id === u.id);
+                  return linked?.phone ?? "—";
+                },
+              },
+              {
+                header: "CCCD",
+                render: (u) => {
+                  const linked = tenants.find((t) => t.user?.id === u.id);
+                  return linked?.idNumber ?? "—";
+                },
+              },
               {
                 header: "Chức vụ",
                 render: (u) => (
@@ -447,9 +460,7 @@ export default function UsersPage() {
               </div>
               <form onSubmit={create} className="form-grid">
                 <div>
-                  <label className="field-label">
-                    Tài khoản (username đăng nhập)
-                  </label>
+                  <label className="field-label">Tài khoản</label>
                   <input
                     placeholder="Nhập tên đăng nhập"
                     value={username}
@@ -464,22 +475,6 @@ export default function UsersPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Họ tên</label>
-                  <input
-                    placeholder="Họ tên"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">SĐT</label>
-                  <input
-                    placeholder="SĐT"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
@@ -708,15 +703,10 @@ export default function UsersPage() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">Role</label>
-                  <select
-                    value={editRole}
-                    onChange={(e) => setEditRole(e.target.value)}
-                  >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="STAFF">STAFF</option>
-                    <option value="TENANT">TENANT</option>
-                  </select>
+                  <label className="field-label">Chức vụ</label>
+                  <div className="readonly-field">
+                    {editing ? roleLabel(editing.role) : "—"}
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">Mật khẩu mới</label>
@@ -727,7 +717,7 @@ export default function UsersPage() {
                     onChange={(e) => setEditPassword(e.target.value)}
                   />
                 </div>
-                {editRole === "TENANT" && (
+                {editing?.role === "TENANT" && (
                   <div className="form-span-2">
                     <label className="field-label">
                       Gắn với khách thuê (người được thuê)

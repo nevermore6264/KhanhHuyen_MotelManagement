@@ -141,6 +141,34 @@ a {
   font-size: 13px;
 }
 
+.service-price-intro {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-color: var(--blue-300);
+}
+
+.service-price-intro-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f3a6e;
+}
+
+.service-price-intro-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.service-price-intro-list li {
+  margin-bottom: 8px;
+}
+
+.service-price-intro-list li:last-child {
+  margin-bottom: 0;
+}
+
 .form-card {
   background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
 }
@@ -168,6 +196,15 @@ a {
   color: #ef4444;
   margin-left: 4px;
   font-weight: 700;
+}
+
+.readonly-field {
+  padding: 10px 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 14px;
 }
 
 .form-actions {

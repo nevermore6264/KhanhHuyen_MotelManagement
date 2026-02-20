@@ -143,19 +143,39 @@ export default function ServicePricesPage() {
       <NavBar />
       <div className="container">
         <h2>Bảng giá dịch vụ</h2>
+        <div className="card service-price-intro">
+          <p className="service-price-intro-title">
+            Màn hình này dùng để làm gì?
+          </p>
+          <ul className="service-price-intro-list">
+            <li>
+              <strong>Giá điện (VNĐ/kWh) và giá nước (VNĐ/m³)</strong> — Dùng để
+              tính tiền điện, nước trong hóa đơn khi bạn nhập số công tơ (ở mục{" "}
+              <strong>Ghi số điện nước</strong> hoặc khi lập hóa đơn). Hệ thống
+              sẽ chọn bảng giá có <strong>ngày hiệu lực</strong> phù hợp với
+              tháng tính tiền.
+            </li>
+            <li>
+              <strong>Giá phòng</strong> — Không cấu hình ở đây. Giá thuê phòng
+              được đặt theo từng phòng trong mục <strong>Phòng</strong> (khi
+              thêm/sửa phòng).
+            </li>
+          </ul>
+        </div>
         <div className="card">
           <div className="grid grid-2">
             <div>
               <h3>Bảng giá hiện hành</h3>
               <p className="card-subtitle">
-                Cập nhật đơn giá điện, nước theo kỳ (giá phòng cấu hình theo
-                từng phòng).
+                {items.length === 0
+                  ? "Chưa có giá. Bấm bên phải để thiết lập giá điện và giá nước (chỉ cần một bộ giá)."
+                  : "Chỉ cần một bộ giá điện + giá nước. Dùng Sửa để cập nhật, không cần thêm bản ghi mới."}
               </p>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              {isAdmin && (
+              {isAdmin && items.length === 0 && (
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  Thêm bảng giá
+                  Thiết lập giá điện & nước
                 </button>
               )}
             </div>
@@ -201,13 +221,15 @@ export default function ServicePricesPage() {
                           >
                             Sửa
                           </button>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-secondary"
-                            onClick={() => deleteItem(i.id)}
-                          >
-                            Xóa
-                          </button>
+                          {items.length > 1 && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              onClick={() => deleteItem(i.id)}
+                            >
+                              Xóa
+                            </button>
+                          )}
                         </span>
                       ),
                     },
