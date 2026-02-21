@@ -87,15 +87,6 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [roomId, setRoomId] = useState("");
-  const [tenantId, setTenantId] = useState("");
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-  const [roomCost, setRoomCost] = useState("");
-  const [electricityCost, setElectricityCost] = useState("");
-  const [waterCost, setWaterCost] = useState("");
-  const [error, setError] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRoomId, setFilterRoomId] = useState("");
   const [remindingId, setRemindingId] = useState<number | null>(null);
@@ -104,6 +95,7 @@ export default function InvoicesPage() {
   const [viewDetailInvoice, setViewDetailInvoice] = useState<Invoice | null>(
     null,
   );
+  const [generating, setGenerating] = useState(false);
   const role = getRole();
   const isTenant = role === "TENANT";
   const isAdmin = role === "ADMIN";
@@ -186,44 +178,27 @@ export default function InvoicesPage() {
     return list;
   }, [invoices, filterStatus, filterRoomId]);
 
-  const create = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roomId || !tenantId) {
-      setError("Vui lòng chọn phòng và khách thuê");
-      return;
+  const runGenerateInvoices = async () => {
+    setGenerating(true);
+    try {
+      const res = await api.post<{ message?: string; created?: number }>(
+        "/invoices/generate",
+      );
+      notify(res.data?.message ?? "Đã chạy sinh hóa đơn.", "success");
+      load();
+    } catch (err: unknown) {
+      const ax = err as {
+        response?: { status?: number; data?: { message?: string } };
+      };
+      const msg =
+        ax?.response?.data?.message ||
+        (ax?.response?.status === 403
+          ? "Bạn không có quyền thao tác."
+          : "Sinh hóa đơn thất bại.");
+      notify(msg, "error");
+    } finally {
+      setGenerating(false);
     }
-    if (!month || !year) {
-      setError("Vui lòng nhập tháng và năm");
-      return;
-    }
-    if (!roomCost || !electricityCost || !waterCost) {
-      setError("Vui lòng nhập đầy đủ tiền phòng, điện, nước");
-      return;
-    }
-    setError("");
-    await api.post("/invoices", {
-      room: roomId ? { id: Number(roomId) } : null,
-      tenant: tenantId ? { id: Number(tenantId) } : null,
-      month: Number(month),
-      year: Number(year),
-      roomCost: roomCost ? Number(roomCost) : null,
-      electricityCost: electricityCost ? Number(electricityCost) : null,
-      waterCost: waterCost ? Number(waterCost) : null,
-      total:
-        Number(roomCost || 0) +
-          Number(electricityCost || 0) +
-          Number(waterCost || 0) || 0,
-    });
-    notify("Tạo hóa đơn thành công", "success");
-    setRoomId("");
-    setTenantId("");
-    setMonth("");
-    setYear("");
-    setRoomCost("");
-    setElectricityCost("");
-    setWaterCost("");
-    setShowCreate(false);
-    load();
   };
 
   return (
@@ -232,19 +207,30 @@ export default function InvoicesPage() {
       <div className="container">
         <h2>Hóa đơn</h2>
         <div className="card">
-          <div className="grid grid-2">
-            <div>
-              <h3>Danh sách hóa đơn</h3>
-              <p className="card-subtitle">Theo dõi thanh toán theo kỳ.</p>
-            </div>
-            {isAdmin && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button className="btn" onClick={() => setShowCreate(true)}>
-                  Tạo hóa đơn
-                </button>
-              </div>
-            )}
+          <div>
+            <h3>Danh sách hóa đơn</h3>
+            <p className="card-subtitle">Theo dõi thanh toán theo kỳ.</p>
           </div>
+          {!isTenant && (
+            <div className="invoice-job-note">
+              <span>
+                Hóa đơn được <strong>sinh tự động</strong> bởi hệ thống (job
+                chạy đầu mỗi tháng) theo hợp đồng đang active và số điện nước.
+                Nhập chỉ số điện nước tại mục <strong>Điện nước</strong>, hệ
+                thống sẽ cập nhật tiền vào hóa đơn tương ứng.
+              </span>
+              {(isAdmin || role === "STAFF") && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={runGenerateInvoices}
+                  disabled={generating}
+                >
+                  {generating ? "Đang sinh…" : "Sinh hóa đơn ngay"}
+                </button>
+              )}
+            </div>
+          )}
           {!isAdmin && (
             <div className="form-error" style={{ marginTop: 12 }}>
               {isTenant
@@ -443,130 +429,6 @@ export default function InvoicesPage() {
             ]}
           />
         </div>
-
-        {showCreate && isAdmin && (
-          <div className="modal-backdrop">
-            <div className="modal-card form-card">
-              <div className="card-header">
-                <div>
-                  <h3>Tạo hóa đơn</h3>
-                  <p className="card-subtitle">Chọn phòng, khách và chi phí</p>
-                </div>
-              </div>
-              <form onSubmit={create} className="form-grid">
-                <div>
-                  <label className="field-label">
-                    Phòng <span className="required">*</span>
-                  </label>
-                  <select
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
-                  >
-                    <option value="">Chọn phòng</option>
-                    {rooms.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.code}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">
-                    Khách thuê <span className="required">*</span>
-                  </label>
-                  <select
-                    value={tenantId}
-                    onChange={(e) => setTenantId(e.target.value)}
-                  >
-                    <option value="">Chọn khách thuê</option>
-                    {tenants.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {tenantOptionLabel(t)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">
-                    Tháng <span className="required">*</span>
-                  </label>
-                  <input
-                    placeholder="Tháng"
-                    inputMode="numeric"
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">
-                    Năm <span className="required">*</span>
-                  </label>
-                  <input
-                    placeholder="Năm"
-                    inputMode="numeric"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">
-                    Tiền phòng <span className="required">*</span>
-                  </label>
-                  <div className="input-suffix">
-                    <input
-                      placeholder="Tiền phòng"
-                      inputMode="numeric"
-                      value={roomCost}
-                      onChange={(e) => setRoomCost(e.target.value)}
-                    />
-                    <span>VNĐ</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="field-label">
-                    Tiền điện <span className="required">*</span>
-                  </label>
-                  <div className="input-suffix">
-                    <input
-                      placeholder="Tiền điện"
-                      inputMode="numeric"
-                      value={electricityCost}
-                      onChange={(e) => setElectricityCost(e.target.value)}
-                    />
-                    <span>VNĐ</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="field-label">
-                    Tiền nước <span className="required">*</span>
-                  </label>
-                  <div className="input-suffix">
-                    <input
-                      placeholder="Tiền nước"
-                      inputMode="numeric"
-                      value={waterCost}
-                      onChange={(e) => setWaterCost(e.target.value)}
-                    />
-                    <span>VNĐ</span>
-                  </div>
-                </div>
-                {error && <div className="form-error">{error}</div>}
-                <div className="form-actions">
-                  <button
-                    className="btn btn-secondary"
-                    type="button"
-                    onClick={() => setShowCreate(false)}
-                  >
-                    Hủy
-                  </button>
-                  <button className="btn" type="submit">
-                    Tạo hóa đơn
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {viewDetailInvoice && (
           <div className="modal-backdrop">

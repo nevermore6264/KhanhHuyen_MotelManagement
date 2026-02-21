@@ -15,6 +15,8 @@ type Tenant = {
   idNumber?: string;
   address?: string;
   email?: string;
+  portraitImagePath?: string;
+  idCardImagePath?: string;
   user?: { id: number; username: string };
 };
 type User = { id: number; username: string; role: string };
@@ -74,6 +76,10 @@ export default function TenantsPage() {
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newUserError, setNewUserError] = useState("");
+  const [portraitFile, setPortraitFile] = useState<File | null>(null);
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [portraitPreview, setPortraitPreview] = useState<string | null>(null);
+  const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
@@ -145,22 +151,41 @@ export default function TenantsPage() {
     }
     setError("");
     try {
-      await api.post("/tenants", {
-        fullName: fullName.trim(),
-        phone: phone.trim() || null,
-        idNumber: idNumber.trim() || null,
-        address: address.trim() || null,
-        email: email.trim() || null,
-        userId: userId ? Number(userId) : null,
-      });
+      const hasFiles = portraitFile || idCardFile;
+      if (hasFiles) {
+        const formData = new FormData();
+        formData.append("fullName", fullName.trim());
+        formData.append("phone", phone.trim() || "");
+        formData.append("idNumber", idNumber.trim() || "");
+        formData.append("address", address.trim() || "");
+        formData.append("email", email.trim() || "");
+        if (userId) formData.append("userId", userId);
+        if (portraitFile) formData.append("portrait", portraitFile);
+        if (idCardFile) formData.append("idCard", idCardFile);
+        await api.post("/tenants", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        await api.post("/tenants", {
+          fullName: fullName.trim(),
+          phone: phone.trim() || null,
+          idNumber: idNumber.trim() || null,
+          address: address.trim() || null,
+          email: email.trim() || null,
+          userId: userId ? Number(userId) : null,
+        });
+      }
       notify("Thêm khách thuê thành công", "success");
     } catch (err: any) {
-      const message =
+      const data = err?.response?.data;
+      const msg =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
-          : "Thêm khách thuê thất bại";
-      setError(message);
-      notify(message, "error");
+          : typeof data === "string"
+            ? data
+            : "Thêm khách thuê thất bại";
+      setError(msg);
+      notify(msg, "error");
       return;
     }
     setFullName("");
@@ -170,8 +195,37 @@ export default function TenantsPage() {
     setEmail("");
     setUserId("");
     setUserQuery("");
+    setPortraitFile(null);
+    setIdCardFile(null);
+    setPortraitPreview(null);
+    setIdCardPreview(null);
     setShowCreate(false);
     load();
+  };
+
+  const onPortraitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (portraitPreview) URL.revokeObjectURL(portraitPreview);
+      setPortraitFile(file);
+      setPortraitPreview(URL.createObjectURL(file));
+    } else {
+      if (portraitPreview) URL.revokeObjectURL(portraitPreview);
+      setPortraitFile(null);
+      setPortraitPreview(null);
+    }
+  };
+  const onIdCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (idCardPreview) URL.revokeObjectURL(idCardPreview);
+      setIdCardFile(file);
+      setIdCardPreview(URL.createObjectURL(file));
+    } else {
+      if (idCardPreview) URL.revokeObjectURL(idCardPreview);
+      setIdCardFile(null);
+      setIdCardPreview(null);
+    }
   };
 
   const startEdit = (tenant: Tenant) => {
@@ -479,6 +533,34 @@ export default function TenantsPage() {
                     onChange={(e) => setAddress(e.target.value)}
                   />
                 </div>
+                <div>
+                  <label className="field-label">Ảnh chân dung</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={onPortraitChange}
+                    className="file-input"
+                  />
+                  {portraitPreview && (
+                    <div className="upload-preview">
+                      <img src={portraitPreview} alt="Chân dung" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="field-label">Ảnh CCCD/CMND</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={onIdCardChange}
+                    className="file-input"
+                  />
+                  {idCardPreview && (
+                    <div className="upload-preview">
+                      <img src={idCardPreview} alt="CCCD" />
+                    </div>
+                  )}
+                </div>
                 <div className="form-span-2">
                   <label className="field-label">Gán tài khoản</label>
                   <div className="account-picker">
@@ -510,7 +592,15 @@ export default function TenantsPage() {
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setShowCreate(false)}
+                    onClick={() => {
+                      if (portraitPreview) URL.revokeObjectURL(portraitPreview);
+                      if (idCardPreview) URL.revokeObjectURL(idCardPreview);
+                      setPortraitFile(null);
+                      setIdCardFile(null);
+                      setPortraitPreview(null);
+                      setIdCardPreview(null);
+                      setShowCreate(false);
+                    }}
                   >
                     Hủy
                   </button>

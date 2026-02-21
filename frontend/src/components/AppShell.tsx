@@ -22,12 +22,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
       <NotificationProvider>
-        {children}
-        {!isLogin && (
-          <footer className="main-footer">
-            © 2026 iTro • Hỗ trợ: support@motel.vn
-          </footer>
-        )}
+        <div className="app-shell-body">
+          <div className="app-shell-content">{children}</div>
+          {!isLogin && (
+            <footer className="main-footer">
+              © 2026 iTro • Hỗ trợ: support@motel.vn
+            </footer>
+          )}
+        </div>
       </NotificationProvider>
     </ToastProvider>
   );

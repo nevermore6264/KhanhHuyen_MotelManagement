@@ -17,6 +17,7 @@ type Area = {
 };
 
 export default function AreasPage() {
+  const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<Area[]>([]);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -31,9 +32,13 @@ export default function AreasPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editError, setEditError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const role = getRole();
+  const role = mounted ? getRole() : null;
   const isAdmin = role === "ADMIN";
   const { notify } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const load = async () => {
     const res = await api.get("/areas");
@@ -41,8 +46,8 @@ export default function AreasPage() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (mounted) load();
+  }, [mounted]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
