@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import ToastProvider from "./ToastProvider";
+import NotificationProvider from "./NotificationProvider";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,12 +21,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      {children}
-      {!isLogin && (
-        <footer className="main-footer">
-          © 2026 iTro • Hỗ trợ: support@motel.vn
-        </footer>
-      )}
+      <NotificationProvider>
+        {children}
+        {!isLogin && (
+          <footer className="main-footer">
+            © 2026 iTro • Hỗ trợ: support@motel.vn
+          </footer>
+        )}
+      </NotificationProvider>
     </ToastProvider>
   );
 }

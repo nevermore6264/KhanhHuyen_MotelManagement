@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
+import { useNotification } from "./NotificationProvider";
 
 type MenuItem = { label: string; href: string };
 type MenuGroup = { label: string; href?: string; items?: MenuItem[] };
@@ -89,11 +90,15 @@ export default function NavBar() {
   const router = useRouter();
   const [role, setRole] = useState("ADMIN");
   const [name, setName] = useState("User");
+  const notificationContext = useNotification();
 
   useEffect(() => {
     setRole(getRole() || "ADMIN");
     setName(getName() || "User");
   }, []);
+
+  const showBell = role === "TENANT" || role === "STAFF";
+  const unreadCount = notificationContext?.unreadCount ?? 0;
 
   const logout = () => {
     clearAuth();
@@ -132,6 +137,37 @@ export default function NavBar() {
         </div>
 
         <div className="nav-actions">
+          {showBell && (
+            <Link
+              href="/notifications"
+              className="nav-bell"
+              title="Thông báo"
+              aria-label={
+                unreadCount > 0
+                  ? `${unreadCount} thông báo chưa đọc`
+                  : "Thông báo"
+              }
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="nav-bell-badge" aria-hidden="true">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
           <span className="nav-user">
             {name} ({role})
           </span>

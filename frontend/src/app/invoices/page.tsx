@@ -29,6 +29,10 @@ type Invoice = {
   status?: string;
   lastReminderEmailAt?: string | null;
   lastReminderSmsAt?: string | null;
+  reminderEmailCount?: number;
+  reminderSmsCount?: number;
+  lastReminderEmailMessage?: string | null;
+  lastReminderSmsMessage?: string | null;
 };
 
 const formatMoney = (n?: number | null) => {
@@ -95,6 +99,11 @@ export default function InvoicesPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRoomId, setFilterRoomId] = useState("");
   const [remindingId, setRemindingId] = useState<number | null>(null);
+  const [viewReminderInvoice, setViewReminderInvoice] =
+    useState<Invoice | null>(null);
+  const [viewDetailInvoice, setViewDetailInvoice] = useState<Invoice | null>(
+    null,
+  );
   const role = getRole();
   const isTenant = role === "TENANT";
   const isAdmin = role === "ADMIN";
@@ -296,20 +305,27 @@ export default function InvoicesPage() {
                 render: (i: Invoice) => `${i.month}/${i.year}`,
               },
               {
-                header: "Tiền phòng",
-                render: (i: Invoice) => formatMoney(i.roomCost),
-              },
-              {
-                header: "Tiền điện",
-                render: (i: Invoice) => formatMoney(i.electricityCost),
-              },
-              {
-                header: "Tiền nước",
-                render: (i: Invoice) => formatMoney(i.waterCost),
-              },
-              {
                 header: "Tổng",
-                render: (i: Invoice) => formatMoney(i.total),
+                render: (i: Invoice) => (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    {formatMoney(i.total)}
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      style={{ padding: "2px 8px" }}
+                      onClick={() => setViewDetailInvoice(i)}
+                      title="Xem chi tiết các khoản"
+                    >
+                      Xem chi tiết
+                    </button>
+                  </span>
+                ),
               },
               {
                 header: "Trạng thái",
@@ -330,13 +346,38 @@ export default function InvoicesPage() {
                   const smsAt = i.lastReminderSmsAt
                     ? formatReminderDate(i.lastReminderSmsAt)
                     : "";
-                  if (!emailAt && !smsAt) return "—";
-                  const parts: string[] = [];
-                  if (emailAt) parts.push(`Email ✓ ${emailAt}`);
-                  if (smsAt) parts.push(`SMS ✓ ${smsAt}`);
+                  const emailCount = i.reminderEmailCount ?? 0;
+                  const smsCount = i.reminderSmsCount ?? 0;
+                  const hasAny =
+                    emailAt || smsAt || emailCount > 0 || smsCount > 0;
+                  if (!hasAny) return "—";
                   return (
-                    <span style={{ whiteSpace: "nowrap" }}>
-                      {parts.join(" · ")}
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        gap: 2,
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      {emailAt && (
+                        <span style={{ whiteSpace: "nowrap" }}>
+                          Email: lần {emailCount || 1} ({emailAt})
+                        </span>
+                      )}
+                      {smsAt && (
+                        <span style={{ whiteSpace: "nowrap" }}>
+                          SMS: lần {smsCount || 1} ({smsAt})
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        style={{ marginTop: 4, padding: "2px 8px" }}
+                        onClick={() => setViewReminderInvoice(i)}
+                      >
+                        Xem nội dung đã gửi
+                      </button>
                     </span>
                   );
                 },
@@ -523,6 +564,172 @@ export default function InvoicesPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {viewDetailInvoice && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card">
+              <div className="card-header">
+                <div>
+                  <h3>Chi tiết các khoản</h3>
+                  <p className="card-subtitle">
+                    Hóa đơn phòng {viewDetailInvoice.room?.code} —{" "}
+                    {viewDetailInvoice.month}/{viewDetailInvoice.year}
+                  </p>
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <span>Tiền phòng</span>
+                  <strong>{formatMoney(viewDetailInvoice.roomCost)}</strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <span>Tiền điện</span>
+                  <strong>
+                    {formatMoney(viewDetailInvoice.electricityCost)}
+                  </strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <span>Tiền nước</span>
+                  <strong>{formatMoney(viewDetailInvoice.waterCost)}</strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 0 0",
+                    fontSize: "1.05rem",
+                    fontWeight: 700,
+                    color: "#102a5c",
+                  }}
+                >
+                  <span>Tổng</span>
+                  <strong>{formatMoney(viewDetailInvoice.total)}</strong>
+                </div>
+              </div>
+              <div className="modal-actions" style={{ marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setViewDetailInvoice(null)}
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {viewReminderInvoice && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card">
+              <div className="card-header">
+                <div>
+                  <h3>Nội dung nhắc nợ đã gửi</h3>
+                  <p className="card-subtitle">
+                    Hóa đơn phòng {viewReminderInvoice.room?.code} —{" "}
+                    {viewReminderInvoice.month}/{viewReminderInvoice.year}
+                  </p>
+                </div>
+              </div>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              >
+                {viewReminderInvoice.lastReminderEmailAt && (
+                  <div>
+                    <div className="field-label" style={{ marginBottom: 6 }}>
+                      Email — lần thứ{" "}
+                      {viewReminderInvoice.reminderEmailCount ?? 1} (gửi{" "}
+                      {formatReminderDate(
+                        viewReminderInvoice.lastReminderEmailAt,
+                      )}
+                      )
+                    </div>
+                    <div
+                      className="readonly-field"
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        maxHeight: 200,
+                        overflowY: "auto",
+                      }}
+                    >
+                      {viewReminderInvoice.lastReminderEmailMessage?.trim() ||
+                        "Không lưu nội dung."}
+                    </div>
+                  </div>
+                )}
+                {viewReminderInvoice.lastReminderSmsAt && (
+                  <div>
+                    <div className="field-label" style={{ marginBottom: 6 }}>
+                      SMS — lần thứ {viewReminderInvoice.reminderSmsCount ?? 1}{" "}
+                      (gửi{" "}
+                      {formatReminderDate(
+                        viewReminderInvoice.lastReminderSmsAt,
+                      )}
+                      )
+                    </div>
+                    <div
+                      className="readonly-field"
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        maxHeight: 120,
+                        overflowY: "auto",
+                      }}
+                    >
+                      {viewReminderInvoice.lastReminderSmsMessage?.trim() ||
+                        "Không lưu nội dung."}
+                    </div>
+                  </div>
+                )}
+                {!viewReminderInvoice.lastReminderEmailAt &&
+                  !viewReminderInvoice.lastReminderSmsAt && (
+                    <p className="card-subtitle">
+                      Chưa có lịch sử nhắc nợ (dữ liệu cũ).
+                    </p>
+                  )}
+              </div>
+              <div className="modal-actions" style={{ marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setViewReminderInvoice(null)}
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
@@ -211,6 +212,17 @@ export default function AreasPage() {
                   <span className="table-ellipsis" title={r.description || ""}>
                     {r.description || ""}
                   </span>
+                ),
+              },
+              {
+                header: "Phòng",
+                render: (r: Area) => (
+                  <Link
+                    href={`/rooms?areaId=${r.id}`}
+                    className="btn btn-secondary"
+                  >
+                    Xem phòng
+                  </Link>
                 ),
               },
               ...(isAdmin

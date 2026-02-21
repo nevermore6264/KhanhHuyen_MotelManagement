@@ -128,6 +128,12 @@ a {
   animation: cardRise 0.35s ease-out both;
 }
 
+.card-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .card-header {
   display: flex;
   align-items: center;
@@ -1930,6 +1936,39 @@ tbody tr:hover {
   align-items: center;
   gap: 12px;
   white-space: nowrap;
+}
+
+.nav-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e6efff;
+  padding: 6px;
+  border-radius: 8px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.nav-bell:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.nav-bell-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: #fff;
+  background: #e53935;
+  border-radius: 8px;
 }
 
 .nav-user {

@@ -81,6 +81,7 @@ public class InvoiceReminderService {
             log.info("Reminder EMAIL: invoiceId={}, to={}, room={}, period={}/{}",
                     invoiceId, toEmail, roomCode, invoice.getMonth(), invoice.getYear());
 
+            String body = buildReminderBody(invoice);
             if (javaMailSender != null) {
                 try {
                     MimeMessage message = javaMailSender.createMimeMessage();
@@ -89,7 +90,7 @@ public class InvoiceReminderService {
                     helper.setTo(toEmail.trim());
                     helper.setSubject(String.format("Nhắc nợ - Hóa đơn phòng %s kỳ %d/%d",
                             roomCode != null ? roomCode : "", invoice.getMonth(), invoice.getYear()));
-                    helper.setText(buildReminderBody(invoice), false);
+                    helper.setText(body, false);
                     javaMailSender.send(message);
                     log.info("Email sent to {}", toEmail);
                 } catch (MessagingException e) {
@@ -99,6 +100,8 @@ public class InvoiceReminderService {
             }
 
             invoice.setLastReminderEmailAt(LocalDateTime.now());
+            invoice.setReminderEmailCount(invoice.getReminderEmailCount() + 1);
+            invoice.setLastReminderEmailMessage(body);
             invoiceRepository.save(invoice);
             return Optional.empty();
         } else {
@@ -109,12 +112,15 @@ public class InvoiceReminderService {
             log.info("Reminder SMS: invoiceId={}, to={}, room={}, period={}/{}",
                     invoiceId, toPhone, roomCode, invoice.getMonth(), invoice.getYear());
 
-            boolean sent = smsSender.send(toPhone.trim(), buildReminderSmsText(invoice));
+            String smsText = buildReminderSmsText(invoice);
+            boolean sent = smsSender.send(toPhone.trim(), smsText);
             if (!sent && smsSender.isConfigured()) {
                 return Optional.of("Gửi SMS thất bại. Kiểm tra cấu hình gateway.");
             }
 
             invoice.setLastReminderSmsAt(LocalDateTime.now());
+            invoice.setReminderSmsCount(invoice.getReminderSmsCount() + 1);
+            invoice.setLastReminderSmsMessage(smsText);
             invoiceRepository.save(invoice);
             return Optional.empty();
         }

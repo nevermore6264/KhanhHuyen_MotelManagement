@@ -51,6 +51,20 @@ public class Invoice {
     /** Thời điểm gửi nhắc nợ qua email gần nhất (null = chưa gửi). */
     private LocalDateTime lastReminderEmailAt;
 
+    /** Số lần đã gửi nhắc nợ qua email. */
+    private int reminderEmailCount;
+
+    /** Nội dung email nhắc nợ gần nhất (để hiển thị lại). */
+    @Column(length = 2000)
+    private String lastReminderEmailMessage;
+
     /** Thời điểm gửi nhắc nợ qua SMS gần nhất (null = chưa gửi). */
     private LocalDateTime lastReminderSmsAt;
+
+    /** Số lần đã gửi nhắc nợ qua SMS. */
+    private int reminderSmsCount;
+
+    /** Nội dung SMS nhắc nợ gần nhất (để hiển thị lại). */
+    @Column(length = 500)
+    private String lastReminderSmsMessage;
 }

@@ -64,11 +64,24 @@ export default function SupportRequestsPage() {
 
   const updateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedId) return;
-    await api.put(`/support-requests/${selectedId}`, { status });
-    setSelectedId("");
-    setStatus("OPEN");
-    load();
+    if (!selectedId || !selectedId.trim()) {
+      notify("Vui lòng nhập ID yêu cầu", "error");
+      return;
+    }
+    try {
+      await api.put(`/support-requests/${selectedId.trim()}`, { status });
+      notify("Đã cập nhật trạng thái", "success");
+      setSelectedId("");
+      setStatus("OPEN");
+      load();
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const message =
+        ax?.response?.status === 404
+          ? "Không tìm thấy yêu cầu với ID này"
+          : "Cập nhật thất bại";
+      notify(message, "error");
+    }
   };
 
   const markResolved = async (req: SupportRequest) => {

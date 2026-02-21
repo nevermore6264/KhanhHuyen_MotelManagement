@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
@@ -79,9 +81,21 @@ export default function RoomsPage() {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [confirmName, setConfirmName] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [areaIdFromUrl, setAreaIdFromUrl] = useState<number | null>(null);
   const role = getRole();
   const isAdmin = role === "ADMIN";
+  const searchParams = useSearchParams();
   const { notify } = useToast();
+
+  useEffect(() => {
+    const areaIdParam = searchParams.get("areaId");
+    if (areaIdParam) {
+      const id = Number(areaIdParam);
+      setAreaIdFromUrl(Number.isNaN(id) ? null : id);
+    } else {
+      setAreaIdFromUrl(null);
+    }
+  }, [searchParams]);
 
   const load = async () => {
     const [roomRes, areaRes] = await Promise.all([
@@ -242,8 +256,16 @@ export default function RoomsPage() {
         room.status?.toLowerCase().includes(q) ||
         room.area?.name?.toLowerCase().includes(q);
     const matchesStatus = statusFilter ? room.status === statusFilter : true;
-    return matchesQuery && matchesStatus;
+    const matchesArea =
+      areaIdFromUrl == null ? true : room.area?.id === areaIdFromUrl;
+    return matchesQuery && matchesStatus && matchesArea;
   });
+
+  const areaFilterName =
+    areaIdFromUrl != null
+      ? (areas.find((a) => a.id === areaIdFromUrl)?.name ??
+        `Khu #${areaIdFromUrl}`)
+      : null;
 
   const isEditLocked = editing ? isLockedStatus(editing.status) : false;
 
@@ -252,6 +274,20 @@ export default function RoomsPage() {
       <NavBar />
       <div className="container">
         <h2>Quản lý phòng</h2>
+        {areaFilterName && (
+          <div className="card card-inline" style={{ marginBottom: 12 }}>
+            <span>
+              Đang xem phòng thuộc khu: <strong>{areaFilterName}</strong>
+            </span>
+            <Link
+              href="/rooms"
+              className="btn btn-secondary btn-sm"
+              style={{ marginLeft: 12 }}
+            >
+              Xem tất cả phòng
+            </Link>
+          </div>
+        )}
         <div className="card">
           <div className="grid grid-3">
             <input
