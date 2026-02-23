@@ -1,27 +1,47 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import ProtectedPage from '@/components/ProtectedPage';
-import NavBar from '@/components/NavBar';
-import SimpleTable from '@/components/SimpleTable';
-import api from '@/lib/api';
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import ProtectedPage from "@/components/ProtectedPage";
+import NavBar from "@/components/NavBar";
+import SimpleTable from "@/components/SimpleTable";
+import api from "@/lib/api";
 
 type Invoice = { id: number; month: number; year: number };
 type Payment = { id: number; amount: number; method: string; paidAt: string };
 
+const formatVND = (value?: number | null) => {
+  if (value == null || Number.isNaN(Number(value))) return "—";
+  return new Intl.NumberFormat("vi-VN").format(Number(value)) + " đ";
+};
+
 export default function MyPaymentsPage() {
+  const searchParams = useSearchParams();
+  const appliedUrlRef = useRef(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [invoiceId, setInvoiceId] = useState('');
+  const [invoiceId, setInvoiceId] = useState("");
 
   useEffect(() => {
-    api.get('/invoices/me').then((res) => setInvoices(res.data));
+    api.get("/invoices/me").then((res) => setInvoices(res.data || []));
   }, []);
+
+  useEffect(() => {
+    if (appliedUrlRef.current || invoices.length === 0) return;
+    const fromUrl = searchParams.get("invoice");
+    if (!fromUrl) return;
+    const id = String(fromUrl);
+    if (invoices.some((i) => String(i.id) === id)) {
+      appliedUrlRef.current = true;
+      setInvoiceId(id);
+      api.get(`/payments/invoice/${id}`).then((res) => setPayments(res.data || []));
+    }
+  }, [searchParams, invoices]);
 
   const loadPayments = async (id: string) => {
     if (!id) return;
     const res = await api.get(`/payments/invoice/${id}`);
-    setPayments(res.data);
+    setPayments(res.data || []);
   };
 
   return (
@@ -42,9 +62,9 @@ export default function MyPaymentsPage() {
             data={payments}
             columns={[
               { header: 'ID', render: (p) => p.id },
-              { header: 'Số tiền', render: (p) => p.amount },
-              { header: 'Hình thức', render: (p) => p.method },
-              { header: 'Ngày', render: (p) => p.paidAt }
+              { header: "Số tiền", render: (p) => formatVND(p.amount) },
+              { header: "Hình thức", render: (p) => p.method === "TRANSFER" ? "Chuyển khoản" : p.method === "CASH" ? "Tiền mặt" : p.method },
+              { header: "Ngày", render: (p) => p.paidAt ? new Date(p.paidAt).toLocaleDateString("vi-VN") : "—" }
             ]}
           />
         </div>

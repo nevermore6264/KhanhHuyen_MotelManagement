@@ -1,17 +1,32 @@
 package com.motelmanagement.controller;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.motelmanagement.domain.Invoice;
 import com.motelmanagement.domain.InvoiceStatus;
 import com.motelmanagement.domain.Payment;
+import com.motelmanagement.domain.Tenant;
+import com.motelmanagement.domain.User;
 import com.motelmanagement.repository.InvoiceRepository;
 import com.motelmanagement.repository.PaymentRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import com.motelmanagement.repository.TenantRepository;
+import com.motelmanagement.service.CurrentUserService;
+import com.motelmanagement.service.PayOSService;
 
-import java.math.BigDecimal;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,11 +34,62 @@ import java.util.List;
 public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final InvoiceRepository invoiceRepository;
+    private final TenantRepository tenantRepository;
+    private final CurrentUserService currentUserService;
+    private final PayOSService payOSService;
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('TENANT')")
+    public List<Payment> myRecentPayments(@RequestParam(defaultValue = "10") int limit) {
+        User user = currentUserService.getCurrentUser();
+        if (user == null) return List.of();
+        Tenant tenant = tenantRepository.findByUserId(user.getId());
+        if (tenant == null) return List.of();
+        int size = Math.min(Math.max(1, limit), 50);
+        return paymentRepository.findByInvoice_Tenant_IdOrderByPaidAtDesc(
+                tenant.getId(), PageRequest.of(0, size));
+    }
 
     @GetMapping("/invoice/{invoiceId}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
     public List<Payment> listByInvoice(@PathVariable("invoiceId") Long invoiceId) {
         return paymentRepository.findByInvoiceId(invoiceId);
+    }
+
+    /** Tạo link thanh toán PayOS (tenant chỉ được tạo cho hóa đơn của mình). */
+    @PostMapping("/create-payment-url")
+    @PreAuthorize("hasRole('TENANT')")
+    public ResponseEntity<Map<String, String>> createPaymentUrl(@RequestBody Map<String, Object> body) {
+        Object idObj = body != null ? body.get("invoiceId") : null;
+        if (idObj == null) return ResponseEntity.badRequest().build();
+        long invoiceId;
+        if (idObj instanceof Number) {
+            invoiceId = ((Number) idObj).longValue();
+        } else {
+            try {
+                invoiceId = Long.parseLong(idObj.toString());
+            } catch (NumberFormatException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        User user = currentUserService.getCurrentUser();
+        if (user == null) return ResponseEntity.status(403).build();
+        Tenant tenant = tenantRepository.findByUserId(user.getId());
+        if (tenant == null) return ResponseEntity.status(403).build();
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElse(null);
+        if (invoice == null || !invoice.getTenant().getId().equals(tenant.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+        String paymentUrl = payOSService.createPaymentLink(invoice);
+        if (paymentUrl == null) return ResponseEntity.badRequest().build();
+        return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
+    }
+
+    /** Webhook PayOS gửi kết quả thanh toán. Cho phép không đăng nhập. */
+    @PostMapping("/payos/webhook")
+    public ResponseEntity<Void> payosWebhook(@RequestBody String body) {
+        boolean ok = payOSService.verifyAndHandleWebhook(body);
+        return ok ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 
     @PostMapping

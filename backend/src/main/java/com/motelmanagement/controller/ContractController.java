@@ -46,6 +46,23 @@ public class ContractController {
         return contractRepository.findByTenantId(tenant.getId());
     }
 
+    @GetMapping("/me/{id}")
+    @PreAuthorize("hasRole('TENANT')")
+    public ResponseEntity<Contract> myContractById(@PathVariable("id") Long id) {
+        User user = currentUserService.getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Tenant tenant = tenantRepository.findByUserId(user.getId());
+        if (tenant == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return contractRepository.findById(id)
+                .filter(c -> c.getTenant() != null && c.getTenant().getId().equals(tenant.getId()))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Contract> create(@RequestBody Contract contract) {

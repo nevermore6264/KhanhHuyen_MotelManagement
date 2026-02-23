@@ -84,6 +84,7 @@ const invoiceStatusBadge = (value?: string) => {
 };
 
 export default function InvoicesPage() {
+  const [mounted, setMounted] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -96,11 +97,15 @@ export default function InvoicesPage() {
     null,
   );
   const [generating, setGenerating] = useState(false);
-  const role = getRole();
+  const role = mounted ? getRole() : null;
   const isTenant = role === "TENANT";
   const isAdmin = role === "ADMIN";
   const canRemind = (isAdmin || role === "STAFF") && !isTenant;
   const { notify } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sendReminder = async (invoiceId: number, channel: "email" | "sms") => {
     setRemindingId(invoiceId);
@@ -164,8 +169,8 @@ export default function InvoicesPage() {
   };
 
   useEffect(() => {
-    load();
-  }, [role]);
+    if (mounted) load();
+  }, [mounted, role]);
 
   const filteredInvoices = useMemo(() => {
     let list = invoices;
@@ -219,7 +224,7 @@ export default function InvoicesPage() {
                 Nhập chỉ số điện nước tại mục <strong>Điện nước</strong>, hệ
                 thống sẽ cập nhật tiền vào hóa đơn tương ứng.
               </span>
-              {(isAdmin || role === "STAFF") && (
+              {mounted && (isAdmin || role === "STAFF") && (
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
