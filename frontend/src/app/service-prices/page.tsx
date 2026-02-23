@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconPlus,
+  IconPencil,
+  IconTrash,
+  IconTimes,
+  IconCheck,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -175,7 +182,7 @@ export default function ServicePricesPage() {
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               {isAdmin && items.length === 0 && (
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  Thiết lập giá điện & nước
+                  <IconPlus /> Thiết lập giá điện & nước
                 </button>
               )}
             </div>
@@ -219,7 +226,7 @@ export default function ServicePricesPage() {
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => startEdit(i)}
                           >
-                            Sửa
+                            <IconPencil /> Sửa
                           </button>
                           {items.length > 1 && (
                             <button
@@ -227,7 +234,7 @@ export default function ServicePricesPage() {
                               className="btn btn-sm btn-secondary"
                               onClick={() => deleteItem(i.id)}
                             >
-                              Xóa
+                              <IconTrash /> Xóa
                             </button>
                           )}
                         </span>
@@ -298,10 +305,10 @@ export default function ServicePricesPage() {
                     type="button"
                     onClick={() => setShowCreate(false)}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn" type="submit">
-                    Lưu bảng giá
+                    <IconCheck /> Lưu bảng giá
                   </button>
                 </div>
               </form>
@@ -372,10 +379,10 @@ export default function ServicePricesPage() {
                     type="button"
                     onClick={() => setEditing(null)}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn" type="submit">
-                    Lưu thay đổi
+                    <IconCheck /> Lưu thay đổi
                   </button>
                 </div>
               </form>

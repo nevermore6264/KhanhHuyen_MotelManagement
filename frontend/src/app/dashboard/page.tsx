@@ -16,6 +16,7 @@ import {
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
+import { IconReceipt, IconFile, IconHome, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 
@@ -115,22 +116,6 @@ const IconUser = () => (
     <circle cx="12" cy="7" r="4" />
   </svg>
 );
-const IconHome = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden
-  >
-    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
 const IconWallet = () => (
   <svg
     width="24"
@@ -146,22 +131,6 @@ const IconWallet = () => (
     <rect width="20" height="14" x="2" y="5" rx="2" />
     <path d="M2 10h20" />
     <path d="M12 15a2 2 0 0 0 2-2 2 2 0 0 0-2-2" />
-  </svg>
-);
-const IconReceipt = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden
-  >
-    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
-    <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
   </svg>
 );
 const IconChart = () => (
@@ -184,6 +153,7 @@ const IconChart = () => (
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const [vacant, setVacant] = useState(0);
   const [debt, setDebt] = useState(0);
   const [revenue, setRevenue] = useState(0);
@@ -195,6 +165,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(tick);
   }, []);
 
   useEffect(() => {
@@ -355,15 +330,39 @@ export default function DashboardPage() {
               <p>Hợp đồng thuê và thanh toán.</p>
               <div className="hero-actions">
                 <Link className="btn" href="/my-payments">
-                  Đến thanh toán
+                  <IconReceipt /> Đến thanh toán
                 </Link>
                 <Link className="btn btn-secondary" href="/my-contracts">
-                  Xem hợp đồng
+                  <IconFile /> Xem hợp đồng
                 </Link>
               </div>
             </div>
-            <div className="hero-pill">
-              {new Date().toLocaleDateString("vi-VN")}
+            <div className="hero-pill hero-pill-clock">
+              <span>{mounted ? now.toLocaleDateString("vi-VN") : "—"}</span>
+              <span className="hero-pill-time" suppressHydrationWarning>
+                {mounted
+                  ? now.toLocaleTimeString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
+                    })
+                  : "—:—:—"}
+              </span>
+            </div>
+          </div>
+
+          <div className="dashboard-slogan-marquee" aria-hidden>
+            <div className="dashboard-slogan-track">
+              <span>
+                🏠 Ngôi nhà thứ hai — Thuê an tâm, thanh toán dễ dàng ·{" "}
+              </span>
+              <span>
+                🏠 Ngôi nhà thứ hai — Thuê an tâm, thanh toán dễ dàng ·{" "}
+              </span>
+              <span>
+                🏠 Ngôi nhà thứ hai — Thuê an tâm, thanh toán dễ dàng ·{" "}
+              </span>
             </div>
           </div>
 
@@ -425,52 +424,52 @@ export default function DashboardPage() {
           </div>
 
           <div className="dashboard-tenant-section">
-          <div className="card" style={{ marginTop: "1.25rem" }}>
-            <h3 className="card-title">
-              <span className="card-title-icon">
-                <IconReceipt />
-              </span>
-              Lịch sử thanh toán gần đây
-            </h3>
-            {myPayments.length === 0 ? (
-              <p className="text-muted">Chưa có giao dịch thanh toán.</p>
-            ) : (
-              <div className="dashboard-payment-list-wrap">
-                <table className="dashboard-payment-table">
-                  <thead>
-                    <tr>
-                      <th>Kỳ</th>
-                      <th>Số tiền</th>
-                      <th>Hình thức</th>
-                      <th>Ngày thanh toán</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myPayments.map((p) => (
-                      <tr key={p.id}>
-                        <td>
-                          {p.invoice
-                            ? `Tháng ${p.invoice.month}/${p.invoice.year}`
-                            : "—"}
-                        </td>
-                        <td>{formatNumber(Number(p.amount))} đ</td>
-                        <td>{paymentMethodLabel(p.method)}</td>
-                        <td>{formatDateDMY(p.paidAt)}</td>
+            <div className="card" style={{ marginTop: "1.25rem" }}>
+              <h3 className="card-title">
+                <span className="card-title-icon">
+                  <IconReceipt />
+                </span>
+                Lịch sử thanh toán gần đây
+              </h3>
+              {myPayments.length === 0 ? (
+                <p className="text-muted">Chưa có giao dịch thanh toán.</p>
+              ) : (
+                <div className="dashboard-payment-list-wrap">
+                  <table className="dashboard-payment-table">
+                    <thead>
+                      <tr>
+                        <th>Kỳ</th>
+                        <th>Số tiền</th>
+                        <th>Hình thức</th>
+                        <th>Ngày thanh toán</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {myPayments.map((p) => (
+                        <tr key={p.id}>
+                          <td>
+                            {p.invoice
+                              ? `Tháng ${p.invoice.month}/${p.invoice.year}`
+                              : "—"}
+                          </td>
+                          <td>{formatNumber(Number(p.amount))} đ</td>
+                          <td>{paymentMethodLabel(p.method)}</td>
+                          <td>{formatDateDMY(p.paidAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div
+                className="dashboard-tenant-card-actions"
+                style={{ marginTop: 12 }}
+              >
+                <Link href="/my-payments" className="btn btn-secondary btn-sm">
+                  Xem tất cả thanh toán
+                </Link>
               </div>
-            )}
-            <div
-              className="dashboard-tenant-card-actions"
-              style={{ marginTop: 12 }}
-            >
-              <Link href="/my-payments" className="btn btn-secondary btn-sm">
-                Xem tất cả thanh toán
-              </Link>
             </div>
-          </div>
           </div>
         </div>
       </ProtectedPage>
@@ -487,15 +486,42 @@ export default function DashboardPage() {
             <p>Cập nhật nhanh tình hình vận hành nhà trọ hôm nay.</p>
             <div className="hero-actions">
               <Link className="btn" href="/rooms">
-                Quản lý phòng
+                <IconHome /> Quản lý phòng
               </Link>
               <Link className="btn btn-secondary" href="/contracts">
-                Tạo hợp đồng
+                <IconPlus /> Tạo hợp đồng
               </Link>
             </div>
           </div>
-          <div className="hero-pill">
-            {new Date().toLocaleDateString("vi-VN")}
+          <div className="hero-pill hero-pill-clock">
+            <span>{mounted ? now.toLocaleDateString("vi-VN") : "—"}</span>
+            <span className="hero-pill-time" suppressHydrationWarning>
+              {mounted
+                ? now.toLocaleTimeString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false,
+                  })
+                : "—:—:—"}
+            </span>
+          </div>
+        </div>
+
+        <div className="dashboard-slogan-marquee" aria-hidden>
+          <div className="dashboard-slogan-track">
+            <span>
+              iTro — Quản lý nhà trọ thông minh · Minh bạch · Chuyên nghiệp
+              ·{" "}
+            </span>
+            <span>
+              iTro — Quản lý nhà trọ thông minh · Minh bạch · Chuyên nghiệp
+              ·{" "}
+            </span>
+            <span>
+              iTro — Quản lý nhà trọ thông minh · Minh bạch · Chuyên nghiệp
+              ·{" "}
+            </span>
           </div>
         </div>
 

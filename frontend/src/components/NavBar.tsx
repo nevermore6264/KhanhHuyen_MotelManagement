@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { IconLogout } from "@/components/Icons";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
@@ -172,7 +173,7 @@ export default function NavBar() {
             {name} ({role})
           </span>
           <button className="btn btn-secondary" onClick={logout}>
-            Đăng xuất
+            <IconLogout /> Đăng xuất
           </button>
         </div>
       </div>

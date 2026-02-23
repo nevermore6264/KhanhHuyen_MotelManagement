@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import { IconPencil, IconTimes, IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -170,7 +171,7 @@ export default function PaymentsPage() {
                     className="btn btn-sm btn-outline-primary"
                     onClick={() => openUpdate(i)}
                   >
-                    Cập nhật thủ công
+                    <IconPencil /> Cập nhật thủ công
                   </button>
                 ),
               },
@@ -227,10 +228,16 @@ export default function PaymentsPage() {
                       setError("");
                     }}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button type="submit" className="btn" disabled={submitting}>
-                    {submitting ? "Đang ghi..." : "Ghi nhận"}
+                    {submitting ? (
+                      "Đang ghi..."
+                    ) : (
+                      <>
+                        <IconCheck /> Ghi nhận
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

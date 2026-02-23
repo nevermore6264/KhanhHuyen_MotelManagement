@@ -6,6 +6,14 @@ import { useSearchParams } from "next/navigation";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconPlus,
+  IconPencil,
+  IconTrash,
+  IconTimes,
+  IconCheck,
+  IconEye,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -284,7 +292,7 @@ export default function RoomsPage() {
               className="btn btn-secondary btn-sm"
               style={{ marginLeft: 12 }}
             >
-              Xem tất cả phòng
+              <IconEye /> Xem tất cả phòng
             </Link>
           </div>
         )}
@@ -307,7 +315,7 @@ export default function RoomsPage() {
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  Thêm phòng mới
+                  <IconPlus /> Thêm phòng mới
                 </button>
               </div>
             )}
@@ -353,7 +361,7 @@ export default function RoomsPage() {
                               className="btn"
                               onClick={() => startEdit(r)}
                             >
-                              Sửa
+                              <IconPencil /> Sửa
                             </button>
                             <button
                               className={`btn btn-secondary ${locked ? "btn-disabled" : ""}`}
@@ -364,7 +372,7 @@ export default function RoomsPage() {
                                   : undefined
                               }
                             >
-                              Xóa
+                              <IconTrash /> Xóa
                             </button>
                           </div>
                         );
@@ -455,10 +463,10 @@ export default function RoomsPage() {
                     type="button"
                     onClick={() => setShowCreate(false)}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn" type="submit">
-                    Thêm phòng
+                    <IconPlus /> Thêm phòng
                   </button>
                 </div>
               </form>
@@ -546,10 +554,10 @@ export default function RoomsPage() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={saveEdit}>
-                  Lưu
+                  <IconCheck /> Lưu
                 </button>
               </div>
             </div>
@@ -566,10 +574,10 @@ export default function RoomsPage() {
               </p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelRemove}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={confirmRemove}>
-                  Xóa
+                  <IconTrash /> Xóa
                 </button>
               </div>
             </div>

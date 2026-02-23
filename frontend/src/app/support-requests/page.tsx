@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import { IconEye, IconCheck, IconSend, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/ToastProvider";
 
@@ -128,7 +129,7 @@ export default function SupportRequestsPage() {
               <option value="CLOSED">Đã đóng</option>
             </select>
             <button className="btn" type="submit">
-              Cập nhật
+              <IconCheck /> Cập nhật
             </button>
           </form>
         </div>
@@ -153,13 +154,13 @@ export default function SupportRequestsPage() {
                 render: (r) => (
                   <div className="table-actions">
                     <button className="btn" onClick={() => setDetail(r)}>
-                      Xem mô tả
+                      <IconEye /> Xem mô tả
                     </button>
                     <button
                       className="btn btn-secondary"
                       onClick={() => markResolved(r)}
                     >
-                      Đã xử lý
+                      <IconCheck /> Đã xử lý
                     </button>
                     <button
                       className={`btn btn-secondary ${!r.tenant?.email ? "btn-disabled" : ""}`}
@@ -169,7 +170,7 @@ export default function SupportRequestsPage() {
                         !r.tenant?.email ? "Thiếu email khách thuê" : undefined
                       }
                     >
-                      Gửi mail
+                      <IconSend /> Gửi mail
                     </button>
                   </div>
                 ),
@@ -191,7 +192,7 @@ export default function SupportRequestsPage() {
                   className="btn btn-secondary"
                   onClick={() => setDetail(null)}
                 >
-                  Đóng
+                  <IconTimes /> Đóng
                 </button>
               </div>
             </div>

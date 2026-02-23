@@ -5,6 +5,14 @@ import Link from "next/link";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconPlus,
+  IconPencil,
+  IconTrash,
+  IconTimes,
+  IconCheck,
+  IconEye,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -14,6 +22,8 @@ type Area = {
   name: string;
   address?: string;
   description?: string;
+  roomCount?: number;
+  canDelete?: boolean;
 };
 
 export default function AreasPage() {
@@ -83,6 +93,10 @@ export default function AreasPage() {
   };
 
   const askRemove = (area: Area) => {
+    if (area.canDelete === false) {
+      notify("Khu còn phòng đang thuê, không thể xóa", "error");
+      return;
+    }
     setConfirmId(area.id);
     setConfirmName(area.name);
   };
@@ -142,16 +156,29 @@ export default function AreasPage() {
     if (confirmId == null) {
       return;
     }
+    const area = data.find((a) => a.id === confirmId);
+    if (area?.canDelete === false) {
+      notify("Khu còn phòng đang thuê, không thể xóa", "error");
+      setConfirmId(null);
+      setConfirmName("");
+      return;
+    }
     try {
       await api.delete(`/areas/${confirmId}`);
       notify("Xóa khu thành công", "success");
     } catch (err: any) {
       setConfirmId(null);
       setConfirmName("");
+      const status = err?.response?.status;
+      const data = err?.response?.data;
       const message =
-        err?.response?.status === 403
+        status === 403
           ? "Bạn không có quyền thao tác"
-          : "Xóa thất bại";
+          : status === 400 && (typeof data === "string" || data?.message)
+            ? typeof data === "string"
+              ? data
+              : data.message
+            : "Xóa thất bại";
       setError(message);
       notify(message, "error");
       return;
@@ -193,7 +220,7 @@ export default function AreasPage() {
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  Thêm khu mới
+                  <IconPlus /> Thêm khu mới
                 </button>
               </div>
             )}
@@ -220,13 +247,21 @@ export default function AreasPage() {
                 ),
               },
               {
+                header: "Số phòng",
+                render: (r: Area) => (
+                  <span>
+                    {typeof r.roomCount === "number" ? r.roomCount : "—"}
+                  </span>
+                ),
+              },
+              {
                 header: "Phòng",
                 render: (r: Area) => (
                   <Link
                     href={`/rooms?areaId=${r.id}`}
                     className="btn btn-secondary"
                   >
-                    Xem phòng
+                    <IconEye /> Xem phòng
                   </Link>
                 ),
               },
@@ -234,19 +269,30 @@ export default function AreasPage() {
                 ? [
                     {
                       header: "Thao tác",
-                      render: (r: Area) => (
-                        <div className="table-actions">
-                          <button className="btn" onClick={() => startEdit(r)}>
-                            Sửa
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => askRemove(r)}
-                          >
-                            Xóa
-                          </button>
-                        </div>
-                      ),
+                      render: (r: Area) => {
+                        const locked = r.canDelete === false;
+                        return (
+                          <div className="table-actions">
+                            <button
+                              className="btn"
+                              onClick={() => startEdit(r)}
+                            >
+                              <IconPencil /> Sửa
+                            </button>
+                            <button
+                              className={`btn btn-secondary ${locked ? "btn-disabled" : ""}`}
+                              onClick={() => askRemove(r)}
+                              title={
+                                locked
+                                  ? "Khu còn phòng đang thuê, không thể xóa"
+                                  : undefined
+                              }
+                            >
+                              <IconTrash /> Xóa
+                            </button>
+                          </div>
+                        );
+                      },
                     },
                   ]
                 : []),
@@ -264,10 +310,10 @@ export default function AreasPage() {
               </p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelRemove}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={confirmRemove}>
-                  Xóa
+                  <IconTrash /> Xóa
                 </button>
               </div>
             </div>
@@ -313,10 +359,10 @@ export default function AreasPage() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={saveEdit}>
-                  Lưu
+                  <IconCheck /> Lưu
                 </button>
               </div>
             </div>
@@ -370,10 +416,10 @@ export default function AreasPage() {
                     type="button"
                     onClick={() => setShowCreate(false)}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn" type="submit">
-                    Thêm khu
+                    <IconPlus /> Thêm khu
                   </button>
                 </div>
               </form>

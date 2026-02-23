@@ -4,6 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconPlus,
+  IconTimes,
+  IconCheck,
+  IconCalendar,
+  IconEye,
+  IconDownload,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -359,7 +367,7 @@ export default function ContractsPage() {
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  Tạo hợp đồng
+                  <IconPlus /> Tạo hợp đồng
                 </button>
               </div>
             )}
@@ -406,14 +414,14 @@ export default function ContractsPage() {
                       onClick={() => viewContractDoc(c)}
                       title="Xem nội dung hợp đồng"
                     >
-                      Xem
+                      <IconEye /> Xem
                     </button>
                     <button
                       className="btn btn-secondary"
                       onClick={() => downloadContractDoc(c)}
                       title="Tải file Word"
                     >
-                      Tải Word
+                      <IconDownload /> Tải Word
                     </button>
                   </div>
                 ),
@@ -425,13 +433,13 @@ export default function ContractsPage() {
                       render: (c: Contract) => (
                         <div className="table-actions">
                           <button className="btn" onClick={() => openExtend(c)}>
-                            Gia hạn
+                            <IconCalendar /> Gia hạn
                           </button>
                           <button
                             className="btn btn-secondary"
                             onClick={() => confirmEnd(c)}
                           >
-                            Kết thúc
+                            <IconTimes /> Kết thúc
                           </button>
                         </div>
                       ),
@@ -672,10 +680,10 @@ export default function ContractsPage() {
                     type="button"
                     onClick={() => setShowCreate(false)}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn btn-primary" type="submit">
-                    Tạo hợp đồng
+                    <IconPlus /> Tạo hợp đồng
                   </button>
                 </div>
               </form>
@@ -699,10 +707,10 @@ export default function ContractsPage() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelExtend}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={saveExtend}>
-                  Lưu
+                  <IconCheck /> Lưu
                 </button>
               </div>
             </div>
@@ -716,10 +724,10 @@ export default function ContractsPage() {
               <p>Bạn có chắc muốn kết thúc hợp đồng này?</p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEnd}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={endContract}>
-                  Kết thúc
+                  <IconTimes /> Kết thúc
                 </button>
               </div>
             </div>

@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconPlus,
+  IconPencil,
+  IconTrash,
+  IconTimes,
+  IconCheck,
+  IconLink,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -364,7 +372,7 @@ export default function UsersPage() {
                     loadTenants();
                   }}
                 >
-                  Tạo tài khoản
+                  <IconPlus /> Tạo tài khoản
                 </button>
               </div>
             )}
@@ -425,20 +433,28 @@ export default function UsersPage() {
                       render: (u: User) => (
                         <div className="table-actions">
                           <button className="btn" onClick={() => startEdit(u)}>
-                            Sửa
+                            <IconPencil /> Sửa
                           </button>
                           <button
                             className="btn btn-secondary"
                             onClick={() => openLinkModal(u)}
                             title="Gắn tài khoản với khách thuê"
                           >
-                            Gắn người dùng
+                            <IconLink /> Gắn người dùng
                           </button>
                           <button
                             className="btn btn-secondary"
                             onClick={() => toggleLock(u)}
                           >
-                            {u.active ? "Khóa" : "Mở"}
+                            {u.active ? (
+                              <>
+                                <IconTrash /> Khóa
+                              </>
+                            ) : (
+                              <>
+                                <IconCheck /> Mở
+                              </>
+                            )}
                           </button>
                         </div>
                       ),
@@ -522,10 +538,10 @@ export default function UsersPage() {
                     type="button"
                     onClick={() => setShowCreate(false)}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn" type="submit">
-                    Tạo tài khoản
+                    <IconPlus /> Tạo tài khoản
                   </button>
                 </div>
               </form>
@@ -598,10 +614,10 @@ export default function UsersPage() {
                         setLinkError("");
                       }}
                     >
-                      Hủy
+                      <IconTimes /> Hủy
                     </button>
                     <button className="btn" onClick={saveLinkTenant}>
-                      Lưu
+                      <IconCheck /> Lưu
                     </button>
                   </div>
                 </>
@@ -669,10 +685,10 @@ export default function UsersPage() {
                         setNewTenantError("");
                       }}
                     >
-                      Hủy
+                      <IconTimes /> Hủy
                     </button>
                     <button className="btn" type="submit">
-                      Tạo khách thuê và gắn
+                      <IconPlus /> Tạo khách thuê và gắn
                     </button>
                   </div>
                 </form>
@@ -740,10 +756,10 @@ export default function UsersPage() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={saveEdit}>
-                  Lưu
+                  <IconCheck /> Lưu
                 </button>
               </div>
             </div>

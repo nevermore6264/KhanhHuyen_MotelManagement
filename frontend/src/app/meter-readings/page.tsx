@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import { IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/ToastProvider";
 
@@ -291,7 +292,7 @@ export default function MeterReadingsPage() {
                 {error && <div className="form-error">{error}</div>}
                 <div className="form-actions">
                   <button className="btn" type="submit">
-                    Lưu chỉ số
+                    <IconCheck /> Lưu chỉ số
                   </button>
                 </div>
               </form>

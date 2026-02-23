@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import { IconEye, IconDownload, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
 import { buildContractDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
@@ -161,7 +162,7 @@ export default function MyContractsPage() {
                       onClick={() => viewContractDoc(c)}
                       title="Xem nội dung hợp đồng"
                     >
-                      Xem
+                      <IconEye /> Xem
                     </button>
                     <button
                       type="button"
@@ -169,7 +170,7 @@ export default function MyContractsPage() {
                       onClick={() => downloadContractDoc(c)}
                       title="Tải file Word"
                     >
-                      Tải Word
+                      <IconDownload /> Tải Word
                     </button>
                   </div>
                 ),
@@ -213,7 +214,7 @@ export default function MyContractsPage() {
                   }}
                   style={{ flexShrink: 0 }}
                 >
-                  Đóng
+                  <IconTimes /> Đóng
                 </button>
               </div>
               <div

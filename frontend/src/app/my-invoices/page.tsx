@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import { IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
 
 type Invoice = {
@@ -147,7 +148,13 @@ export default function MyInvoicesPage() {
                       disabled={payingId === i.id}
                       onClick={() => handlePay(i.id)}
                     >
-                      {payingId === i.id ? "Đang chuyển..." : "Thanh toán"}
+                      {payingId === i.id ? (
+                        "Đang chuyển..."
+                      ) : (
+                        <>
+                          <IconCheck /> Thanh toán
+                        </>
+                      )}
                     </button>
                   ) : (
                     <span className="text-muted">—</span>

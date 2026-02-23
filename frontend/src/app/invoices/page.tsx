@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconTimes,
+  IconCheck,
+  IconEye,
+  IconRefresh,
+  IconSend,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -231,7 +238,13 @@ export default function InvoicesPage() {
                   onClick={runGenerateInvoices}
                   disabled={generating}
                 >
-                  {generating ? "Đang sinh…" : "Sinh hóa đơn ngay"}
+                  {generating ? (
+                    "Đang sinh…"
+                  ) : (
+                    <>
+                      <IconRefresh /> Sinh hóa đơn ngay
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -313,7 +326,7 @@ export default function InvoicesPage() {
                       onClick={() => setViewDetailInvoice(i)}
                       title="Xem chi tiết các khoản"
                     >
-                      Xem chi tiết
+                      <IconEye /> Xem chi tiết
                     </button>
                   </span>
                 ),
@@ -513,7 +526,7 @@ export default function InvoicesPage() {
                   className="btn btn-secondary"
                   onClick={() => setViewDetailInvoice(null)}
                 >
-                  Đóng
+                  <IconTimes /> Đóng
                 </button>
               </div>
             </div>
@@ -594,7 +607,7 @@ export default function InvoicesPage() {
                   className="btn btn-secondary"
                   onClick={() => setViewReminderInvoice(null)}
                 >
-                  Đóng
+                  <IconTimes /> Đóng
                 </button>
               </div>
             </div>

@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";
 import SimpleTable from "@/components/SimpleTable";
+import {
+  IconPlus,
+  IconPencil,
+  IconTrash,
+  IconTimes,
+  IconCheck,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole, getToken } from "@/lib/auth";
 import { useToast } from "@/components/ToastProvider";
@@ -429,7 +436,7 @@ export default function TenantsPage() {
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  Thêm khách thuê
+                  <IconPlus /> Thêm khách thuê
                 </button>
               </div>
             )}
@@ -458,13 +465,13 @@ export default function TenantsPage() {
                       render: (t: Tenant) => (
                         <div className="table-actions">
                           <button className="btn" onClick={() => startEdit(t)}>
-                            Sửa
+                            <IconPencil /> Sửa
                           </button>
                           <button
                             className="btn btn-secondary"
                             onClick={() => askRemove(t)}
                           >
-                            Xóa
+                            <IconTrash /> Xóa
                           </button>
                         </div>
                       ),
@@ -602,10 +609,10 @@ export default function TenantsPage() {
                       setShowCreate(false);
                     }}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button className="btn" type="submit">
-                    Thêm khách thuê
+                    <IconPlus /> Thêm khách thuê
                   </button>
                 </div>
               </form>
@@ -754,10 +761,10 @@ export default function TenantsPage() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={saveEdit}>
-                  Lưu
+                  <IconCheck /> Lưu
                 </button>
               </div>
             </div>
@@ -785,7 +792,7 @@ export default function TenantsPage() {
                     className="btn"
                     onClick={() => openCreateUserForm("edit")}
                   >
-                    Tạo tài khoản
+                    <IconPlus /> Tạo tài khoản
                   </button>
                 </div>
                 <div className="picker-list">
@@ -815,7 +822,7 @@ export default function TenantsPage() {
                   className="btn btn-secondary"
                   onClick={() => setShowEditUserPicker(false)}
                 >
-                  Đóng
+                  <IconTimes /> Đóng
                 </button>
               </div>
             </div>
@@ -866,10 +873,10 @@ export default function TenantsPage() {
                     className="btn btn-secondary"
                     onClick={closeCreateUserForm}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button type="submit" className="btn">
-                    Tạo tài khoản
+                    <IconPlus /> Tạo tài khoản
                   </button>
                 </div>
               </form>
@@ -887,10 +894,10 @@ export default function TenantsPage() {
               </p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelRemove}>
-                  Hủy
+                  <IconTimes /> Hủy
                 </button>
                 <button className="btn" onClick={confirmRemove}>
-                  Xóa
+                  <IconTrash /> Xóa
                 </button>
               </div>
             </div>

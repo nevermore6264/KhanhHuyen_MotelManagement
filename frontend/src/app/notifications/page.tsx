@@ -12,6 +12,7 @@ import {
 } from "@/lib/notificationSocket";
 import { useToast } from "@/components/ToastProvider";
 import { useNotification } from "@/components/NotificationProvider";
+import { IconPlus, IconTimes, IconSend, IconCheck } from "@/components/Icons";
 
 type Notification = {
   id: number;
@@ -169,7 +170,7 @@ export default function NotificationsPage() {
                   setError("");
                 }}
               >
-                Tạo thông báo
+                <IconPlus /> Tạo thông báo
               </button>
             </div>
           </div>
@@ -192,7 +193,7 @@ export default function NotificationsPage() {
                     className="btn"
                     onClick={() => markRead(n.id)}
                   >
-                    Đánh dấu đã đọc
+                    <IconCheck /> Đánh dấu đã đọc
                   </button>
                 ),
               },
@@ -249,10 +250,16 @@ export default function NotificationsPage() {
                       setError("");
                     }}
                   >
-                    Hủy
+                    <IconTimes /> Hủy
                   </button>
                   <button type="submit" className="btn" disabled={creating}>
-                    {creating ? "Đang gửi…" : "Gửi thông báo"}
+                    {creating ? (
+                      "Đang gửi…"
+                    ) : (
+                      <>
+                        <IconSend /> Gửi thông báo
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
