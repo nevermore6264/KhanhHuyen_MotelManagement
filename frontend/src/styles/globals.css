@@ -2034,6 +2034,67 @@ table .btn {
   color: #667085;
 }
 
+.login-forgot-wrap {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.login-forgot-link {
+  color: var(--blue-600);
+  text-decoration: none;
+}
+
+.login-forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-shell--single {
+  justify-content: center;
+}
+
+.login-shell--single .login-card {
+  max-width: 420px;
+}
+
+.login-forgot-desc {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.login-success-box {
+  padding: 8px 0;
+}
+
+.login-success-message {
+  color: #0f766e;
+  margin: 0;
+  font-size: 14px;
+}
+
+.login-reset-link-box {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.login-reset-link-box label {
+  display: block;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.login-reset-link {
+  display: block;
+  word-break: break-all;
+  color: var(--blue-600);
+  font-size: 13px;
+}
+
+.login-reset-link:hover {
+  text-decoration: underline;
+}
+
 @keyframes fadeUp {
   from {
     opacity: 0;

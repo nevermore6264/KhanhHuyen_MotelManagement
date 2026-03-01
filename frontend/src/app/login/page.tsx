@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 
@@ -200,6 +201,11 @@ export default function LoginPage() {
             <div className="login-hint">
               Demo: <strong>admin / admin123</strong>
             </div>
+            <p className="login-forgot-wrap">
+              <Link href="/forgot-password" className="login-forgot-link">
+                Quên mật khẩu?
+              </Link>
+            </p>
           </form>
         </div>
       </div>
