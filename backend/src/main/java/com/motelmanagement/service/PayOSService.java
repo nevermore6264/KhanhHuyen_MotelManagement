@@ -17,85 +17,86 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.motelmanagement.config.PayOSProperties;
-import com.motelmanagement.domain.Invoice;
-import com.motelmanagement.domain.InvoiceStatus;
-import com.motelmanagement.domain.PayOSOrder;
-import com.motelmanagement.domain.Payment;
-import com.motelmanagement.domain.PaymentMethod;
-import com.motelmanagement.repository.InvoiceRepository;
-import com.motelmanagement.repository.PayOSOrderRepository;
-import com.motelmanagement.repository.PaymentRepository;
+import com.motelmanagement.config.ThuocTinhPayOS;
+import com.motelmanagement.domain.DonHangPayOS;
+import com.motelmanagement.domain.HoaDon;
+import com.motelmanagement.domain.PhuongThucThanhToan;
+import com.motelmanagement.domain.ThanhToan;
+import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.repository.KhoHoaDon;
+import com.motelmanagement.repository.KhoDonHangPayOS;
+import com.motelmanagement.repository.KhoThanhToan;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
+/** Dịch vụ tích hợp PayOS: tạo link thanh toán, xử lý webhook. */
 @RequiredArgsConstructor
 @Slf4j
 public class PayOSService {
     private static final String CREATE_PAYMENT_URL = "https://api-merchant.payos.vn/v2/payment-requests";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final PayOSProperties payOS;
-    private final PayOSOrderRepository payOSOrderRepository;
-    private final InvoiceRepository invoiceRepository;
-    private final PaymentRepository paymentRepository;
+    private final ThuocTinhPayOS thuocTinhPayOS;
+    private final KhoDonHangPayOS khoDonHangPayOS;
+    private final KhoHoaDon khoHoaDon;
+    private final KhoThanhToan khoThanhToan;
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
      * Tạo link thanh toán PayOS cho hóa đơn. Lưu orderCode -> invoiceId để xử lý webhook.
      */
-    public String createPaymentLink(Invoice invoice) {
-        if (invoice == null || invoice.getTotal() == null
-                || isBlank(payOS.getClientId()) || isBlank(payOS.getApiKey()) || isBlank(payOS.getChecksumKey())) {
+    public String taoLinkThanhToan(HoaDon hoaDon) {
+        if (hoaDon == null || hoaDon.getTotal() == null
+                || laRong(thuocTinhPayOS.getClientId()) || laRong(thuocTinhPayOS.getApiKey()) || laRong(thuocTinhPayOS.getChecksumKey())) {
             return null;
         }
-        long amount = invoice.getTotal().longValue();
-        if (amount <= 0) return null;
+        long soTien = hoaDon.getTotal().longValue();
+        if (soTien <= 0) return null;
 
-        int orderCode = (int) (System.currentTimeMillis() % 2_000_000_000);
-        if (orderCode <= 0) orderCode = 1;
+        int maDonHang = (int) (System.currentTimeMillis() % 2_000_000_000);
+        if (maDonHang <= 0) maDonHang = 1;
 
-        String returnUrl = payOS.getReturnUrl() != null ? payOS.getReturnUrl() : "http://localhost:4002/my-invoices?payment=success";
-        String cancelUrl = payOS.getCancelUrl() != null ? payOS.getCancelUrl() : "http://localhost:4002/my-invoices?payment=cancel";
-        String description = "HD" + invoice.getId() + " " + invoice.getMonth() + "/" + invoice.getYear();
-        if (description.length() > 250) description = description.substring(0, 250);
+        String urlQuayLai = thuocTinhPayOS.getReturnUrl() != null ? thuocTinhPayOS.getReturnUrl() : "http://localhost:4002/my-invoices?payment=success";
+        String urlHuy = thuocTinhPayOS.getCancelUrl() != null ? thuocTinhPayOS.getCancelUrl() : "http://localhost:4002/my-invoices?payment=cancel";
+        String moTa = "HD" + hoaDon.getId() + " " + hoaDon.getMonth() + "/" + hoaDon.getYear();
+        if (moTa.length() > 250) moTa = moTa.substring(0, 250);
 
-        String signData = "amount=" + amount + "&cancelUrl=" + cancelUrl + "&description=" + description
-                + "&orderCode=" + orderCode + "&returnUrl=" + returnUrl;
-        String signature = hmacSha256(payOS.getChecksumKey(), signData);
+        String duLieuKy = "amount=" + soTien + "&cancelUrl=" + urlHuy + "&description=" + moTa
+                + "&orderCode=" + maDonHang + "&returnUrl=" + urlQuayLai;
+        String chuKy = hmacSha256(thuocTinhPayOS.getChecksumKey(), duLieuKy);
 
         ObjectNode bodyNode = OBJECT_MAPPER.createObjectNode();
-        bodyNode.put("orderCode", orderCode);
-        bodyNode.put("amount", amount);
-        bodyNode.put("description", description);
-        bodyNode.put("cancelUrl", cancelUrl);
-        bodyNode.put("returnUrl", returnUrl);
-        bodyNode.put("signature", signature);
+        bodyNode.put("orderCode", maDonHang);
+        bodyNode.put("amount", soTien);
+        bodyNode.put("description", moTa);
+        bodyNode.put("cancelUrl", urlHuy);
+        bodyNode.put("returnUrl", urlQuayLai);
+        bodyNode.put("signature", chuKy);
         String body = bodyNode.toString();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("x-client-id", payOS.getClientId());
-        headers.set("x-api-key", payOS.getApiKey());
+        headers.set("x-client-id", thuocTinhPayOS.getClientId());
+        headers.set("x-api-key", thuocTinhPayOS.getApiKey());
 
         try {
-            ResponseEntity<String> res = restTemplate.exchange(
+            ResponseEntity<String> phanHoi = restTemplate.exchange(
                     CREATE_PAYMENT_URL,
                     HttpMethod.POST,
                     new HttpEntity<>(body, headers),
                     String.class);
-            if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
-                JsonNode root = OBJECT_MAPPER.readTree(res.getBody());
+            if (phanHoi.getStatusCode().is2xxSuccessful() && phanHoi.getBody() != null) {
+                JsonNode root = OBJECT_MAPPER.readTree(phanHoi.getBody());
                 if ("00".equals(root.path("code").asText(null))) {
-                    String checkoutUrl = root.path("data").path("checkoutUrl").asText(null);
-                    if (checkoutUrl != null) {
-                        PayOSOrder order = new PayOSOrder();
-                        order.setOrderCode(orderCode);
-                        order.setInvoiceId(invoice.getId());
-                        payOSOrderRepository.save(order);
-                        return checkoutUrl;
+                    String linkThanhToan = root.path("data").path("checkoutUrl").asText(null);
+                    if (linkThanhToan != null) {
+                        DonHangPayOS donHang = new DonHangPayOS();
+                        donHang.setOrderCode(maDonHang);
+                        donHang.setInvoiceId(hoaDon.getId());
+                        khoDonHangPayOS.save(donHang);
+                        return linkThanhToan;
                     }
                 }
             }
@@ -108,44 +109,44 @@ public class PayOSService {
     /**
      * Xác thực chữ ký webhook và trả về data nếu hợp lệ. Format webhook: { "code", "desc", "success", "data": { ... }, "signature" }.
      */
-    public boolean verifyAndHandleWebhook(String requestBody) {
-        if (isBlank(payOS.getChecksumKey()) || requestBody == null) return false;
+    public boolean xacThucVaXuLyWebhook(String noiDungYeuCau) {
+        if (laRong(thuocTinhPayOS.getChecksumKey()) || noiDungYeuCau == null) return false;
         try {
-            JsonNode root = OBJECT_MAPPER.readTree(requestBody);
+            JsonNode root = OBJECT_MAPPER.readTree(noiDungYeuCau);
             JsonNode data = root.get("data");
-            String receivedSig = root.path("signature").asText(null);
-            if (data == null || receivedSig == null) return false;
+            String chuKyNhan = root.path("signature").asText(null);
+            if (data == null || chuKyNhan == null) return false;
 
-            String dataSignature = buildSignatureFromData(data);
-            if (!receivedSig.equalsIgnoreCase(dataSignature)) return false;
+            String chuKyTinh = xayChuKyTuData(data);
+            if (!chuKyNhan.equalsIgnoreCase(chuKyTinh)) return false;
 
-            boolean success = root.path("success").asBoolean(false);
-            String code = root.path("code").asText("");
-            if (!success || !"00".equals(code)) return true;
+            boolean thanhCong = root.path("success").asBoolean(false);
+            String maLoi = root.path("code").asText("");
+            if (!thanhCong || !"00".equals(maLoi)) return true;
 
-            long orderCode = data.path("orderCode").asLong(0);
-            int amount = data.path("amount").asInt(0);
-            if (orderCode == 0 || amount <= 0) return true;
+            long maDonHang = data.path("orderCode").asLong(0);
+            int soTien = data.path("amount").asInt(0);
+            if (maDonHang == 0 || soTien <= 0) return true;
 
-            return payOSOrderRepository.findByOrderCode(orderCode)
-                    .map(order -> {
-                        Invoice invoice = invoiceRepository.findById(order.getInvoiceId()).orElse(null);
-                        if (invoice == null) return false;
-                        Payment payment = new Payment();
-                        payment.setInvoice(invoice);
-                        payment.setAmount(java.math.BigDecimal.valueOf(amount));
-                        payment.setMethod(PaymentMethod.TRANSFER);
-                        paymentRepository.save(payment);
-                        java.math.BigDecimal totalPaid = paymentRepository.findByInvoiceId(invoice.getId()).stream()
-                                .map(Payment::getAmount)
+            return khoDonHangPayOS.findByOrderCode(maDonHang)
+                    .map(donHang -> {
+                        HoaDon hoaDon = khoHoaDon.findById(donHang.getInvoiceId()).orElse(null);
+                        if (hoaDon == null) return false;
+                        ThanhToan thanhToan = new ThanhToan();
+                        thanhToan.setHoaDon(hoaDon);
+                        thanhToan.setAmount(java.math.BigDecimal.valueOf(soTien));
+                        thanhToan.setMethod(PhuongThucThanhToan.TRANSFER);
+                        khoThanhToan.save(thanhToan);
+                        java.math.BigDecimal tongDaThanhToan = khoThanhToan.findByHoaDonId(hoaDon.getId()).stream()
+                                .map(ThanhToan::getAmount)
                                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-                        if (totalPaid.compareTo(invoice.getTotal()) >= 0) {
-                            invoice.setStatus(InvoiceStatus.PAID);
+                        if (tongDaThanhToan.compareTo(hoaDon.getTotal()) >= 0) {
+                            hoaDon.setStatus(TrangThaiHoaDon.PAID);
                         } else {
-                            invoice.setStatus(InvoiceStatus.PARTIAL);
+                            hoaDon.setStatus(TrangThaiHoaDon.PARTIAL);
                         }
-                        invoiceRepository.save(invoice);
-                        payOSOrderRepository.delete(order);
+                        khoHoaDon.save(hoaDon);
+                        khoDonHangPayOS.delete(donHang);
                         return true;
                     })
                     .orElse(false);
@@ -155,8 +156,8 @@ public class PayOSService {
         }
     }
 
-    private String buildSignatureFromData(JsonNode data) {
-        TreeMap<String, String> sorted = new TreeMap<>();
+    private String xayChuKyTuData(JsonNode data) {
+        TreeMap<String, String> sapXep = new TreeMap<>();
         data.fields().forEachRemaining(e -> {
             JsonNode v = e.getValue();
             String val;
@@ -165,12 +166,12 @@ public class PayOSService {
             else if (v.isObject() || v.isArray()) val = v.toString();
             else val = v.asText("");
             if ("null".equals(val) || "undefined".equals(val)) val = "";
-            sorted.put(e.getKey(), val);
+            sapXep.put(e.getKey(), val);
         });
         StringBuilder sb = new StringBuilder();
-        sorted.forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
+        sapXep.forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
         if (sb.length() > 0) sb.setLength(sb.length() - 1);
-        return hmacSha256(payOS.getChecksumKey(), sb.toString());
+        return hmacSha256(thuocTinhPayOS.getChecksumKey(), sb.toString());
     }
 
     private static String hmacSha256(String key, String data) {
@@ -186,7 +187,7 @@ public class PayOSService {
         }
     }
 
-    private static boolean isBlank(String s) {
+    private static boolean laRong(String s) {
         return s == null || s.isBlank();
     }
 }

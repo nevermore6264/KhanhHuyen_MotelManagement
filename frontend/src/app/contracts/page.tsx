@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Trang quản lý hợp đồng: danh sách hợp đồng, tìm kiếm, tạo/sửa/gia hạn/kết thúc,
+ * xem/tải Word, phân quyền Admin/Staff/Tenant.
+ */
 import { useEffect, useRef, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import NavBar from "@/components/NavBar";

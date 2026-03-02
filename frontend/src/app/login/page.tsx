@@ -6,12 +6,14 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 
+/** Trang đăng nhập: form tài khoản/mật khẩu, gọi API xác thực, lưu token và chuyển dashboard. */
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("admin123");
   const [error, setError] = useState("");
 
+  /** Gửi form đăng nhập: gọi POST /auth/login, lưu token/role/fullName, chuyển /dashboard. */
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");

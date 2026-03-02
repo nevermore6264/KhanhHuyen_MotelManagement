@@ -1,10 +1,12 @@
 "use client";
 
+/** Định nghĩa cột: tiêu đề và hàm render ô (row) */
 type Column<T> = {
   header: string;
   render: (row: T) => React.ReactNode;
 };
 
+/** Bảng dữ liệu đơn giản: nhận mảng cột và mảng dữ liệu, render thead + tbody. */
 export default function SimpleTable<T>({
   columns,
   data,

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/auth";
 
+/** Bọc trang cần đăng nhập: không có token thì chuyển hướng về /login. */
 export default function ProtectedPage({
   children,
 }: {

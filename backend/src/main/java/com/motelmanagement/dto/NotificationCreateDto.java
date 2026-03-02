@@ -3,6 +3,7 @@ package com.motelmanagement.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+/** DTO tạo thông báo (nội dung, gửi cho user nào hoặc tất cả). */
 @Getter
 @Setter
 public class NotificationCreateDto {

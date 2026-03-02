@@ -7,6 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+/** DTO khu vực kèm số lượng phòng. */
 @NoArgsConstructor
 @AllArgsConstructor
 public class AreaWithRoomCountDto {

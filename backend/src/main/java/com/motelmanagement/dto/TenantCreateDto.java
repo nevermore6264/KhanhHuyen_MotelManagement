@@ -3,6 +3,7 @@ package com.motelmanagement.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+/** DTO tạo khách thuê (thông tin cá nhân, không gồm tài khoản). */
 @Getter
 @Setter
 public class TenantCreateDto {

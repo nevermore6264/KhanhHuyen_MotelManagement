@@ -7,9 +7,12 @@ import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
 import { useNotification } from "./NotificationProvider";
 
+/** Một mục menu (nhãn + đường dẫn) */
 type MenuItem = { label: string; href: string };
+/** Nhóm menu (có thể có mục con hoặc link trực tiếp) */
 type MenuGroup = { label: string; href?: string; items?: MenuItem[] };
 
+/** Cấu hình menu theo vai trò: ADMIN, STAFF, TENANT */
 const roleMenus: Record<string, MenuGroup[]> = {
   ADMIN: [
     { label: "Tổng quan", href: "/dashboard" },
