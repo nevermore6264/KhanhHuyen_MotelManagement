@@ -382,14 +382,17 @@ export default function ContractsPage() {
         </div>
         <div className="card">
           <SimpleTable
-            className="table-nowrap"
+            className="table-nowrap contracts-table-fit"
             data={filtered}
             columns={[
               { header: "ID", render: (c) => c.id },
               { header: "Phòng", render: (c) => c.room?.code },
               { header: "Khách", render: (c) => c.tenant?.fullName },
               { header: "CCCD", render: (c) => c.tenant?.idNumber ?? "—" },
-              { header: "Bắt đầu", render: (c) => formatDateDMY(c.startDate) },
+              {
+                header: "Bắt đầu",
+                render: (c) => formatDateDMY(c.startDate),
+              },
               { header: "Kết thúc", render: (c) => formatDateDMY(c.endDate) },
               {
                 header: "Tiền thuê/tháng",

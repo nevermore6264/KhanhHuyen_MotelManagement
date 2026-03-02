@@ -2217,6 +2217,10 @@ table {
   background: #fff;
 }
 
+.contracts-table-fit.table-wrap .table {
+  min-width: 95%;
+}
+
 .table-wrap.table-nowrap .table {
   min-width: 1000px;
 }
