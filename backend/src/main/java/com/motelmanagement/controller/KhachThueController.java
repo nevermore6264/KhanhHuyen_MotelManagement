@@ -20,8 +20,8 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.TenantCreateDto;
-import com.motelmanagement.repository.KhoNguoiDung;
-import com.motelmanagement.repository.KhoKhachThue;
+import com.motelmanagement.repository.NguoiDungRepository;
+import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.FileKhachThueService;
 
@@ -30,10 +30,10 @@ import lombok.RequiredArgsConstructor;
 /** API quản lý khách thuê (CRUD, gắn tài khoản). */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/tenants")
+@RequestMapping("/api/khach-thue")
 public class KhachThueController {
-    private final KhoKhachThue khoKhachThue;
-    private final KhoNguoiDung khoNguoiDung;
+    private final KhachThueRepository khachThueRepository;
+    private final NguoiDungRepository nguoiDungRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final FileKhachThueService fileKhachThueService;
 
@@ -42,23 +42,23 @@ public class KhachThueController {
     public List<KhachThue> layDanhSach(@RequestParam(value = "q", required = false) String tuKhoa) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung != null && nguoiDung.getVaiTro() == VaiTro.TENANT) {
-            KhachThue khachThue = khoKhachThue.findByUser_Id(nguoiDung.getId());
+            KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
             return khachThue != null ? List.of(khachThue) : List.of();
         }
         if (tuKhoa != null && !tuKhoa.isBlank()) {
-            return khoKhachThue.findByFullNameContainingIgnoreCase(tuKhoa);
+            return khachThueRepository.findByHoTenContainingIgnoreCase(tuKhoa);
         }
-        return khoKhachThue.findAll();
+        return khachThueRepository.findAll();
     }
 
-    @GetMapping("/me")
+    @GetMapping("/cua-toi")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<KhachThue> layThongTinToi() {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) {
             return ResponseEntity.notFound().build();
         }
-        KhachThue khachThue = khoKhachThue.findByUser_Id(nguoiDung.getId());
+        KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
         return khachThue != null ? ResponseEntity.ok(khachThue) : ResponseEntity.notFound().build();
     }
 
@@ -66,15 +66,15 @@ public class KhachThueController {
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public KhachThue tao(@RequestBody TenantCreateDto dto) {
         KhachThue khachThue = new KhachThue();
-        khachThue.setFullName(dto.getFullName());
-        khachThue.setPhone(dto.getPhone());
-        khachThue.setIdNumber(dto.getIdNumber());
-        khachThue.setAddress(dto.getAddress());
+        khachThue.setHoTen(dto.getFullName());
+        khachThue.setSoDienThoai(dto.getPhone());
+        khachThue.setSoGiayTo(dto.getIdNumber());
+        khachThue.setDiaChi(dto.getAddress());
         khachThue.setEmail(dto.getEmail());
         if (dto.getUserId() != null) {
-            khachThue.setUser(khoNguoiDung.findById(dto.getUserId()).orElse(null));
+            khachThue.setNguoiDung(nguoiDungRepository.findById(dto.getUserId()).orElse(null));
         }
-        return khoKhachThue.save(khachThue);
+        return khachThueRepository.save(khachThue);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -90,21 +90,21 @@ public class KhachThueController {
             @RequestParam(required = false) MultipartFile idCard) {
         try {
             KhachThue khachThue = new KhachThue();
-            khachThue.setFullName(fullName != null ? fullName.trim() : "");
-            khachThue.setPhone(phone != null && !phone.isBlank() ? phone.trim() : null);
-            khachThue.setIdNumber(idNumber != null && !idNumber.isBlank() ? idNumber.trim() : null);
-            khachThue.setAddress(address != null && !address.isBlank() ? address.trim() : null);
+            khachThue.setHoTen(fullName != null ? fullName.trim() : "");
+            khachThue.setSoDienThoai(phone != null && !phone.isBlank() ? phone.trim() : null);
+            khachThue.setSoGiayTo(idNumber != null && !idNumber.isBlank() ? idNumber.trim() : null);
+            khachThue.setDiaChi(address != null && !address.isBlank() ? address.trim() : null);
             khachThue.setEmail(email != null && !email.isBlank() ? email.trim() : null);
             if (userId != null) {
-                khachThue.setUser(khoNguoiDung.findById(userId).orElse(null));
+                khachThue.setNguoiDung(nguoiDungRepository.findById(userId).orElse(null));
             }
             if (portrait != null && !portrait.isEmpty()) {
-                khachThue.setPortraitImagePath(fileKhachThueService.luuAnh(portrait));
+                khachThue.setAnhChanDung(fileKhachThueService.luuAnh(portrait));
             }
             if (idCard != null && !idCard.isEmpty()) {
-                khachThue.setIdCardImagePath(fileKhachThueService.luuAnh(idCard));
+                khachThue.setAnhGiayTo(fileKhachThueService.luuAnh(idCard));
             }
-            return ResponseEntity.ok(khoKhachThue.save(khachThue));
+            return ResponseEntity.ok(khachThueRepository.save(khachThue));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -119,17 +119,17 @@ public class KhachThueController {
         if (nguoiDung == null || nguoiDung.getVaiTro() != VaiTro.ADMIN) {
             return ResponseEntity.status(403).build();
         }
-        return khoKhachThue.findById(ma)
+        return khachThueRepository.findById(ma)
                 .map(hienTai -> {
-                    hienTai.setFullName(khachThue.getFullName());
-                    hienTai.setPhone(khachThue.getPhone());
-                    hienTai.setIdNumber(khachThue.getIdNumber());
-                    hienTai.setAddress(khachThue.getAddress());
+                    hienTai.setHoTen(khachThue.getHoTen());
+                    hienTai.setSoDienThoai(khachThue.getSoDienThoai());
+                    hienTai.setSoGiayTo(khachThue.getSoGiayTo());
+                    hienTai.setDiaChi(khachThue.getDiaChi());
                     hienTai.setEmail(khachThue.getEmail());
-                    if (khachThue.getUser() != null && khachThue.getUser().getId() != null) {
-                        hienTai.setUser(khoNguoiDung.findById(khachThue.getUser().getId()).orElse(null));
+                    if (khachThue.getNguoiDung() != null && khachThue.getNguoiDung().getId() != null) {
+                        hienTai.setNguoiDung(nguoiDungRepository.findById(khachThue.getNguoiDung().getId()).orElse(null));
                     }
-                    return ResponseEntity.ok(khoKhachThue.save(hienTai));
+                    return ResponseEntity.ok(khachThueRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -141,7 +141,7 @@ public class KhachThueController {
         if (nguoiDung == null || nguoiDung.getVaiTro() != VaiTro.ADMIN) {
             return ResponseEntity.status(403).build();
         }
-        khoKhachThue.deleteById(ma);
+        khachThueRepository.deleteById(ma);
         return ResponseEntity.ok().build();
     }
 }

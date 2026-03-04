@@ -118,7 +118,7 @@ export default function InvoicesPage() {
     setRemindingId(invoiceId);
     try {
       const res = await api.post<{ message?: string }>(
-        `/invoices/${invoiceId}/remind`,
+        `/hoa-don/${invoiceId}/nhac-no`,
         {
           channel,
         },
@@ -147,7 +147,7 @@ export default function InvoicesPage() {
     }
     try {
       if (role === "TENANT") {
-        const res = await api.get("/invoices/me");
+        const res = await api.get("/hoa-don/cua-toi");
         setInvoices(res.data);
         setRooms([]);
         setTenants([]);
@@ -155,9 +155,9 @@ export default function InvoicesPage() {
       }
       if (role === "ADMIN" || role === "STAFF") {
         const [iRes, rRes, tRes] = await Promise.all([
-          api.get("/invoices"),
-          api.get("/rooms"),
-          api.get("/tenants"),
+          api.get("/hoa-don"),
+          api.get("/phong"),
+          api.get("/khach-thue"),
         ]);
         setInvoices(iRes.data);
         setRooms(rRes.data);
@@ -194,7 +194,7 @@ export default function InvoicesPage() {
     setGenerating(true);
     try {
       const res = await api.post<{ message?: string; created?: number }>(
-        "/invoices/generate",
+        "/hoa-don/sinh",
       );
       notify(res.data?.message ?? "Đã chạy sinh hóa đơn.", "success");
       load();

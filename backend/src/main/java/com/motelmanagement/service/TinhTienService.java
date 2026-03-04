@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.motelmanagement.domain.ChiSoDienNuoc;
-import com.motelmanagement.domain.HopDong;
 import com.motelmanagement.domain.HoaDon;
-import com.motelmanagement.domain.TrangThaiHopDong;
+import com.motelmanagement.domain.HopDong;
 import com.motelmanagement.domain.TrangThaiHoaDon;
-import com.motelmanagement.repository.KhoHopDong;
-import com.motelmanagement.repository.KhoHoaDon;
-import com.motelmanagement.repository.KhoChiSoDienNuoc;
+import com.motelmanagement.domain.TrangThaiHopDong;
+import com.motelmanagement.repository.ChiSoDienNuocRepository;
+import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.HopDongRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,39 +24,39 @@ import lombok.RequiredArgsConstructor;
 public class TinhTienService {
     private static final Logger log = LoggerFactory.getLogger(TinhTienService.class);
 
-    private final KhoHoaDon khoHoaDon;
-    private final KhoHopDong khoHopDong;
-    private final KhoChiSoDienNuoc khoChiSoDienNuoc;
+    private final HoaDonRepository hoaDonRepository;
+    private final HopDongRepository hopDongRepository;
+    private final ChiSoDienNuocRepository chiSoDienNuocRepository;
 
     public HoaDon taoHoacCapNhatHoaDonTuChiSo(ChiSoDienNuoc chiSo) {
-        HoaDon hoaDon = khoHoaDon
-                .findByPhong_IdAndMonthAndYear(chiSo.getPhong().getId(), chiSo.getMonth(), chiSo.getYear())
+        HoaDon hoaDon = hoaDonRepository
+                .findByPhong_IdAndThangAndNam(chiSo.getPhong().getId(), chiSo.getThang(), chiSo.getNam())
                 .orElseGet(HoaDon::new);
 
         hoaDon.setPhong(chiSo.getPhong());
-        hoaDon.setMonth(chiSo.getMonth());
-        hoaDon.setYear(chiSo.getYear());
+        hoaDon.setThang(chiSo.getThang());
+        hoaDon.setNam(chiSo.getNam());
 
-        // Giá phòng lấy theo từng phòng (Phong.currentPrice), không dùng bảng giá dịch vụ
-        BigDecimal giaPhong = chiSo.getPhong().getCurrentPrice() != null
-                ? chiSo.getPhong().getCurrentPrice() : BigDecimal.ZERO;
-        hoaDon.setRoomCost(giaPhong);
-        hoaDon.setElectricityCost(chiSo.getElectricityCost());
-        hoaDon.setWaterCost(chiSo.getWaterCost());
+        // Giá phòng lấy theo từng phòng (Phong.giaHienTai), không dùng bảng giá dịch vụ
+        BigDecimal giaPhong = chiSo.getPhong().getGiaHienTai() != null
+                ? chiSo.getPhong().getGiaHienTai() : BigDecimal.ZERO;
+        hoaDon.setTienPhong(giaPhong);
+        hoaDon.setTienDien(chiSo.getTienDien());
+        hoaDon.setTienNuoc(chiSo.getTienNuoc());
 
         BigDecimal tong = giaPhong
-                .add(chiSo.getElectricityCost() != null ? chiSo.getElectricityCost() : BigDecimal.ZERO)
-                .add(chiSo.getWaterCost() != null ? chiSo.getWaterCost() : BigDecimal.ZERO);
-        hoaDon.setTotal(tong);
+                .add(chiSo.getTienDien() != null ? chiSo.getTienDien() : BigDecimal.ZERO)
+                .add(chiSo.getTienNuoc() != null ? chiSo.getTienNuoc() : BigDecimal.ZERO);
+        hoaDon.setTongTien(tong);
 
-        HopDong hopDongHoatDong = khoHopDong.findByStatus(TrangThaiHopDong.ACTIVE).stream()
+        HopDong hopDongHoatDong = hopDongRepository.findByTrangThai(TrangThaiHopDong.ACTIVE).stream()
                 .filter(hd -> hd.getPhong().getId().equals(chiSo.getPhong().getId()))
                 .findFirst()
                 .orElse(null);
         if (hopDongHoatDong != null) {
             hoaDon.setKhachThue(hopDongHoatDong.getKhachThue());
         }
-        return khoHoaDon.save(hoaDon);
+        return hoaDonRepository.save(hoaDon);
     }
 
     /**
@@ -65,42 +65,42 @@ public class TinhTienService {
      * tiền điện/nước lấy từ ChiSoDienNuoc nếu có, không có thì 0.
      */
     public int sinhHoaDonChoThang(int thang, int nam) {
-        List<HopDong> danhSachHopDong = khoHopDong.findByStatus(TrangThaiHopDong.ACTIVE);
+        List<HopDong> danhSachHopDong = hopDongRepository.findByTrangThai(TrangThaiHopDong.ACTIVE);
         int soTao = 0;
         for (HopDong hopDong : danhSachHopDong) {
             if (hopDong.getPhong() == null) continue;
             Long maPhong = hopDong.getPhong().getId();
-            if (khoHoaDon.findByPhong_IdAndMonthAndYear(maPhong, thang, nam).isPresent()) {
+            if (hoaDonRepository.findByPhong_IdAndThangAndNam(maPhong, thang, nam).isPresent()) {
                 continue;
             }
             HoaDon hoaDon = new HoaDon();
             hoaDon.setPhong(hopDong.getPhong());
             hoaDon.setKhachThue(hopDong.getKhachThue());
-            hoaDon.setMonth(thang);
-            hoaDon.setYear(nam);
-            hoaDon.setStatus(TrangThaiHoaDon.UNPAID);
+            hoaDon.setThang(thang);
+            hoaDon.setNam(nam);
+            hoaDon.setTrangThai(TrangThaiHoaDon.UNPAID);
 
-            BigDecimal giaPhong = hopDong.getPhong().getCurrentPrice() != null
-                    ? hopDong.getPhong().getCurrentPrice() : BigDecimal.ZERO;
-            hoaDon.setRoomCost(giaPhong);
+            BigDecimal giaPhong = hopDong.getPhong().getGiaHienTai() != null
+                    ? hopDong.getPhong().getGiaHienTai() : BigDecimal.ZERO;
+            hoaDon.setTienPhong(giaPhong);
 
-            hoaDon.setElectricityCost(BigDecimal.ZERO);
-            hoaDon.setWaterCost(BigDecimal.ZERO);
-            khoChiSoDienNuoc.findByPhongAndMonthAndYear(hopDong.getPhong(), thang, nam)
+            hoaDon.setTienDien(BigDecimal.ZERO);
+            hoaDon.setTienNuoc(BigDecimal.ZERO);
+            chiSoDienNuocRepository.findByPhongAndThangAndNam(hopDong.getPhong(), thang, nam)
                     .ifPresent(chiSo -> {
-                        if (chiSo.getElectricityCost() != null) {
-                            hoaDon.setElectricityCost(chiSo.getElectricityCost());
+                        if (chiSo.getTienDien() != null) {
+                            hoaDon.setTienDien(chiSo.getTienDien());
                         }
-                        if (chiSo.getWaterCost() != null) {
-                            hoaDon.setWaterCost(chiSo.getWaterCost());
+                        if (chiSo.getTienNuoc() != null) {
+                            hoaDon.setTienNuoc(chiSo.getTienNuoc());
                         }
                     });
 
             BigDecimal tong = giaPhong
-                    .add(hoaDon.getElectricityCost())
-                    .add(hoaDon.getWaterCost());
-            hoaDon.setTotal(tong);
-            khoHoaDon.save(hoaDon);
+                    .add(hoaDon.getTienDien())
+                    .add(hoaDon.getTienNuoc());
+            hoaDon.setTongTien(tong);
+            hoaDonRepository.save(hoaDon);
             soTao++;
         }
         if (soTao > 0) {

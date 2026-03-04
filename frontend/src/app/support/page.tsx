@@ -13,7 +13,7 @@ export default function SupportPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/support-requests", { title, description });
+    await api.post("/yeu-cau-ho-tro", { title, description });
     setTitle("");
     setDescription("");
     setMessage("Đã gửi yêu cầu hỗ trợ");

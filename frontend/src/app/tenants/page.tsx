@@ -101,21 +101,25 @@ export default function TenantsPage() {
     const authHeader = { Authorization: `Bearer ${token}` };
     try {
       if (isTenant) {
-        const res = await api.get("/tenants/me", { headers: authHeader });
+        const res = await api.get("/khach-thue/cua-toi", {
+          headers: authHeader,
+        });
         setTenants(res.data ? [res.data] : []);
         setUsers([]);
         return;
       }
       const [tRes, uRes] = await Promise.all([
-        api.get("/tenants", { headers: authHeader }),
-        api.get("/users", { headers: authHeader }),
+        api.get("/khach-thue", { headers: authHeader }),
+        api.get("/nguoi-dung", { headers: authHeader }),
       ]);
       setTenants(tRes.data);
       setUsers(uRes.data.filter((u: User) => u.role === "TENANT"));
     } catch (err: any) {
       if (err?.response?.status === 403) {
         try {
-          const res = await api.get("/tenants/me", { headers: authHeader });
+          const res = await api.get("/khach-thue/cua-toi", {
+            headers: authHeader,
+          });
           if (res.data) {
             setTenants([res.data]);
             setUsers([]);
@@ -169,11 +173,11 @@ export default function TenantsPage() {
         if (userId) formData.append("userId", userId);
         if (portraitFile) formData.append("portrait", portraitFile);
         if (idCardFile) formData.append("idCard", idCardFile);
-        await api.post("/tenants", formData, {
+        await api.post("/khach-thue", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
-        await api.post("/tenants", {
+        await api.post("/khach-thue", {
           fullName: fullName.trim(),
           phone: phone.trim() || null,
           idNumber: idNumber.trim() || null,
@@ -261,7 +265,7 @@ export default function TenantsPage() {
     }
     setEditError("");
     try {
-      await api.put(`/tenants/${editing.id}`, {
+      await api.put(`/khach-thue/${editing.id}`, {
         fullName: editFullName.trim(),
         phone: editPhone.trim() || null,
         idNumber: editIdNumber.trim() || null,
@@ -310,7 +314,7 @@ export default function TenantsPage() {
   const confirmRemove = async () => {
     if (confirmId == null) return;
     try {
-      await api.delete(`/tenants/${confirmId}`);
+      await api.delete(`/khach-thue/${confirmId}`);
       notify("Xóa khách thuê thành công", "success");
     } catch (err: any) {
       setConfirmId(null);
@@ -362,7 +366,7 @@ export default function TenantsPage() {
     }
     setNewUserError("");
     try {
-      const res = await api.post("/users", {
+      const res = await api.post("/nguoi-dung", {
         username: trimmedUsername,
         password: newPassword,
         role: "TENANT",

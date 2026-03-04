@@ -20,8 +20,8 @@ import com.motelmanagement.dto.YeuCauDangKy;
 import com.motelmanagement.dto.YeuCauDatLaiMatKhau;
 import com.motelmanagement.dto.YeuCauQuenMatKhau;
 import com.motelmanagement.dto.YeuCauXacThuc;
-import com.motelmanagement.repository.KhoNguoiDung;
-import com.motelmanagement.repository.KhoPhieuDatLaiMatKhau;
+import com.motelmanagement.repository.NguoiDungRepository;
+import com.motelmanagement.repository.PhieuDatLaiMatKhauRepository;
 import com.motelmanagement.security.TienIchJwt;
 
 import jakarta.mail.MessagingException;
@@ -37,8 +37,8 @@ public class XacThucService {
     /** Số phút token đặt lại mật khẩu có hiệu lực */
     private static final int RESET_TOKEN_VALID_MINUTES = 15;
 
-    private final KhoNguoiDung khoNguoiDung;
-    private final KhoPhieuDatLaiMatKhau khoPhieuDatLaiMatKhau;
+    private final NguoiDungRepository nguoiDungRepository;
+    private final PhieuDatLaiMatKhauRepository phieuDatLaiMatKhauRepository;
     private final PasswordEncoder passwordEncoder;
     private final TienIchJwt tienIchJwt;
     private final ThuocTinhMail thuocTinhMail;
@@ -48,7 +48,7 @@ public class XacThucService {
 
     /** Đăng nhập: kiểm tra tenDangNhap/matKhau, trả về JWT và thông tin cơ bản. */
     public PhanHoiXacThuc dangNhap(YeuCauXacThuc yeuCau) {
-        NguoiDung nguoiDung = khoNguoiDung.findByTenDangNhap(yeuCau.getTenDangNhap())
+        NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(yeuCau.getTenDangNhap())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
         if (!nguoiDung.isKichHoat() || !passwordEncoder.matches(yeuCau.getMatKhau(), nguoiDung.getMatKhau())) {
             throw new IllegalArgumentException("Invalid credentials");
@@ -59,7 +59,7 @@ public class XacThucService {
 
     /** Đăng ký tài khoản mới (mật khẩu được mã hóa). */
     public NguoiDung dangKy(YeuCauDangKy yeuCau) {
-        if (khoNguoiDung.findByTenDangNhap(yeuCau.getTenDangNhap()).isPresent()) {
+        if (nguoiDungRepository.findByTenDangNhap(yeuCau.getTenDangNhap()).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
         NguoiDung nguoiDung = new NguoiDung();
@@ -69,13 +69,13 @@ public class XacThucService {
         nguoiDung.setSoDienThoai(yeuCau.getSoDienThoai());
         nguoiDung.setVaiTro(yeuCau.getVaiTro());
         nguoiDung.setKichHoat(true);
-        return khoNguoiDung.save(nguoiDung);
+        return nguoiDungRepository.save(nguoiDung);
     }
 
     /** Quên mật khẩu: tạo phiếu + gửi email hoặc trả link đặt lại. */
     @Transactional
     public PhanHoiQuenMatKhau quenMatKhau(YeuCauQuenMatKhau yeuCau) {
-        Optional<NguoiDung> nguoiDungOpt = khoNguoiDung.findByTenDangNhap(yeuCau.getTenDangNhap().trim());
+        Optional<NguoiDung> nguoiDungOpt = nguoiDungRepository.findByTenDangNhap(yeuCau.getTenDangNhap().trim());
         String baseUrl = yeuCau.getResetBaseUrl() != null && !yeuCau.getResetBaseUrl().isBlank()
                 ? yeuCau.getResetBaseUrl().replaceAll("/$", "")
                 : "http://localhost:4002";
@@ -92,13 +92,13 @@ public class XacThucService {
                     null
             );
         }
-        khoPhieuDatLaiMatKhau.xoaTheoMaNguoiDung(nguoiDung.getId());
+        phieuDatLaiMatKhauRepository.xoaTheoMaNguoiDung(nguoiDung.getId());
         String token = UUID.randomUUID().toString().replace("-", "");
         PhieuDatLaiMatKhau phieu = new PhieuDatLaiMatKhau();
-        phieu.setToken(token);
+        phieu.setMaToken(token);
         phieu.setNguoiDung(nguoiDung);
-        phieu.setExpiry(LocalDateTime.now().plusMinutes(RESET_TOKEN_VALID_MINUTES));
-        khoPhieuDatLaiMatKhau.save(phieu);
+        phieu.setHetHanLuc(LocalDateTime.now().plusMinutes(RESET_TOKEN_VALID_MINUTES));
+        phieuDatLaiMatKhauRepository.save(phieu);
         String resetLink = baseUrl + "/reset-password?token=" + token;
 
         if (nguoiDung.getEmail() != null && !nguoiDung.getEmail().isBlank() && javaMailSender != null) {
@@ -122,16 +122,16 @@ public class XacThucService {
     /** Đặt lại mật khẩu theo token từ link (sau đó xóa phiếu). */
     @Transactional
     public void datLaiMatKhau(YeuCauDatLaiMatKhau yeuCau) {
-        PhieuDatLaiMatKhau phieu = khoPhieuDatLaiMatKhau.findByToken(yeuCau.getToken().trim())
+        PhieuDatLaiMatKhau phieu = phieuDatLaiMatKhauRepository.findByMaToken(yeuCau.getToken().trim())
                 .orElseThrow(() -> new IllegalArgumentException("Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn."));
         if (phieu.daHetHan()) {
-            khoPhieuDatLaiMatKhau.delete(phieu);
+            phieuDatLaiMatKhauRepository.delete(phieu);
             throw new IllegalArgumentException("Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.");
         }
         NguoiDung nguoiDung = phieu.getNguoiDung();
         nguoiDung.setMatKhau(passwordEncoder.encode(yeuCau.getNewPassword()));
-        khoNguoiDung.save(nguoiDung);
-        khoPhieuDatLaiMatKhau.delete(phieu);
+        nguoiDungRepository.save(nguoiDung);
+        phieuDatLaiMatKhauRepository.delete(phieu);
         log.info("Password reset for user {}", nguoiDung.getTenDangNhap());
     }
 }

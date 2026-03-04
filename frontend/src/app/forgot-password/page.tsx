@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
         typeof window !== "undefined"
           ? window.location.origin
           : "http://localhost:4002";
-      const res = await api.post("/auth/forgot-password", {
+      const res = await api.post("/xac-thuc/quen-mat-khau", {
         username: username.trim(),
         resetBaseUrl: baseUrl,
       });

@@ -5,7 +5,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.motelmanagement.domain.NguoiDung;
-import com.motelmanagement.repository.KhoNguoiDung;
+import com.motelmanagement.repository.NguoiDungRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class NguoiDungHienTaiService {
-    private final KhoNguoiDung khoNguoiDung;
+    private final NguoiDungRepository nguoiDungRepository;
 
     /**
      * Lấy thực thể NguoiDung đang đăng nhập, hoặc null nếu chưa đăng nhập.
@@ -27,6 +27,6 @@ public class NguoiDungHienTaiService {
         if (xacThuc == null || xacThuc.getName() == null) {
             return null;
         }
-        return khoNguoiDung.findByTenDangNhap(xacThuc.getName()).orElse(null);
+        return nguoiDungRepository.findByTenDangNhap(xacThuc.getName()).orElse(null);
     }
 }

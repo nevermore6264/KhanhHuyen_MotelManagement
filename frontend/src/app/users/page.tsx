@@ -114,13 +114,13 @@ export default function UsersPage() {
   const { notify } = useToast();
 
   const load = async () => {
-    const res = await api.get("/users");
+    const res = await api.get("/nguoi-dung");
     setUsers(res.data);
   };
 
   const loadTenants = async () => {
     try {
-      const res = await api.get("/tenants");
+      const res = await api.get("/khach-thue");
       setTenants(res.data || []);
     } catch {
       setTenants([]);
@@ -141,7 +141,7 @@ export default function UsersPage() {
     }
     setError("");
     try {
-      await api.post("/users", {
+      await api.post("/nguoi-dung", {
         username: trimmedUsername,
         password,
         role,
@@ -186,14 +186,14 @@ export default function UsersPage() {
   const saveEdit = async () => {
     if (!editing) return;
     try {
-      await api.put(`/users/${editing.id}`, {
+      await api.put(`/nguoi-dung/${editing.id}`, {
         fullName: editFullName.trim(),
         phone: editPhone.trim(),
         role: editing.role,
         active: editing.active,
         password: editPassword.trim() || null,
       });
-      await api.put(`/users/${editing.id}/tenant`, {
+      await api.put(`/nguoi-dung/${editing.id}/khach-thue`, {
         tenantId: editTenantId ? Number(editTenantId) : null,
       });
       notify("Cập nhật người dùng thành công", "success");
@@ -239,7 +239,7 @@ export default function UsersPage() {
     if (!linkUserModal) return;
     setLinkError("");
     try {
-      await api.put(`/users/${linkUserModal.id}/tenant`, {
+      await api.put(`/nguoi-dung/${linkUserModal.id}/khach-thue`, {
         tenantId: linkTenantId ? Number(linkTenantId) : null,
       });
       notify("Gắn khách thuê thành công", "success");
@@ -273,7 +273,7 @@ export default function UsersPage() {
     }
     setNewTenantError("");
     try {
-      await api.post("/tenants", {
+      await api.post("/khach-thue", {
         fullName: newTenantFullName.trim(),
         phone: newTenantPhone.trim() || null,
         idNumber: newTenantIdNumber.trim() || null,
@@ -312,7 +312,9 @@ export default function UsersPage() {
 
   const toggleLock = async (user: User) => {
     try {
-      await api.put(`/users/${user.id}/${user.active ? "lock" : "unlock"}`);
+      await api.put(
+        `/nguoi-dung/${user.id}/${user.active ? "khoa" : "mo-khoa"}`,
+      );
       notify(
         user.active
           ? "Khóa tài khoản thành công"

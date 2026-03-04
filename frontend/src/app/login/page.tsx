@@ -18,7 +18,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     try {
-      const res = await api.post("/auth/login", { username, password });
+      const res = await api.post("/xac-thuc/dang-nhap", { username, password });
       setAuth(res.data.token, res.data.role, res.data.fullName);
       router.replace("/dashboard");
     } catch (err: any) {

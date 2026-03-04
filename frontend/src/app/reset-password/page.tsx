@@ -33,7 +33,10 @@ function ResetPasswordForm() {
     }
     setLoading(true);
     try {
-      await api.post("/auth/reset-password", { token, newPassword: password });
+      await api.post("/xac-thuc/dat-lai-mat-khau", {
+        token,
+        newPassword: password,
+      });
       setSuccess(true);
       setTimeout(() => router.replace("/login"), 2000);
     } catch (err: any) {

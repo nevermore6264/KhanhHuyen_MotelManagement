@@ -155,16 +155,16 @@ export default function ContractsPage() {
   const load = async () => {
     try {
       if (isTenant) {
-        const res = await api.get("/contracts/me");
+        const res = await api.get("/hop-dong/cua-toi");
         setContracts(res.data);
         setRooms([]);
         setTenants([]);
         return;
       }
       const [cRes, rRes, tRes] = await Promise.all([
-        api.get("/contracts"),
-        api.get("/rooms"),
-        api.get("/tenants"),
+        api.get("/hop-dong"),
+        api.get("/phong"),
+        api.get("/khach-thue"),
       ]);
       setContracts(cRes.data);
       setRooms(rRes.data);
@@ -222,7 +222,7 @@ export default function ContractsPage() {
     }
     setError("");
     try {
-      await api.post("/contracts", {
+      await api.post("/hop-dong", {
         room: roomId ? { id: Number(roomId) } : null,
         tenant: tenantId ? { id: Number(tenantId) } : null,
         startDate,
@@ -280,7 +280,7 @@ export default function ContractsPage() {
   const saveExtend = async () => {
     if (!extendId || !extendDate) return;
     try {
-      await api.put(`/contracts/${extendId}/extend`, { endDate: extendDate });
+      await api.put(`/hop-dong/${extendId}/gia-han`, { endDate: extendDate });
       notify("Gia hạn hợp đồng thành công", "success");
     } catch (err: any) {
       const message =
@@ -308,7 +308,7 @@ export default function ContractsPage() {
   const endContract = async () => {
     if (!confirmEndId) return;
     try {
-      await api.put(`/contracts/${confirmEndId}/end`);
+      await api.put(`/hop-dong/${confirmEndId}/ket-thuc`);
       notify("Kết thúc hợp đồng thành công", "success");
     } catch (err: any) {
       const message =

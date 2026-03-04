@@ -20,9 +20,9 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThanhToan;
 import com.motelmanagement.domain.TrangThaiHoaDon;
-import com.motelmanagement.repository.KhoHoaDon;
-import com.motelmanagement.repository.KhoKhachThue;
-import com.motelmanagement.repository.KhoThanhToan;
+import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.repository.ThanhToanRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.PayOSService;
 
@@ -31,34 +31,34 @@ import lombok.RequiredArgsConstructor;
 /** API thanh toán: PayOS, lịch sử thanh toán theo khách thuê. */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/payments")
+@RequestMapping("/api/thanh-toan")
 public class ThanhToanController {
-    private final KhoThanhToan khoThanhToan;
-    private final KhoHoaDon khoHoaDon;
-    private final KhoKhachThue khoKhachThue;
+    private final ThanhToanRepository thanhToanRepository;
+    private final HoaDonRepository hoaDonRepository;
+    private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final PayOSService payOSService;
 
-    @GetMapping("/me")
+    @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('TENANT')")
     public List<ThanhToan> layThanhToanGanDayCuaToi(@RequestParam(defaultValue = "10") int gioiHan) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) return List.of();
-        KhachThue khachThue = khoKhachThue.findByUser_Id(nguoiDung.getId());
+        KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
         if (khachThue == null) return List.of();
         int kichThuoc = Math.min(Math.max(1, gioiHan), 50);
-        return khoThanhToan.findByHoaDon_KhachThue_IdOrderByPaidAtDesc(
+        return thanhToanRepository.findByHoaDon_KhachThue_IdOrderByThoiGianThanhToanDesc(
                 khachThue.getId(), PageRequest.of(0, kichThuoc));
     }
 
-    @GetMapping("/invoice/{invoiceId}")
+    @GetMapping("/hoa-don/{invoiceId}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
     public List<ThanhToan> layTheoHoaDon(@PathVariable("invoiceId") Long maHoaDon) {
-        return khoThanhToan.findByHoaDonId(maHoaDon);
+        return thanhToanRepository.findByHoaDonId(maHoaDon);
     }
 
     /** Tạo link thanh toán PayOS (tenant chỉ được tạo cho hóa đơn của mình). */
-    @PostMapping("/create-payment-url")
+    @PostMapping("/tao-link")
     @PreAuthorize("hasRole('TENANT')")
     public ResponseEntity<Map<String, String>> taoLinkThanhToan(@RequestBody Map<String, Object> body) {
         Object idObj = body != null ? body.get("invoiceId") : null;
@@ -75,9 +75,9 @@ public class ThanhToanController {
         }
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) return ResponseEntity.status(403).build();
-        KhachThue khachThue = khoKhachThue.findByUser_Id(nguoiDung.getId());
+        KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
         if (khachThue == null) return ResponseEntity.status(403).build();
-        HoaDon hoaDon = khoHoaDon.findById(maHoaDon).orElse(null);
+        HoaDon hoaDon = hoaDonRepository.findById(maHoaDon).orElse(null);
         if (hoaDon == null || !hoaDon.getKhachThue().getId().equals(khachThue.getId())) {
             return ResponseEntity.status(403).build();
         }
@@ -99,23 +99,23 @@ public class ThanhToanController {
         if (thanhToan.getHoaDon() == null || thanhToan.getHoaDon().getId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        HoaDon hoaDon = khoHoaDon.findById(thanhToan.getHoaDon().getId()).orElse(null);
+        HoaDon hoaDon = hoaDonRepository.findById(thanhToan.getHoaDon().getId()).orElse(null);
         if (hoaDon == null) {
             return ResponseEntity.badRequest().build();
         }
         thanhToan.setHoaDon(hoaDon);
-        ThanhToan daLuu = khoThanhToan.save(thanhToan);
+        ThanhToan daLuu = thanhToanRepository.save(thanhToan);
 
-        BigDecimal tongDaThanhToan = khoThanhToan.findByHoaDonId(hoaDon.getId()).stream()
-                .map(ThanhToan::getAmount)
+        BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDonId(hoaDon.getId()).stream()
+                .map(ThanhToan::getSoTien)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (tongDaThanhToan.compareTo(hoaDon.getTotal()) >= 0) {
-            hoaDon.setStatus(TrangThaiHoaDon.PAID);
+        if (tongDaThanhToan.compareTo(hoaDon.getTongTien()) >= 0) {
+            hoaDon.setTrangThai(TrangThaiHoaDon.PAID);
         } else if (tongDaThanhToan.compareTo(BigDecimal.ZERO) > 0) {
-            hoaDon.setStatus(TrangThaiHoaDon.PARTIAL);
+            hoaDon.setTrangThai(TrangThaiHoaDon.PARTIAL);
         }
-        khoHoaDon.save(hoaDon);
+        hoaDonRepository.save(hoaDon);
         return ResponseEntity.ok(daLuu);
     }
 }

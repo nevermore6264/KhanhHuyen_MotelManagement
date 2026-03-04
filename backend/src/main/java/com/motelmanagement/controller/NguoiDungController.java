@@ -18,24 +18,24 @@ import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.DtoLienKetNguoiDungKhachThue;
 import com.motelmanagement.dto.YeuCauTaoNguoiDung;
-import com.motelmanagement.repository.KhoKhachThue;
-import com.motelmanagement.repository.KhoNguoiDung;
+import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.repository.NguoiDungRepository;
 
 import lombok.RequiredArgsConstructor;
 
 /** API quản lý người dùng (chỉ ADMIN): CRUD, khóa/mở, gắn khách thuê. */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/api/nguoi-dung")
 public class NguoiDungController {
-    private final KhoNguoiDung khoNguoiDung;
-    private final KhoKhachThue khoKhachThue;
+    private final NguoiDungRepository nguoiDungRepository;
+    private final KhachThueRepository khachThueRepository;
     private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<NguoiDung> layDanhSach() {
-        return khoNguoiDung.findAll();
+        return nguoiDungRepository.findAll();
     }
 
     @PostMapping
@@ -48,11 +48,11 @@ public class NguoiDungController {
         nguoiDung.setSoDienThoai(dto.getSoDienThoai());
         nguoiDung.setVaiTro(dto.getVaiTro() != null ? dto.getVaiTro() : VaiTro.STAFF);
         nguoiDung.setKichHoat(dto.isKichHoat());
-        NguoiDung daLuu = khoNguoiDung.save(nguoiDung);
+        NguoiDung daLuu = nguoiDungRepository.save(nguoiDung);
         if (dto.getMaKhachThue() != null && daLuu.getVaiTro() == VaiTro.TENANT) {
-            khoKhachThue.findById(dto.getMaKhachThue()).ifPresent(khachThue -> {
-                khachThue.setUser(daLuu);
-                khoKhachThue.save(khachThue);
+            khachThueRepository.findById(dto.getMaKhachThue()).ifPresent(khachThue -> {
+                khachThue.setNguoiDung(daLuu);
+                khachThueRepository.save(khachThue);
             });
         }
         return daLuu;
@@ -61,7 +61,7 @@ public class NguoiDungController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NguoiDung> capNhat(@PathVariable("id") Long ma, @RequestBody NguoiDung nguoiDung) {
-        return khoNguoiDung.findById(ma)
+        return nguoiDungRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setHoTen(nguoiDung.getHoTen());
                     hienTai.setSoDienThoai(nguoiDung.getSoDienThoai());
@@ -70,50 +70,50 @@ public class NguoiDungController {
                     if (nguoiDung.getMatKhau() != null && !nguoiDung.getMatKhau().isBlank()) {
                         hienTai.setMatKhau(passwordEncoder.encode(nguoiDung.getMatKhau()));
                     }
-                    return ResponseEntity.ok(khoNguoiDung.save(hienTai));
+                    return ResponseEntity.ok(nguoiDungRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}/lock")
+    @PutMapping("/{id}/khoa")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NguoiDung> khoa(@PathVariable("id") Long ma) {
-        return khoNguoiDung.findById(ma)
+        return nguoiDungRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setKichHoat(false);
-                    return ResponseEntity.ok(khoNguoiDung.save(hienTai));
+                    return ResponseEntity.ok(nguoiDungRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}/unlock")
+    @PutMapping("/{id}/mo-khoa")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NguoiDung> moKhoa(@PathVariable("id") Long ma) {
-        return khoNguoiDung.findById(ma)
+        return nguoiDungRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setKichHoat(true);
-                    return ResponseEntity.ok(khoNguoiDung.save(hienTai));
+                    return ResponseEntity.ok(nguoiDungRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /** Chỉ gắn hoặc bỏ gắn tài khoản với khách thuê. tenantId = null để bỏ gắn. */
-    @PutMapping("/{id}/tenant")
+    @PutMapping("/{id}/khach-thue")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> lienKetKhachThue(@PathVariable("id") Long maNguoiDung, @RequestBody DtoLienKetNguoiDungKhachThue dto) {
-        NguoiDung nguoiDung = khoNguoiDung.findById(maNguoiDung).orElse(null);
+        NguoiDung nguoiDung = nguoiDungRepository.findById(maNguoiDung).orElse(null);
         if (nguoiDung == null) {
             return ResponseEntity.notFound().build();
         }
-        KhachThue hienTai = khoKhachThue.findByUser_Id(maNguoiDung);
+        KhachThue hienTai = khachThueRepository.findByNguoiDung_Id(maNguoiDung);
         if (hienTai != null) {
-            hienTai.setUser(null);
-            khoKhachThue.save(hienTai);
+            hienTai.setNguoiDung(null);
+            khachThueRepository.save(hienTai);
         }
         if (dto.getTenantId() != null) {
-            khoKhachThue.findById(dto.getTenantId()).ifPresent(khachThue -> {
-                khachThue.setUser(nguoiDung);
-                khoKhachThue.save(khachThue);
+            khachThueRepository.findById(dto.getTenantId()).ifPresent(khachThue -> {
+                khachThue.setNguoiDung(nguoiDung);
+                khachThueRepository.save(khachThue);
             });
         }
         return ResponseEntity.ok().build();

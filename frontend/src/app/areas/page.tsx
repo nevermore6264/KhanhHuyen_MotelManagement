@@ -51,7 +51,7 @@ export default function AreasPage() {
   }, []);
 
   const load = async () => {
-    const res = await api.get("/areas");
+    const res = await api.get("/khu-vuc");
     setData(res.data);
   };
 
@@ -70,7 +70,7 @@ export default function AreasPage() {
     }
     setError("");
     try {
-      await api.post("/areas", {
+      await api.post("/khu-vuc", {
         name: trimmedName,
         address: trimmedAddress,
         description: trimmedDescription,
@@ -122,7 +122,7 @@ export default function AreasPage() {
     }
     setEditError("");
     try {
-      await api.put(`/areas/${editing.id}`, {
+      await api.put(`/khu-vuc/${editing.id}`, {
         name: trimmedName,
         address: trimmedAddress,
         description: trimmedDescription,
@@ -164,7 +164,7 @@ export default function AreasPage() {
       return;
     }
     try {
-      await api.delete(`/areas/${confirmId}`);
+      await api.delete(`/khu-vuc/${confirmId}`);
       notify("Xóa khu thành công", "success");
     } catch (err: any) {
       setConfirmId(null);

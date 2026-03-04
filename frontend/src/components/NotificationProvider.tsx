@@ -53,7 +53,7 @@ export default function NotificationProvider({
         setUnreadCount(count);
         return;
       }
-      const res = await api.get("/notifications");
+      const res = await api.get("/thong-bao");
       const data = res.data || [];
       setUnreadCount(
         data.filter((n: { readFlag?: boolean }) => !n.readFlag).length,

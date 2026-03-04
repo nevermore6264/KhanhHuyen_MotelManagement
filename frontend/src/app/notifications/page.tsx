@@ -42,7 +42,7 @@ export default function NotificationsPage() {
   }, []);
 
   const load = async () => {
-    const res = await api.get("/notifications");
+    const res = await api.get("/thong-bao");
     const data = res.data || [];
     setItems(data);
     notificationContext?.refetchUnread(data);
@@ -71,7 +71,7 @@ export default function NotificationsPage() {
     if (!mounted || !isAdmin) return;
     const loadUsers = async () => {
       try {
-        const res = await api.get("/users");
+        const res = await api.get("/nguoi-dung");
         setUsers(res.data || []);
       } catch {
         setUsers([]);
@@ -114,7 +114,7 @@ export default function NotificationsPage() {
   }, [mounted, isAdmin, notify]);
 
   const markRead = async (id: number) => {
-    await api.put(`/notifications/${id}/read`);
+    await api.put(`/thong-bao/${id}/da-doc`);
     await load();
     notificationContext?.refetchUnread();
   };
@@ -129,7 +129,7 @@ export default function NotificationsPage() {
     setError("");
     setCreating(true);
     try {
-      await api.post("/notifications", {
+      await api.post("/thong-bao", {
         message: trimmed,
         userId: userId ? Number(userId) : null,
       });

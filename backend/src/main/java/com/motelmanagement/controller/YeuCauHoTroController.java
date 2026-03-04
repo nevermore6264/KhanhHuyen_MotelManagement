@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.YeuCauHoTro;
-import com.motelmanagement.repository.KhoKhachThue;
-import com.motelmanagement.repository.KhoYeuCauHoTro;
+import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.repository.YeuCauHoTroRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,16 +24,16 @@ import lombok.RequiredArgsConstructor;
 /** API yêu cầu hỗ trợ từ khách thuê. */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/support-requests")
+@RequestMapping("/api/yeu-cau-ho-tro")
 public class YeuCauHoTroController {
-    private final KhoYeuCauHoTro khoYeuCauHoTro;
-    private final KhoKhachThue khoKhachThue;
+    private final YeuCauHoTroRepository yeuCauHoTroRepository;
+    private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<YeuCauHoTro> layDanhSach() {
-        return khoYeuCauHoTro.findAll();
+        return yeuCauHoTroRepository.findAll();
     }
 
     @PostMapping
@@ -43,34 +43,34 @@ public class YeuCauHoTroController {
         if (nguoiDung == null) {
             return ResponseEntity.badRequest().build();
         }
-        KhachThue khachThue = khoKhachThue.findByUser_Id(nguoiDung.getId());
+        KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
         if (khachThue == null) {
             KhachThue moiTao = new KhachThue();
-            moiTao.setFullName(nguoiDung.getHoTen());
-            moiTao.setPhone(nguoiDung.getSoDienThoai());
-            moiTao.setUser(nguoiDung);
-            khachThue = khoKhachThue.save(moiTao);
+            moiTao.setHoTen(nguoiDung.getHoTen());
+            moiTao.setSoDienThoai(nguoiDung.getSoDienThoai());
+            moiTao.setNguoiDung(nguoiDung);
+            khachThue = khachThueRepository.save(moiTao);
         }
         yeuCau.setKhachThue(khachThue);
-        return ResponseEntity.ok(khoYeuCauHoTro.save(yeuCau));
+        return ResponseEntity.ok(yeuCauHoTroRepository.save(yeuCau));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<YeuCauHoTro> capNhat(@PathVariable("id") Long ma, @RequestBody YeuCauHoTro yeuCau) {
-        return khoYeuCauHoTro.findById(ma)
+        return yeuCauHoTroRepository.findById(ma)
                 .map(hienTai -> {
-                    if (yeuCau.getStatus() != null) {
-                        hienTai.setStatus(yeuCau.getStatus());
+                    if (yeuCau.getTrangThai() != null) {
+                        hienTai.setTrangThai(yeuCau.getTrangThai());
                     }
-                    if (yeuCau.getTitle() != null) {
-                        hienTai.setTitle(yeuCau.getTitle());
+                    if (yeuCau.getTieuDe() != null) {
+                        hienTai.setTieuDe(yeuCau.getTieuDe());
                     }
-                    if (yeuCau.getDescription() != null) {
-                        hienTai.setDescription(yeuCau.getDescription());
+                    if (yeuCau.getMoTa() != null) {
+                        hienTai.setMoTa(yeuCau.getMoTa());
                     }
-                    hienTai.setUpdatedAt(java.time.LocalDateTime.now());
-                    return ResponseEntity.ok(khoYeuCauHoTro.save(hienTai));
+                    hienTai.setNgayCapNhat(java.time.LocalDateTime.now());
+                    return ResponseEntity.ok(yeuCauHoTroRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

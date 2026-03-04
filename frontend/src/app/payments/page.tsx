@@ -68,7 +68,7 @@ export default function PaymentsPage() {
       return;
     }
     try {
-      const res = await api.get("/invoices");
+      const res = await api.get("/hoa-don");
       setInvoices(res.data);
     } catch {
       setInvoices([]);
@@ -97,7 +97,7 @@ export default function PaymentsPage() {
     setError("");
     setSubmitting(true);
     try {
-      await api.post("/payments", {
+      await api.post("/thanh-toan", {
         invoice: { id: updatingInvoice.id },
         amount: Number(num),
         method,

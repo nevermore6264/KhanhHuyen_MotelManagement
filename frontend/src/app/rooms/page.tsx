@@ -107,8 +107,8 @@ export default function RoomsPage() {
 
   const load = async () => {
     const [roomRes, areaRes] = await Promise.all([
-      api.get("/rooms"),
-      api.get("/areas"),
+      api.get("/phong"),
+      api.get("/khu-vuc"),
     ]);
     setRooms(roomRes.data);
     setAreas(areaRes.data);
@@ -128,7 +128,7 @@ export default function RoomsPage() {
     }
     setError("");
     try {
-      await api.post("/rooms", {
+      await api.post("/phong", {
         code: trimmedCode,
         floor: floor.trim() || null,
         status,
@@ -179,7 +179,7 @@ export default function RoomsPage() {
     }
     setEditError("");
     try {
-      await api.put(`/rooms/${editing.id}`, {
+      await api.put(`/phong/${editing.id}`, {
         code: trimmedCode,
         floor: editFloor.trim() || null,
         status: editStatus,
@@ -232,7 +232,7 @@ export default function RoomsPage() {
       return;
     }
     try {
-      await api.delete(`/rooms/${confirmId}`);
+      await api.delete(`/phong/${confirmId}`);
       notify("Xóa phòng thành công", "success");
     } catch (err: any) {
       setConfirmId(null);

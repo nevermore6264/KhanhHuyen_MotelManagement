@@ -70,7 +70,7 @@ export default function ServicePricesPage() {
   }, []);
 
   const load = async () => {
-    const res = await api.get("/service-prices");
+    const res = await api.get("/bang-gia-dich-vu");
     setItems(res.data);
   };
 
@@ -87,7 +87,7 @@ export default function ServicePricesPage() {
       return;
     }
     setError("");
-    await api.post("/service-prices", {
+    await api.post("/bang-gia-dich-vu", {
       roomPrice: null,
       electricityPrice: ep,
       waterPrice: wp,
@@ -127,7 +127,7 @@ export default function ServicePricesPage() {
       return;
     }
     setEditError("");
-    await api.put(`/service-prices/${editing.id}`, {
+    await api.put(`/bang-gia-dich-vu/${editing.id}`, {
       roomPrice: null,
       electricityPrice: ep,
       waterPrice: wp,
@@ -140,7 +140,7 @@ export default function ServicePricesPage() {
 
   const deleteItem = async (id: number) => {
     if (!confirm("Bạn có chắc muốn xóa bảng giá này?")) return;
-    await api.delete(`/service-prices/${id}`);
+    await api.delete(`/bang-gia-dich-vu/${id}`);
     notify("Đã xóa bảng giá", "success");
     load();
   };

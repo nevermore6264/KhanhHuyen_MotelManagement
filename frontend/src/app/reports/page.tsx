@@ -97,11 +97,11 @@ export default function ReportsPage() {
       const y = year ? Number(year) : now.getFullYear();
       const [sumRes, debtRes, vacantRes, occRes, invSumRes] = await Promise.all(
         [
-          api.get(`/reports/summary?month=${m}&year=${y}`),
-          api.get("/reports/debt-detail"),
-          api.get("/reports/vacant"),
-          api.get("/reports/occupancy"),
-          api.get(`/reports/invoice-summary?month=${m}&year=${y}`),
+          api.get(`/bao-cao/tom-tat?month=${m}&year=${y}`),
+          api.get("/bao-cao/chi-tiet-cong-no"),
+          api.get("/bao-cao/phong-trong"),
+          api.get("/bao-cao/ty-le-lap-day"),
+          api.get(`/bao-cao/tom-tat-hoa-don?month=${m}&year=${y}`),
         ],
       );
       setSummary(sumRes.data);
@@ -119,7 +119,9 @@ export default function ReportsPage() {
   const loadRevenueYear = async () => {
     if (!canView || !yearRevenue) return;
     try {
-      const res = await api.get(`/reports/revenue-year?year=${yearRevenue}`);
+      const res = await api.get(
+        `/bao-cao/doanh-thu-theo-nam?year=${yearRevenue}`,
+      );
       setRevenueYear(res.data);
     } catch {
       setRevenueYear(null);

@@ -14,9 +14,9 @@ import com.motelmanagement.domain.HoaDon;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
 import com.motelmanagement.domain.TrangThaiHoaDon;
-import com.motelmanagement.repository.KhoHoaDon;
-import com.motelmanagement.repository.KhoNguoiDung;
-import com.motelmanagement.repository.KhoThongBao;
+import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.NguoiDungRepository;
+import com.motelmanagement.repository.ThongBaoRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,25 +24,25 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ThongBaoService {
-    private final KhoHoaDon khoHoaDon;
-    private final KhoThongBao khoThongBao;
-    private final KhoNguoiDung khoNguoiDung;
+    private final HoaDonRepository hoaDonRepository;
+    private final ThongBaoRepository thongBaoRepository;
+    private final NguoiDungRepository nguoiDungRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Scheduled(cron = "0 0 9 * * ?")
     public void nhacThanhToanDinhKy() {
         LocalDate hienTai = LocalDate.now();
-        List<HoaDon> chuaThanhToan = khoHoaDon.findByStatus(TrangThaiHoaDon.UNPAID);
+        List<HoaDon> chuaThanhToan = hoaDonRepository.findByTrangThai(TrangThaiHoaDon.UNPAID);
         for (HoaDon hoaDon : chuaThanhToan) {
-            if (hoaDon.getKhachThue() != null && hoaDon.getKhachThue().getUser() != null) {
-                NguoiDung nguoiDung = hoaDon.getKhachThue().getUser();
+            if (hoaDon.getKhachThue() != null && hoaDon.getKhachThue().getNguoiDung() != null) {
+                NguoiDung nguoiDung = hoaDon.getKhachThue().getNguoiDung();
                 ThongBao thongBao = new ThongBao();
-                thongBao.setUser(nguoiDung);
-                thongBao.setMessage(
-                        "Nhắc thanh toán hóa đơn " + hoaDon.getMonth() + "/" + hoaDon.getYear()
-                                + " cho phòng " + hoaDon.getPhong().getCode()
+                thongBao.setNguoiDung(nguoiDung);
+                thongBao.setNoiDung(
+                        "Nhắc thanh toán hóa đơn " + hoaDon.getThang() + "/" + hoaDon.getNam()
+                                + " cho phòng " + hoaDon.getPhong().getMaPhong()
                                 + " vào " + hienTai);
-                khoThongBao.save(thongBao);
+                thongBaoRepository.save(thongBao);
             }
         }
     }
@@ -55,18 +55,18 @@ public class ThongBaoService {
     public void taoVaDay(String message, Long userId) {
         if (message == null || message.isBlank()) return;
         List<NguoiDung> danhSachNhan = userId != null
-                ? khoNguoiDung.findById(userId).map(List::of).orElse(List.of())
-                : khoNguoiDung.findAll();
+                ? nguoiDungRepository.findById(userId).map(List::of).orElse(List.of())
+                : nguoiDungRepository.findAll();
         for (NguoiDung nguoiDung : danhSachNhan) {
             ThongBao thongBao = new ThongBao();
-            thongBao.setUser(nguoiDung);
-            thongBao.setMessage(message.trim());
-            thongBao = khoThongBao.save(thongBao);
+            thongBao.setNguoiDung(nguoiDung);
+            thongBao.setNoiDung(message.trim());
+            thongBao = thongBaoRepository.save(thongBao);
             Map<String, Object> payload = new HashMap<>();
             payload.put("id", thongBao.getId());
-            payload.put("message", thongBao.getMessage());
-            payload.put("readFlag", thongBao.isReadFlag());
-            payload.put("sentAt", thongBao.getSentAt() != null ? thongBao.getSentAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null);
+            payload.put("message", thongBao.getNoiDung());
+            payload.put("readFlag", thongBao.isDaDoc());
+            payload.put("sentAt", thongBao.getThoiGianGui() != null ? thongBao.getThoiGianGui().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null);
             messagingTemplate.convertAndSendToUser(nguoiDung.getTenDangNhap(), "/queue/notifications", payload);
         }
     }

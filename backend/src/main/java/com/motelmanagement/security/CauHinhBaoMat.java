@@ -29,8 +29,8 @@ public class CauHinhBaoMat {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/payments/payos/webhook").permitAll()
+                        .requestMatchers("/api/xac-thuc/**").permitAll()
+                        .requestMatchers("/api/thanh-toan/payos/webhook").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )

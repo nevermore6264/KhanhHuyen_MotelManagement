@@ -72,12 +72,12 @@ export default function MyContractsPage() {
   const { notify } = useToast();
 
   useEffect(() => {
-    api.get("/contracts/me").then((res) => setItems(res.data || []));
+    api.get("/hop-dong/cua-toi").then((res) => setItems(res.data || []));
   }, []);
 
   const fetchContractForDoc = async (id: number): Promise<Contract | null> => {
     try {
-      const res = await api.get(`/contracts/me/${id}`);
+      const res = await api.get(`/hop-dong/cua-toi/${id}`);
       return res.data;
     } catch {
       return null;

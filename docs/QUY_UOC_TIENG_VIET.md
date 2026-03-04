@@ -100,7 +100,7 @@ Tài liệu này mô tả phần đã thay thế **comment** và **tên class/fu
 
 - **Ten bien va ham (controller, service, security, job, logging, cauhinh):** Da doi sang tieng Viet khong dau trong toan bo backend. Vi du bien: `user` → `nguoiDung`, `tenant` → `khachThue`, `room` → `phong`, `invoice` → `hoaDon`, `request` → `yeuCau`, `id` (param) → `ma`. Vi du ham: `list()` → `layDanhSach()`, `create()` → `tao()`, `update()` → `capNhat()`, `delete()` → `xoa()`, `getCurrentUser()` → `layNguoiDungHienTai()`. **Giu nguyen:** getter/setter cua entity va DTO (de JSON khong doi), ten phuong thuc repository Spring Data (`findByUsername`, `save`, ...).
 
-- **Giữ nguyên:** Đường dẫn API (`/api/auth/login`, `/api/users`, ...), tên bảng DB (`users`, `password_reset_tokens`), tên trường JSON (`username`, `token`, `fullName`, ...) để frontend và hợp đồng API không đổi.
+- **API (đã đổi sang tiếng Việt không dấu):** `/api/xac-thuc/dang-nhap`, `/api/nguoi-dung`, `/api/khu-vuc`, `/api/phong`, `/api/hop-dong`, `/api/khach-thue`, `/api/hoa-don`, `/api/thanh-toan`, `/api/bang-gia-dich-vu`, `/api/chi-so-dien-nuoc`, `/api/yeu-cau-ho-tro`, `/api/thong-bao`, `/api/bao-cao`, `/api/nhat-ky`. **Giữ nguyên:** tên bảng DB, tên trường JSON (`username`, `token`, `fullName`, ...) để hợp đồng dữ liệu không đổi.
 
 ### Frontend (TypeScript/React)
 

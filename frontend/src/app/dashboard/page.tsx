@@ -176,28 +176,28 @@ export default function DashboardPage() {
     if (!mounted) return;
     if (isTenant) {
       api
-        .get("/contracts/me")
+        .get("/hop-dong/cua-toi")
         .then((res) => setMyContracts(res.data || []))
         .catch(() => setMyContracts([]));
       api
-        .get("/payments/me?limit=10")
+        .get("/thanh-toan/cua-toi?gioiHan=10")
         .then((res) => setMyPayments(Array.isArray(res.data) ? res.data : []))
         .catch(() => setMyPayments([]));
       return;
     }
     const load = async () => {
       try {
-        const vacantRes = await api.get("/reports/vacant");
+        const vacantRes = await api.get("/bao-cao/phong-trong");
         setVacant(vacantRes.data.vacantRooms || 0);
       } catch {}
       try {
-        const debtRes = await api.get("/reports/debt");
+        const debtRes = await api.get("/bao-cao/cong-no");
         setDebt(Number(debtRes.data.totalDebt || 0));
       } catch {}
       try {
         const now = new Date();
         const revRes = await api.get(
-          `/reports/revenue?month=${now.getMonth() + 1}&year=${now.getFullYear()}`,
+          `/bao-cao/doanh-thu?month=${now.getMonth() + 1}&year=${now.getFullYear()}`,
         );
         setRevenue(Number(revRes.data.revenue || 0));
       } catch {}

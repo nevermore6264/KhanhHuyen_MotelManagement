@@ -23,7 +23,7 @@ export default function MyPaymentsPage() {
   const [invoiceId, setInvoiceId] = useState("");
 
   useEffect(() => {
-    api.get("/invoices/me").then((res) => setInvoices(res.data || []));
+    api.get("/hoa-don/cua-toi").then((res) => setInvoices(res.data || []));
   }, []);
 
   useEffect(() => {
@@ -34,13 +34,15 @@ export default function MyPaymentsPage() {
     if (invoices.some((i) => String(i.id) === id)) {
       appliedUrlRef.current = true;
       setInvoiceId(id);
-      api.get(`/payments/invoice/${id}`).then((res) => setPayments(res.data || []));
+      api
+        .get(`/thanh-toan/hoa-don/${id}`)
+        .then((res) => setPayments(res.data || []));
     }
   }, [searchParams, invoices]);
 
   const loadPayments = async (id: string) => {
     if (!id) return;
-    const res = await api.get(`/payments/invoice/${id}`);
+    const res = await api.get(`/thanh-toan/hoa-don/${id}`);
     setPayments(res.data || []);
   };
 
@@ -50,10 +52,18 @@ export default function MyPaymentsPage() {
       <div className="container">
         <h2>Lịch sử thanh toán</h2>
         <div className="card">
-          <select value={invoiceId} onChange={(e) => { setInvoiceId(e.target.value); loadPayments(e.target.value); }}>
+          <select
+            value={invoiceId}
+            onChange={(e) => {
+              setInvoiceId(e.target.value);
+              loadPayments(e.target.value);
+            }}
+          >
             <option value="">Chọn hóa đơn</option>
             {invoices.map((i) => (
-              <option key={i.id} value={i.id}>Hóa đơn #{i.id} ({i.month}/{i.year})</option>
+              <option key={i.id} value={i.id}>
+                Hóa đơn #{i.id} ({i.month}/{i.year})
+              </option>
             ))}
           </select>
         </div>
@@ -61,10 +71,24 @@ export default function MyPaymentsPage() {
           <SimpleTable
             data={payments}
             columns={[
-              { header: 'ID', render: (p) => p.id },
+              { header: "ID", render: (p) => p.id },
               { header: "Số tiền", render: (p) => formatVND(p.amount) },
-              { header: "Hình thức", render: (p) => p.method === "TRANSFER" ? "Chuyển khoản" : p.method === "CASH" ? "Tiền mặt" : p.method },
-              { header: "Ngày", render: (p) => p.paidAt ? new Date(p.paidAt).toLocaleDateString("vi-VN") : "—" }
+              {
+                header: "Hình thức",
+                render: (p) =>
+                  p.method === "TRANSFER"
+                    ? "Chuyển khoản"
+                    : p.method === "CASH"
+                      ? "Tiền mặt"
+                      : p.method,
+              },
+              {
+                header: "Ngày",
+                render: (p) =>
+                  p.paidAt
+                    ? new Date(p.paidAt).toLocaleDateString("vi-VN")
+                    : "—",
+              },
             ]}
           />
         </div>

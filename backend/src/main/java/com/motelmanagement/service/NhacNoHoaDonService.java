@@ -1,21 +1,23 @@
 package com.motelmanagement.service;
 
-import com.motelmanagement.config.ThuocTinhMail;
-import com.motelmanagement.domain.HoaDon;
-import com.motelmanagement.domain.TrangThaiHoaDon;
-import com.motelmanagement.repository.KhoHoaDon;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
+import com.motelmanagement.config.ThuocTinhMail;
+import com.motelmanagement.domain.HoaDon;
+import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.repository.HoaDonRepository;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 /** Dịch vụ gửi nhắc nợ hóa đơn qua email/SMS. */
@@ -23,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 public class NhacNoHoaDonService {
 
-    private final KhoHoaDon khoHoaDon;
+    private final HoaDonRepository hoaDonRepository;
     private final ThuocTinhMail thuocTinhMail;
     private final SmsService smsService;
 
@@ -36,10 +38,10 @@ public class NhacNoHoaDonService {
     }
 
     private static String buildReminderBody(HoaDon hoaDon) {
-        String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getCode() : "—";
-        String ky = hoaDon.getMonth() + "/" + hoaDon.getYear();
-        String tong = formatMoney(hoaDon.getTotal());
-        String ten = hoaDon.getKhachThue() != null ? hoaDon.getKhachThue().getFullName() : "Khách";
+        String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : "—";
+        String ky = hoaDon.getThang() + "/" + hoaDon.getNam();
+        String tong = formatMoney(hoaDon.getTongTien());
+        String ten = hoaDon.getKhachThue() != null ? hoaDon.getKhachThue().getHoTen() : "Khách";
         return String.format(
                 "Kính gửi %s,\n\nNhắc nợ hóa đơn tiền trọ:\n- Phòng: %s\n- Kỳ: %s\n- Tổng cộng: %s\n\nVui lòng thanh toán sớm.\nTrân trọng.",
                 ten, phong, ky, tong
@@ -47,9 +49,9 @@ public class NhacNoHoaDonService {
     }
 
     private static String buildReminderSmsText(HoaDon hoaDon) {
-        String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getCode() : "—";
-        String ky = hoaDon.getMonth() + "/" + hoaDon.getYear();
-        String tong = formatMoney(hoaDon.getTotal());
+        String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : "—";
+        String ky = hoaDon.getThang() + "/" + hoaDon.getNam();
+        String tong = formatMoney(hoaDon.getTongTien());
         return String.format("Nhac no: Phong %s, ky %s, tong %s. Vui long thanh toan.", phong, ky, tong);
     }
 
@@ -61,26 +63,26 @@ public class NhacNoHoaDonService {
         if (!"email".equalsIgnoreCase(kenh) && !"sms".equalsIgnoreCase(kenh)) {
             return Optional.of("Kênh không hợp lệ. Chọn email hoặc sms.");
         }
-        HoaDon hoaDon = khoHoaDon.findById(maHoaDon).orElse(null);
+        HoaDon hoaDon = hoaDonRepository.findById(maHoaDon).orElse(null);
         if (hoaDon == null) {
             return Optional.of("Không tìm thấy hóa đơn.");
         }
         if (hoaDon.getKhachThue() == null) {
             return Optional.of("Hóa đơn chưa gắn khách thuê.");
         }
-        if (hoaDon.getStatus() == TrangThaiHoaDon.PAID) {
+        if (hoaDon.getTrangThai() == TrangThaiHoaDon.PAID) {
             return Optional.of("Hóa đơn đã thanh toán, không cần nhắc.");
         }
 
         String emailNhan = hoaDon.getKhachThue().getEmail();
-        String sdtNhan = hoaDon.getKhachThue().getPhone();
+        String sdtNhan = hoaDon.getKhachThue().getSoDienThoai();
         if ("email".equalsIgnoreCase(kenh)) {
             if (emailNhan == null || emailNhan.isBlank()) {
                 return Optional.of("Khách thuê chưa có email.");
             }
-            String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getCode() : null;
+            String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : null;
             log.info("Reminder EMAIL: invoiceId={}, to={}, room={}, period={}/{}",
-                    maHoaDon, emailNhan, maPhong, hoaDon.getMonth(), hoaDon.getYear());
+                    maHoaDon, emailNhan, maPhong, hoaDon.getThang(), hoaDon.getNam());
 
             String noiDung = buildReminderBody(hoaDon);
             if (javaMailSender != null) {
@@ -90,7 +92,7 @@ public class NhacNoHoaDonService {
                     helper.setFrom(thuocTinhMail.getFrom());
                     helper.setTo(emailNhan.trim());
                     helper.setSubject(String.format("Nhắc nợ - Hóa đơn phòng %s kỳ %d/%d",
-                            maPhong != null ? maPhong : "", hoaDon.getMonth(), hoaDon.getYear()));
+                            maPhong != null ? maPhong : "", hoaDon.getThang(), hoaDon.getNam()));
                     helper.setText(noiDung, false);
                     javaMailSender.send(message);
                     log.info("Email sent to {}", emailNhan);
@@ -100,18 +102,18 @@ public class NhacNoHoaDonService {
                 }
             }
 
-            hoaDon.setLastReminderEmailAt(LocalDateTime.now());
-            hoaDon.setReminderEmailCount(hoaDon.getReminderEmailCount() + 1);
-            hoaDon.setLastReminderEmailMessage(noiDung);
-            khoHoaDon.save(hoaDon);
+            hoaDon.setNhacNoEmailLanCuoi(LocalDateTime.now());
+            hoaDon.setSoLanNhacNoEmail(hoaDon.getSoLanNhacNoEmail() + 1);
+            hoaDon.setNoiDungEmailCuoi(noiDung);
+            hoaDonRepository.save(hoaDon);
             return Optional.empty();
         } else {
             if (sdtNhan == null || sdtNhan.isBlank()) {
                 return Optional.of("Khách thuê chưa có số điện thoại.");
             }
-            String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getCode() : null;
+            String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : null;
             log.info("Reminder SMS: invoiceId={}, to={}, room={}, period={}/{}",
-                    maHoaDon, sdtNhan, maPhong, hoaDon.getMonth(), hoaDon.getYear());
+                    maHoaDon, sdtNhan, maPhong, hoaDon.getThang(), hoaDon.getNam());
 
             String smsText = buildReminderSmsText(hoaDon);
             boolean daGui = smsService.gui(sdtNhan.trim(), smsText);
@@ -119,10 +121,10 @@ public class NhacNoHoaDonService {
                 return Optional.of("Gửi SMS thất bại. Kiểm tra cấu hình gateway.");
             }
 
-            hoaDon.setLastReminderSmsAt(LocalDateTime.now());
-            hoaDon.setReminderSmsCount(hoaDon.getReminderSmsCount() + 1);
-            hoaDon.setLastReminderSmsMessage(smsText);
-            khoHoaDon.save(hoaDon);
+            hoaDon.setNhacNoSmsLanCuoi(LocalDateTime.now());
+            hoaDon.setSoLanNhacNoSms(hoaDon.getSoLanNhacNoSms() + 1);
+            hoaDon.setNoiDungSmsCuoi(smsText);
+            hoaDonRepository.save(hoaDon);
             return Optional.empty();
         }
     }

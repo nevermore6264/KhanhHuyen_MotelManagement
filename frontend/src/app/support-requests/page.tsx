@@ -55,7 +55,7 @@ export default function SupportRequestsPage() {
   const { notify } = useToast();
 
   const load = async () => {
-    const res = await api.get("/support-requests");
+    const res = await api.get("/yeu-cau-ho-tro");
     setItems(res.data);
   };
 
@@ -70,7 +70,7 @@ export default function SupportRequestsPage() {
       return;
     }
     try {
-      await api.put(`/support-requests/${selectedId.trim()}`, { status });
+      await api.put(`/yeu-cau-ho-tro/${selectedId.trim()}`, { status });
       notify("Đã cập nhật trạng thái", "success");
       setSelectedId("");
       setStatus("OPEN");
@@ -86,7 +86,7 @@ export default function SupportRequestsPage() {
   };
 
   const markResolved = async (req: SupportRequest) => {
-    await api.put(`/support-requests/${req.id}`, {
+    await api.put(`/yeu-cau-ho-tro/${req.id}`, {
       status: "RESOLVED",
       title: req.title,
       description: req.description,

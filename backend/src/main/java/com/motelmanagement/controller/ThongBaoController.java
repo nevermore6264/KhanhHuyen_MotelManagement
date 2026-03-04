@@ -3,7 +3,7 @@ package com.motelmanagement.controller;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
 import com.motelmanagement.dto.NotificationCreateDto;
-import com.motelmanagement.repository.KhoThongBao;
+import com.motelmanagement.repository.ThongBaoRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.ThongBaoService;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +16,9 @@ import java.util.List;
 /** API thông báo: lấy danh sách, đánh dấu đã đọc, tạo và đẩy thông báo. */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/thong-bao")
 public class ThongBaoController {
-    private final KhoThongBao khoThongBao;
+    private final ThongBaoRepository thongBaoRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final ThongBaoService thongBaoService;
 
@@ -29,16 +29,16 @@ public class ThongBaoController {
         if (nguoiDung == null) {
             return List.of();
         }
-        return khoThongBao.findByUser(nguoiDung);
+        return thongBaoRepository.findByNguoiDung(nguoiDung);
     }
 
-    @PutMapping("/{id}/read")
+    @PutMapping("/{id}/da-doc")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
     public ResponseEntity<ThongBao> danhDauDaDoc(@PathVariable("id") Long ma) {
-        return khoThongBao.findById(ma)
+        return thongBaoRepository.findById(ma)
                 .map(hienTai -> {
-                    hienTai.setReadFlag(true);
-                    return ResponseEntity.ok(khoThongBao.save(hienTai));
+                    hienTai.setDaDoc(true);
+                    return ResponseEntity.ok(thongBaoRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

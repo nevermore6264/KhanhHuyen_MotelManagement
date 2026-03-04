@@ -59,9 +59,9 @@ export default function MeterReadingsPage() {
 
   const load = async () => {
     const [rRes, rmRes, aRes] = await Promise.all([
-      api.get("/meter-readings"),
-      api.get("/rooms"),
-      api.get("/areas"),
+      api.get("/chi-so-dien-nuoc"),
+      api.get("/phong"),
+      api.get("/khu-vuc"),
     ]);
     setReadings(rRes.data);
     setRooms(rmRes.data);
@@ -128,7 +128,7 @@ export default function MeterReadingsPage() {
     }
     setError("");
     try {
-      await api.post("/meter-readings", {
+      await api.post("/chi-so-dien-nuoc", {
         room: { id: Number(roomId) },
         month: Number(month),
         year: Number(year),

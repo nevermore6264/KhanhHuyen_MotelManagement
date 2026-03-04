@@ -23,9 +23,9 @@ import com.motelmanagement.domain.HoaDon;
 import com.motelmanagement.domain.PhuongThucThanhToan;
 import com.motelmanagement.domain.ThanhToan;
 import com.motelmanagement.domain.TrangThaiHoaDon;
-import com.motelmanagement.repository.KhoHoaDon;
-import com.motelmanagement.repository.KhoDonHangPayOS;
-import com.motelmanagement.repository.KhoThanhToan;
+import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.DonHangPayOSRepository;
+import com.motelmanagement.repository.ThanhToanRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,20 +39,20 @@ public class PayOSService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ThuocTinhPayOS thuocTinhPayOS;
-    private final KhoDonHangPayOS khoDonHangPayOS;
-    private final KhoHoaDon khoHoaDon;
-    private final KhoThanhToan khoThanhToan;
+    private final DonHangPayOSRepository donHangPayOSRepository;
+    private final HoaDonRepository hoaDonRepository;
+    private final ThanhToanRepository thanhToanRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
      * Tạo link thanh toán PayOS cho hóa đơn. Lưu orderCode -> invoiceId để xử lý webhook.
      */
     public String taoLinkThanhToan(HoaDon hoaDon) {
-        if (hoaDon == null || hoaDon.getTotal() == null
+        if (hoaDon == null || hoaDon.getTongTien() == null
                 || laRong(thuocTinhPayOS.getClientId()) || laRong(thuocTinhPayOS.getApiKey()) || laRong(thuocTinhPayOS.getChecksumKey())) {
             return null;
         }
-        long soTien = hoaDon.getTotal().longValue();
+        long soTien = hoaDon.getTongTien().longValue();
         if (soTien <= 0) return null;
 
         int maDonHang = (int) (System.currentTimeMillis() % 2_000_000_000);
@@ -60,7 +60,7 @@ public class PayOSService {
 
         String urlQuayLai = thuocTinhPayOS.getReturnUrl() != null ? thuocTinhPayOS.getReturnUrl() : "http://localhost:4002/my-invoices?payment=success";
         String urlHuy = thuocTinhPayOS.getCancelUrl() != null ? thuocTinhPayOS.getCancelUrl() : "http://localhost:4002/my-invoices?payment=cancel";
-        String moTa = "HD" + hoaDon.getId() + " " + hoaDon.getMonth() + "/" + hoaDon.getYear();
+        String moTa = "HD" + hoaDon.getId() + " " + hoaDon.getThang() + "/" + hoaDon.getNam();
         if (moTa.length() > 250) moTa = moTa.substring(0, 250);
 
         String duLieuKy = "amount=" + soTien + "&cancelUrl=" + urlHuy + "&description=" + moTa
@@ -93,9 +93,9 @@ public class PayOSService {
                     String linkThanhToan = root.path("data").path("checkoutUrl").asText(null);
                     if (linkThanhToan != null) {
                         DonHangPayOS donHang = new DonHangPayOS();
-                        donHang.setOrderCode(maDonHang);
-                        donHang.setInvoiceId(hoaDon.getId());
-                        khoDonHangPayOS.save(donHang);
+                        donHang.setMaDonHang(maDonHang);
+                        donHang.setMaHoaDon(hoaDon.getId());
+                        donHangPayOSRepository.save(donHang);
                         return linkThanhToan;
                     }
                 }
@@ -128,25 +128,25 @@ public class PayOSService {
             int soTien = data.path("amount").asInt(0);
             if (maDonHang == 0 || soTien <= 0) return true;
 
-            return khoDonHangPayOS.findByOrderCode(maDonHang)
+            return donHangPayOSRepository.findByMaDonHang(maDonHang)
                     .map(donHang -> {
-                        HoaDon hoaDon = khoHoaDon.findById(donHang.getInvoiceId()).orElse(null);
+                        HoaDon hoaDon = hoaDonRepository.findById(donHang.getMaHoaDon()).orElse(null);
                         if (hoaDon == null) return false;
                         ThanhToan thanhToan = new ThanhToan();
                         thanhToan.setHoaDon(hoaDon);
-                        thanhToan.setAmount(java.math.BigDecimal.valueOf(soTien));
-                        thanhToan.setMethod(PhuongThucThanhToan.TRANSFER);
-                        khoThanhToan.save(thanhToan);
-                        java.math.BigDecimal tongDaThanhToan = khoThanhToan.findByHoaDonId(hoaDon.getId()).stream()
-                                .map(ThanhToan::getAmount)
+                        thanhToan.setSoTien(java.math.BigDecimal.valueOf(soTien));
+                        thanhToan.setPhuongThuc(PhuongThucThanhToan.TRANSFER);
+                        thanhToanRepository.save(thanhToan);
+                        java.math.BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDonId(hoaDon.getId()).stream()
+                                .map(ThanhToan::getSoTien)
                                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-                        if (tongDaThanhToan.compareTo(hoaDon.getTotal()) >= 0) {
-                            hoaDon.setStatus(TrangThaiHoaDon.PAID);
+                        if (tongDaThanhToan.compareTo(hoaDon.getTongTien()) >= 0) {
+                            hoaDon.setTrangThai(TrangThaiHoaDon.PAID);
                         } else {
-                            hoaDon.setStatus(TrangThaiHoaDon.PARTIAL);
+                            hoaDon.setTrangThai(TrangThaiHoaDon.PARTIAL);
                         }
-                        khoHoaDon.save(hoaDon);
-                        khoDonHangPayOS.delete(donHang);
+                        hoaDonRepository.save(hoaDon);
+                        donHangPayOSRepository.delete(donHang);
                         return true;
                     })
                     .orElse(false);
@@ -158,15 +158,15 @@ public class PayOSService {
 
     private String xayChuKyTuData(JsonNode data) {
         TreeMap<String, String> sapXep = new TreeMap<>();
-        data.fields().forEachRemaining(e -> {
-            JsonNode v = e.getValue();
+        data.fieldNames().forEachRemaining(key -> {
+            JsonNode v = data.get(key);
             String val;
             if (v == null || v.isNull()) val = "";
             else if (v.isNumber() || v.isBoolean()) val = v.toString();
             else if (v.isObject() || v.isArray()) val = v.toString();
             else val = v.asText("");
             if ("null".equals(val) || "undefined".equals(val)) val = "";
-            sapXep.put(e.getKey(), val);
+            sapXep.put(key, val);
         });
         StringBuilder sb = new StringBuilder();
         sapXep.forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));

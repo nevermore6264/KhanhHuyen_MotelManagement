@@ -17,29 +17,29 @@ import org.springframework.web.bind.annotation.RestController;
 import com.motelmanagement.domain.KhuVuc;
 import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.dto.AreaWithRoomCountDto;
-import com.motelmanagement.repository.KhoKhuVuc;
-import com.motelmanagement.repository.KhoHopDong;
-import com.motelmanagement.repository.KhoPhong;
+import com.motelmanagement.repository.KhuVucRepository;
+import com.motelmanagement.repository.HopDongRepository;
+import com.motelmanagement.repository.PhongRepository;
 
 import lombok.RequiredArgsConstructor;
 
 /** API khu vực (kèm số phòng). */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/areas")
+@RequestMapping("/api/khu-vuc")
 public class KhuVucController {
-    private final KhoKhuVuc khoKhuVuc;
-    private final KhoPhong khoPhong;
-    private final KhoHopDong khoHopDong;
+    private final KhuVucRepository khuVucRepository;
+    private final PhongRepository phongRepository;
+    private final HopDongRepository hopDongRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<AreaWithRoomCountDto> layDanhSach() {
-        return khoKhuVuc.findAll().stream()
+        return khuVucRepository.findAll().stream()
                 .map(khuVuc -> {
-                    long soPhong = khoPhong.countByKhuVuc_Id(khuVuc.getId());
-                    boolean coTheXoa = khoHopDong.countByPhong_KhuVuc_IdAndStatus(khuVuc.getId(), TrangThaiHopDong.ACTIVE) == 0;
-                    return new AreaWithRoomCountDto(khuVuc.getId(), khuVuc.getName(), khuVuc.getAddress(), khuVuc.getDescription(), soPhong, coTheXoa);
+                    long soPhong = phongRepository.countByKhuVuc_Id(khuVuc.getId());
+                    boolean coTheXoa = hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai(khuVuc.getId(), TrangThaiHopDong.ACTIVE) == 0;
+                    return new AreaWithRoomCountDto(khuVuc.getId(), khuVuc.getTen(), khuVuc.getDiaChi(), khuVuc.getMoTa(), soPhong, coTheXoa);
                 })
                 .collect(Collectors.toList());
     }
@@ -47,18 +47,18 @@ public class KhuVucController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public KhuVuc tao(@RequestBody KhuVuc khuVuc) {
-        return khoKhuVuc.save(khuVuc);
+        return khuVucRepository.save(khuVuc);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<KhuVuc> capNhat(@PathVariable("id") Long ma, @RequestBody KhuVuc khuVuc) {
-        return khoKhuVuc.findById(ma)
+        return khuVucRepository.findById(ma)
                 .map(hienTai -> {
-                    hienTai.setName(khuVuc.getName());
-                    hienTai.setAddress(khuVuc.getAddress());
-                    hienTai.setDescription(khuVuc.getDescription());
-                    return ResponseEntity.ok(khoKhuVuc.save(hienTai));
+                    hienTai.setTen(khuVuc.getTen());
+                    hienTai.setDiaChi(khuVuc.getDiaChi());
+                    hienTai.setMoTa(khuVuc.getMoTa());
+                    return ResponseEntity.ok(khuVucRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -66,11 +66,11 @@ public class KhuVucController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> xoa(@PathVariable("id") Long ma) {
-        if (khoHopDong.countByPhong_KhuVuc_IdAndStatus(ma, TrangThaiHopDong.ACTIVE) > 0) {
+        if (hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai(ma, TrangThaiHopDong.ACTIVE) > 0) {
             return ResponseEntity.badRequest()
                     .body("Không thể xóa khu khi còn phòng đang được thuê. Vui lòng kết thúc hoặc hủy hợp đồng trước.");
         }
-        khoKhuVuc.deleteById(ma);
+        khuVucRepository.deleteById(ma);
         return ResponseEntity.ok().build();
     }
 }

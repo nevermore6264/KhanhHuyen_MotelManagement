@@ -59,7 +59,7 @@ export default function MyInvoicesPage() {
   } | null>(null);
 
   useEffect(() => {
-    api.get("/invoices/me").then((res) => setItems(res.data || []));
+    api.get("/hoa-don/cua-toi").then((res) => setItems(res.data || []));
   }, []);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function MyInvoicesPage() {
     setMessage(null);
     try {
       const res = await api.post<{ paymentUrl: string }>(
-        "/payments/create-payment-url",
+        "/thanh-toan/tao-link",
         { invoiceId },
       );
       const url = res.data?.paymentUrl;

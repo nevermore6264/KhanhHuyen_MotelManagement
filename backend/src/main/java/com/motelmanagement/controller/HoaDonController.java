@@ -19,21 +19,21 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.TrangThaiHoaDon;
 import com.motelmanagement.dto.RemindRequest;
-import com.motelmanagement.repository.KhoHoaDon;
-import com.motelmanagement.repository.KhoKhachThue;
-import com.motelmanagement.service.TinhTienService;
+import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhacNoHoaDonService;
+import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
 /** API hóa đơn: danh sách, tạo, cập nhật trạng thái. */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/invoices")
+@RequestMapping("/api/hoa-don")
 public class HoaDonController {
-    private final KhoHoaDon khoHoaDon;
-    private final KhoKhachThue khoKhachThue;
+    private final HoaDonRepository hoaDonRepository;
+    private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final NhacNoHoaDonService nhacNoHoaDonService;
     private final TinhTienService tinhTienService;
@@ -41,42 +41,42 @@ public class HoaDonController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<HoaDon> layDanhSach() {
-        return khoHoaDon.findAllWithTenantAndRoom();
+        return hoaDonRepository.findAllWithTenantAndRoom();
     }
 
-    @GetMapping("/me")
+    @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('TENANT')")
     public List<HoaDon> layHoaDonCuaToi() {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) {
             return List.of();
         }
-        KhachThue khachThue = khoKhachThue.findByUser_Id(nguoiDung.getId());
+        KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
         if (khachThue == null) {
             return List.of();
         }
-        return khoHoaDon.findByKhachThue(khachThue);
+        return hoaDonRepository.findByKhachThue(khachThue);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public HoaDon tao(@RequestBody HoaDon hoaDon) {
-        return khoHoaDon.save(hoaDon);
+        return hoaDonRepository.save(hoaDon);
     }
 
-    @PutMapping("/{id}/status")
+    @PutMapping("/{id}/trang-thai")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<HoaDon> capNhatTrangThai(@PathVariable("id") Long ma, @RequestParam(value = "status") TrangThaiHoaDon trangThai) {
-        return khoHoaDon.findById(ma)
+        return hoaDonRepository.findById(ma)
                 .map(hienTai -> {
-                    hienTai.setStatus(trangThai);
-                    return ResponseEntity.ok(khoHoaDon.save(hienTai));
+                    hienTai.setTrangThai(trangThai);
+                    return ResponseEntity.ok(hoaDonRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /** Chạy ngay job sinh hóa đơn cho tháng trước và tháng hiện tại (tránh đợi job định kỳ). */
-    @PostMapping("/generate")
+    @PostMapping("/sinh")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<Map<String, Object>> sinhHoaDonNgay() {
         java.time.YearMonth hienTai = java.time.YearMonth.now();
@@ -92,7 +92,7 @@ public class HoaDonController {
         ));
     }
 
-    @PostMapping("/{id}/remind")
+    @PostMapping("/{id}/nhac-no")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<?> guiNhacNo(@PathVariable("id") Long ma, @RequestBody RemindRequest yeuCau) {
         String kenh = yeuCau != null && yeuCau.getChannel() != null ? yeuCau.getChannel().trim() : "";

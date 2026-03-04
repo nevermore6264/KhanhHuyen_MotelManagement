@@ -16,55 +16,55 @@ import org.springframework.web.bind.annotation.RestController;
 import com.motelmanagement.domain.KhuVuc;
 import com.motelmanagement.domain.Phong;
 import com.motelmanagement.domain.TrangThaiPhong;
-import com.motelmanagement.repository.KhoKhuVuc;
-import com.motelmanagement.repository.KhoPhong;
+import com.motelmanagement.repository.KhuVucRepository;
+import com.motelmanagement.repository.PhongRepository;
 
 import lombok.RequiredArgsConstructor;
 
 /** API phòng: CRUD, lọc theo khu vực/trạng thái. */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/rooms")
+@RequestMapping("/api/phong")
 public class PhongController {
-    private final KhoPhong khoPhong;
-    private final KhoKhuVuc khoKhuVuc;
+    private final PhongRepository phongRepository;
+    private final KhuVucRepository khuVucRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<Phong> layDanhSach() {
-        return khoPhong.findAll();
+        return phongRepository.findAll();
     }
 
-    @GetMapping("/available")
+    @GetMapping("/con-trong")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<Phong> layDanhSachConTrong() {
-        return khoPhong.findByStatus(TrangThaiPhong.AVAILABLE);
+        return phongRepository.findByTrangThai(TrangThaiPhong.AVAILABLE);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Phong tao(@RequestBody Phong phong) {
         if (phong.getKhuVuc() != null && phong.getKhuVuc().getId() != null) {
-            KhuVuc khuVuc = khoKhuVuc.findById(phong.getKhuVuc().getId()).orElse(null);
+            KhuVuc khuVuc = khuVucRepository.findById(phong.getKhuVuc().getId()).orElse(null);
             phong.setKhuVuc(khuVuc);
         }
-        return khoPhong.save(phong);
+        return phongRepository.save(phong);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Phong> capNhat(@PathVariable("id") Long ma, @RequestBody Phong phong) {
-        return khoPhong.findById(ma)
+        return phongRepository.findById(ma)
                 .map(hienTai -> {
-                    hienTai.setCode(phong.getCode());
-                    hienTai.setFloor(phong.getFloor());
-                    hienTai.setStatus(phong.getStatus());
-                    hienTai.setCurrentPrice(phong.getCurrentPrice());
-                    hienTai.setAreaSize(phong.getAreaSize());
+                    hienTai.setMaPhong(phong.getMaPhong());
+                    hienTai.setTang(phong.getTang());
+                    hienTai.setTrangThai(phong.getTrangThai());
+                    hienTai.setGiaHienTai(phong.getGiaHienTai());
+                    hienTai.setDienTich(phong.getDienTich());
                     if (phong.getKhuVuc() != null && phong.getKhuVuc().getId() != null) {
-                        hienTai.setKhuVuc(khoKhuVuc.findById(phong.getKhuVuc().getId()).orElse(null));
+                        hienTai.setKhuVuc(khuVucRepository.findById(phong.getKhuVuc().getId()).orElse(null));
                     }
-                    return ResponseEntity.ok(khoPhong.save(hienTai));
+                    return ResponseEntity.ok(phongRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -72,7 +72,7 @@ public class PhongController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> xoa(@PathVariable("id") Long ma) {
-        khoPhong.deleteById(ma);
+        phongRepository.deleteById(ma);
         return ResponseEntity.ok().build();
     }
 }
