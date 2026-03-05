@@ -288,7 +288,7 @@ export default function RoomsPage() {
               Đang xem phòng thuộc khu: <strong>{areaFilterName}</strong>
             </span>
             <Link
-              href="/rooms"
+              href="/phong"
               className="btn btn-secondary btn-sm"
               style={{ marginLeft: 12 }}
             >

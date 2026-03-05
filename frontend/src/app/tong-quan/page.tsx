@@ -329,10 +329,10 @@ export default function DashboardPage() {
               <h2>Tổng quan của tôi</h2>
               <p>Hợp đồng thuê và thanh toán.</p>
               <div className="hero-actions">
-                <Link className="btn" href="/my-payments">
+                <Link className="btn" href="/thanh-toan-cua-toi">
                   <IconReceipt /> Đến thanh toán
                 </Link>
-                <Link className="btn btn-secondary" href="/my-contracts">
+                <Link className="btn btn-secondary" href="/hop-dong-cua-toi">
                   <IconFile /> Xem hợp đồng
                 </Link>
               </div>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                       <span className="contract-status">
                         {contractStatusLabel(c.status)}
                       </span>
-                      <Link href="/my-contracts" className="link-small">
+                      <Link href="/hop-dong-cua-toi" className="link-small">
                         Xem chi tiết
                       </Link>
                     </li>
@@ -398,7 +398,10 @@ export default function DashboardPage() {
                 </ul>
               )}
               <div className="dashboard-tenant-card-actions">
-                <Link href="/my-contracts" className="btn btn-secondary btn-sm">
+                <Link
+                  href="/hop-dong-cua-toi"
+                  className="btn btn-secondary btn-sm"
+                >
                   Xem tất cả hợp đồng
                 </Link>
               </div>
@@ -416,7 +419,7 @@ export default function DashboardPage() {
                 thanh toán.
               </p>
               <div className="dashboard-tenant-card-actions">
-                <Link href="/support" className="btn btn-secondary btn-sm">
+                <Link href="/yeu-cau" className="btn btn-secondary btn-sm">
                   Gửi yêu cầu hỗ trợ
                 </Link>
               </div>
@@ -465,7 +468,10 @@ export default function DashboardPage() {
                 className="dashboard-tenant-card-actions"
                 style={{ marginTop: 12 }}
               >
-                <Link href="/my-payments" className="btn btn-secondary btn-sm">
+                <Link
+                  href="/thanh-toan-cua-toi"
+                  className="btn btn-secondary btn-sm"
+                >
                   Xem tất cả thanh toán
                 </Link>
               </div>
@@ -485,10 +491,10 @@ export default function DashboardPage() {
             <h2>Tổng quan iTro</h2>
             <p>Cập nhật nhanh tình hình vận hành nhà trọ hôm nay.</p>
             <div className="hero-actions">
-              <Link className="btn" href="/rooms">
+              <Link className="btn" href="/phong">
                 <IconHome /> Quản lý phòng
               </Link>
-              <Link className="btn btn-secondary" href="/contracts">
+              <Link className="btn btn-secondary" href="/hop-dong">
                 <IconPlus /> Tạo hợp đồng
               </Link>
             </div>
@@ -562,10 +568,10 @@ export default function DashboardPage() {
           <div className="card quick-card">
             <div className="quick-title">Tác vụ nhanh</div>
             <div className="quick-actions">
-              <Link href="/areas">+ Thêm khu</Link>
-              <Link href="/rooms">+ Thêm phòng</Link>
-              <Link href="/tenants">+ Thêm khách</Link>
-              <Link href="/meter-readings">+ Nhập điện nước</Link>
+              <Link href="/khu-vuc">+ Thêm khu</Link>
+              <Link href="/phong">+ Thêm phòng</Link>
+              <Link href="/khach-thue">+ Thêm khách</Link>
+              <Link href="/chi-so-dien-nuoc">+ Nhập điện nước</Link>
             </div>
           </div>
           <div className="card quick-card">

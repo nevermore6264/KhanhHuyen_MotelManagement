@@ -9,7 +9,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const token = getToken();
-    router.replace(token ? "/dashboard" : "/login");
+    router.replace(token ? "/tong-quan" : "/dang-nhap");
   }, [router]);
 
   return <div className="container">Đang chuyển hướng...</div>;

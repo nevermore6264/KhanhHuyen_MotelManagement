@@ -20,7 +20,7 @@ export default function LoginPage() {
     try {
       const res = await api.post("/xac-thuc/dang-nhap", { username, password });
       setAuth(res.data.token, res.data.role, res.data.fullName);
-      router.replace("/dashboard");
+      router.replace("/tong-quan");
     } catch (err: any) {
       setError("Đăng nhập thất bại");
     }
@@ -204,7 +204,7 @@ export default function LoginPage() {
               Demo: <strong>admin / admin123</strong>
             </div>
             <p className="login-forgot-wrap">
-              <Link href="/forgot-password" className="login-forgot-link">
+              <Link href="/quen-mat-khau" className="login-forgot-link">
                 Quên mật khẩu?
               </Link>
             </p>

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/auth";
 
-/** Bọc trang cần đăng nhập: không có token thì chuyển hướng về /login. */
+/** Bọc trang cần đăng nhập: không có token thì chuyển hướng về /dang-nhap. */
 export default function ProtectedPage({
   children,
 }: {
@@ -15,7 +15,7 @@ export default function ProtectedPage({
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      router.replace("/login");
+      router.replace("/dang-nhap");
     }
   }, [router]);
 

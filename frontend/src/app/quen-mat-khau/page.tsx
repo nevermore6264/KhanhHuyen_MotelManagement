@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
               <Link
-                href="/login"
+                href="/dang-nhap"
                 className="btn login-btn"
                 style={{ marginTop: "1rem" }}
               >
@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
                 {loading ? "Đang xử lý…" : "Gửi yêu cầu"}
               </button>
               <p className="login-forgot-wrap">
-                <Link href="/login" className="login-forgot-link">
+                <Link href="/dang-nhap" className="login-forgot-link">
                   ← Quay lại đăng nhập
                 </Link>
               </p>

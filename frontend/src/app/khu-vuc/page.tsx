@@ -258,7 +258,7 @@ export default function AreasPage() {
                 header: "Phòng",
                 render: (r: Area) => (
                   <Link
-                    href={`/rooms?areaId=${r.id}`}
+                    href={`/phong?areaId=${r.id}`}
                     className="btn btn-secondary"
                   >
                     <IconEye /> Xem phòng

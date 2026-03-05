@@ -8,83 +8,83 @@ import { clearAuth, getName, getRole } from "@/lib/auth";
 import { useNotification } from "./NotificationProvider";
 
 /** Một mục menu (nhãn + đường dẫn) */
-type MenuItem = { label: string; href: string };
+type MucMenu = { label: string; href: string };
 /** Nhóm menu (có thể có mục con hoặc link trực tiếp) */
-type MenuGroup = { label: string; href?: string; items?: MenuItem[] };
+type NhomMenu = { label: string; href?: string; items?: MucMenu[] };
 
 /** Cấu hình menu theo vai trò: ADMIN, STAFF, TENANT */
-const roleMenus: Record<string, MenuGroup[]> = {
+const menuTheoVaiTro: Record<string, NhomMenu[]> = {
   ADMIN: [
-    { label: "Tổng quan", href: "/dashboard" },
+    { label: "Tổng quan", href: "/tong-quan" },
     {
       label: "Quản lý",
       items: [
-        { href: "/areas", label: "Khu" },
-        { href: "/rooms", label: "Phòng" },
-        { href: "/tenants", label: "Khách thuê" },
-        { href: "/contracts", label: "Hợp đồng" },
-        { href: "/users", label: "Người dùng" },
+        { href: "/khu-vuc", label: "Khu" },
+        { href: "/phong", label: "Phòng" },
+        { href: "/khach-thue", label: "Khách thuê" },
+        { href: "/hop-dong", label: "Hợp đồng" },
+        { href: "/nguoi-dung", label: "Người dùng" },
       ],
     },
     {
       label: "Tài chính",
       items: [
-        { href: "/service-prices", label: "Bảng giá" },
-        { href: "/meter-readings", label: "Điện nước" },
-        { href: "/invoices", label: "Hóa đơn" },
-        { href: "/payments", label: "Thanh toán" },
-        { href: "/reports", label: "Báo cáo" },
+        { href: "/bang-gia-dich-vu", label: "Bảng giá" },
+        { href: "/chi-so-dien-nuoc", label: "Điện nước" },
+        { href: "/hoa-don", label: "Hóa đơn" },
+        { href: "/thanh-toan", label: "Thanh toán" },
+        { href: "/bao-cao", label: "Báo cáo" },
       ],
     },
     {
       label: "Hỗ trợ",
       items: [
-        { href: "/support-requests", label: "Yêu cầu" },
-        { href: "/notifications", label: "Thông báo" },
+        { href: "/yeu-cau-ho-tro", label: "Yêu cầu" },
+        { href: "/thong-bao", label: "Thông báo" },
       ],
     },
   ],
   STAFF: [
-    { label: "Tổng quan", href: "/dashboard" },
+    { label: "Tổng quan", href: "/tong-quan" },
     {
       label: "Quản lý",
       items: [
-        { href: "/rooms", label: "Phòng" },
-        { href: "/contracts", label: "Hợp đồng" },
+        { href: "/phong", label: "Phòng" },
+        { href: "/hop-dong", label: "Hợp đồng" },
       ],
     },
     {
       label: "Tài chính",
       items: [
-        { href: "/meter-readings", label: "Điện nước" },
-        { href: "/invoices", label: "Hóa đơn" },
-        { href: "/payments", label: "Thanh toán" },
-        { href: "/reports", label: "Báo cáo" },
+        { href: "/chi-so-dien-nuoc", label: "Điện nước" },
+        { href: "/hoa-don", label: "Hóa đơn" },
+        { href: "/thanh-toan", label: "Thanh toán" },
+        { href: "/bao-cao", label: "Báo cáo" },
       ],
     },
     {
       label: "Hỗ trợ",
       items: [
-        { href: "/support-requests", label: "Yêu cầu" },
-        { href: "/notifications", label: "Thông báo" },
+        { href: "/yeu-cau-ho-tro", label: "Yêu cầu" },
+        { href: "/thong-bao", label: "Thông báo" },
       ],
     },
   ],
   TENANT: [
-    { label: "Tổng quan", href: "/dashboard" },
+    { label: "Tổng quan", href: "/tong-quan" },
     {
       label: "Tài khoản",
       items: [
-        { href: "/my-contracts", label: "Hợp đồng" },
-        { href: "/my-invoices", label: "Hóa đơn" },
-        { href: "/my-payments", label: "Thanh toán" },
+        { href: "/hop-dong-cua-toi", label: "Hợp đồng" },
+        { href: "/hoa-don-cua-toi", label: "Hóa đơn" },
+        { href: "/thanh-toan-cua-toi", label: "Thanh toán" },
       ],
     },
     {
       label: "Hỗ trợ",
       items: [
-        { href: "/support", label: "Yêu cầu" },
-        { href: "/notifications", label: "Thông báo" },
+        { href: "/yeu-cau", label: "Yêu cầu" },
+        { href: "/thong-bao", label: "Thông báo" },
       ],
     },
   ],
@@ -92,21 +92,21 @@ const roleMenus: Record<string, MenuGroup[]> = {
 
 export default function NavBar() {
   const router = useRouter();
-  const [role, setRole] = useState("ADMIN");
-  const [name, setName] = useState("User");
-  const notificationContext = useNotification();
+  const [vaiTro, setVaiTro] = useState("ADMIN");
+  const [ten, setTen] = useState("User");
+  const contextThongBao = useNotification();
 
   useEffect(() => {
-    setRole(getRole() || "ADMIN");
-    setName(getName() || "User");
+    setVaiTro(getRole() || "ADMIN");
+    setTen(getName() || "User");
   }, []);
 
-  const showBell = role === "TENANT" || role === "STAFF";
-  const unreadCount = notificationContext?.unreadCount ?? 0;
+  const hienThiChuong = vaiTro === "TENANT" || vaiTro === "STAFF";
+  const soChuaDoc = contextThongBao?.unreadCount ?? 0;
 
-  const logout = () => {
+  const dangXuat = () => {
     clearAuth();
-    router.replace("/login");
+    router.replace("/dang-nhap");
   };
 
   return (
@@ -118,19 +118,19 @@ export default function NavBar() {
         </div>
 
         <div className="nav-menu">
-          {roleMenus[role]?.map((group) => (
-            <div key={group.label} className="nav-item">
-              {group.href ? (
-                <Link className="nav-link" href={group.href}>
-                  {group.label}
+          {menuTheoVaiTro[vaiTro]?.map((nhom) => (
+            <div key={nhom.label} className="nav-item">
+              {nhom.href ? (
+                <Link className="nav-link" href={nhom.href}>
+                  {nhom.label}
                 </Link>
               ) : (
                 <>
-                  <span className="nav-link">{group.label}</span>
+                  <span className="nav-link">{nhom.label}</span>
                   <div className="nav-dropdown">
-                    {group.items?.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        {item.label}
+                    {nhom.items?.map((muc) => (
+                      <Link key={muc.href} href={muc.href}>
+                        {muc.label}
                       </Link>
                     ))}
                   </div>
@@ -141,15 +141,13 @@ export default function NavBar() {
         </div>
 
         <div className="nav-actions">
-          {showBell && (
+          {hienThiChuong && (
             <Link
-              href="/notifications"
+              href="/thong-bao"
               className="nav-bell"
               title="Thông báo"
               aria-label={
-                unreadCount > 0
-                  ? `${unreadCount} thông báo chưa đọc`
-                  : "Thông báo"
+                soChuaDoc > 0 ? `${soChuaDoc} thông báo chưa đọc` : "Thông báo"
               }
             >
               <svg
@@ -165,17 +163,17 @@ export default function NavBar() {
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
-              {unreadCount > 0 && (
+              {soChuaDoc > 0 && (
                 <span className="nav-bell-badge" aria-hidden="true">
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                  {soChuaDoc > 99 ? "99+" : soChuaDoc}
                 </span>
               )}
             </Link>
           )}
           <span className="nav-user">
-            {name} ({role})
+            {ten} ({vaiTro})
           </span>
-          <button className="btn btn-secondary" onClick={logout}>
+          <button className="btn btn-secondary" onClick={dangXuat}>
             <IconLogout /> Đăng xuất
           </button>
         </div>

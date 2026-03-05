@@ -8,9 +8,9 @@ import NotificationProvider from "./NotificationProvider";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLogin =
-    pathname === "/login" ||
-    pathname === "/forgot-password" ||
-    pathname === "/reset-password";
+    pathname === "/dang-nhap" ||
+    pathname === "/quen-mat-khau" ||
+    pathname === "/dat-lai-mat-khau";
 
   useEffect(() => {
     const className = "login-body";
