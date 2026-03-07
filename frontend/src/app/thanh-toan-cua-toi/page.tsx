@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 
 type Invoice = { id: number; month: number; year: number };
@@ -15,7 +15,7 @@ const formatVND = (value?: number | null) => {
   return new Intl.NumberFormat("vi-VN").format(Number(value)) + " đ";
 };
 
-export default function MyPaymentsPage() {
+export default function TrangThanhToanCuaToi() {
   const searchParams = useSearchParams();
   const appliedUrlRef = useRef(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -47,8 +47,8 @@ export default function MyPaymentsPage() {
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Lịch sử thanh toán</h2>
         <div className="card">
@@ -68,7 +68,7 @@ export default function MyPaymentsPage() {
           </select>
         </div>
         <div className="card">
-          <SimpleTable
+          <BangDonGian
             data={payments}
             columns={[
               { header: "ID", render: (p) => p.id },
@@ -93,6 +93,6 @@ export default function MyPaymentsPage() {
           />
         </div>
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

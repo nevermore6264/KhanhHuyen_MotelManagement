@@ -1,48 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import api from "@/lib/api";
 import { IconSend } from "@/components/Icons";
 
-export default function SupportPage() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [message, setMessage] = useState("");
+export default function TrangYeuCau() {
+  const [tieuDe, setTieuDe] = useState("");
+  const [moTa, setMoTa] = useState("");
+  const [thongBao, setThongBao] = useState("");
 
-  const submit = async (e: React.FormEvent) => {
+  const gui = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/yeu-cau-ho-tro", { title, description });
-    setTitle("");
-    setDescription("");
-    setMessage("Đã gửi yêu cầu hỗ trợ");
+    await api.post("/yeu-cau-ho-tro", { title: tieuDe, description: moTa });
+    setTieuDe("");
+    setMoTa("");
+    setThongBao("Đã gửi yêu cầu hỗ trợ");
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Gửi yêu cầu hỗ trợ</h2>
         <div className="card">
-          <form onSubmit={submit} className="grid">
+          <form onSubmit={gui} className="grid">
             <input
               placeholder="Tiêu đề"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={tieuDe}
+              onChange={(e) => setTieuDe(e.target.value)}
             />
             <textarea
               placeholder="Mô tả"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={moTa}
+              onChange={(e) => setMoTa(e.target.value)}
             />
             <button className="btn" type="submit">
               <IconSend /> Gửi yêu cầu
             </button>
-            {message && <div>{message}</div>}
+            {thongBao && <div>{thongBao}</div>}
           </form>
         </div>
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

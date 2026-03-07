@@ -14,8 +14,8 @@ import {
   Legend,
 } from "chart.js";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import { IconReceipt, IconFile, IconHome, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
@@ -151,7 +151,7 @@ const IconChart = () => (
   </svg>
 );
 
-export default function DashboardPage() {
+export default function TrangTongQuan() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [vacant, setVacant] = useState(0);
@@ -321,8 +321,8 @@ export default function DashboardPage() {
 
   if (mounted && isTenant) {
     return (
-      <ProtectedPage>
-        <NavBar />
+      <TrangBaoVe>
+        <ThanhDieuHuong />
         <div className="container">
           <div className="dashboard-hero">
             <div>
@@ -478,13 +478,13 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </ProtectedPage>
+      </TrangBaoVe>
     );
   }
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <div className="dashboard-hero">
           <div>
@@ -608,6 +608,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

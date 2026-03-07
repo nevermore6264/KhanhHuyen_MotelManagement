@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import { IconEye, IconCheck, IconSend, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type SupportRequest = {
   id: number;
@@ -47,82 +47,87 @@ const statusClass = (value?: string) => {
   }
 };
 
-export default function SupportRequestsPage() {
-  const [items, setItems] = useState<SupportRequest[]>([]);
-  const [selectedId, setSelectedId] = useState("");
-  const [status, setStatus] = useState("OPEN");
-  const [detail, setDetail] = useState<SupportRequest | null>(null);
+export default function TrangYeuCauHoTro() {
+  const [danhSach, setDanhSach] = useState<SupportRequest[]>([]);
+  const [idDangChon, setIdDangChon] = useState("");
+  const [trangThai, setTrangThai] = useState("OPEN");
+  const [chiTiet, setChiTiet] = useState<SupportRequest | null>(null);
   const { notify } = useToast();
 
-  const load = async () => {
-    const res = await api.get("/yeu-cau-ho-tro");
-    setItems(res.data);
+  const tai = async () => {
+    const phanHoi = await api.get("/yeu-cau-ho-tro");
+    setDanhSach(phanHoi.data);
   };
 
   useEffect(() => {
-    load();
+    tai();
   }, []);
 
-  const updateStatus = async (e: React.FormEvent) => {
+  const capNhatTrangThai = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedId || !selectedId.trim()) {
+    if (!idDangChon?.trim()) {
       notify("Vui lòng nhập ID yêu cầu", "error");
       return;
     }
     try {
-      await api.put(`/yeu-cau-ho-tro/${selectedId.trim()}`, { status });
+      await api.put(`/yeu-cau-ho-tro/${idDangChon.trim()}`, {
+        status: trangThai,
+      });
       notify("Đã cập nhật trạng thái", "success");
-      setSelectedId("");
-      setStatus("OPEN");
-      load();
+      setIdDangChon("");
+      setTrangThai("OPEN");
+      tai();
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
-      const message =
+      const thongBao =
         ax?.response?.status === 404
           ? "Không tìm thấy yêu cầu với ID này"
           : "Cập nhật thất bại";
-      notify(message, "error");
+      notify(thongBao, "error");
     }
   };
 
-  const markResolved = async (req: SupportRequest) => {
-    await api.put(`/yeu-cau-ho-tro/${req.id}`, {
+  const danhDauDaXuLy = async (yeuCau: SupportRequest) => {
+    await api.put(`/yeu-cau-ho-tro/${yeuCau.id}`, {
       status: "RESOLVED",
-      title: req.title,
-      description: req.description,
+      title: yeuCau.title,
+      description: yeuCau.description,
     });
     notify("Đã cập nhật trạng thái xử lý", "success");
-    load();
+    tai();
   };
 
-  const sendMail = (req: SupportRequest) => {
-    const email = req.tenant?.email;
+  const guiEmail = (yeuCau: SupportRequest) => {
+    const email = yeuCau.tenant?.email;
     if (!email) {
       notify("Thiếu email khách thuê", "error");
       return;
     }
-    const subject = `Phản hồi sự cố #${req.id}`;
+    const subject = `Phản hồi sự cố #${yeuCau.id}`;
     const body =
-      `Xin chào ${req.tenant?.fullName || ""},%0D%0A%0D%0A` +
-      `Chúng tôi đã tiếp nhận sự cố: ${req.title}.%0D%0A` +
-      `Mô tả: ${req.description || ""}%0D%0A%0D%0A` +
+      `Xin chào ${yeuCau.tenant?.fullName || ""},%0D%0A%0D%0A` +
+      `Chúng tôi đã tiếp nhận sự cố: ${yeuCau.title}.%0D%0A` +
+      `Mô tả: ${yeuCau.description || ""}%0D%0A%0D%0A` +
       `Hướng xử lý: ...%0D%0A%0D%0ATrân trọng.`;
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Quản lý sự cố</h2>
         <div className="card">
-          <form onSubmit={updateStatus} className="grid grid-3">
+          <form onSubmit={capNhatTrangThai} className="grid grid-3">
             <input
               placeholder="ID yêu cầu"
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
+              value={idDangChon}
+              onChange={(e) => setIdDangChon(e.target.value)}
             />
-            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <select
+              value={trangThai}
+              onChange={(e) => setTrangThai(e.target.value)}
+            >
               <option value="OPEN">Mới</option>
               <option value="IN_PROGRESS">Đang xử lý</option>
               <option value="RESOLVED">Đã xử lý</option>
@@ -134,8 +139,8 @@ export default function SupportRequestsPage() {
           </form>
         </div>
         <div className="card">
-          <SimpleTable
-            data={items}
+          <BangDonGian
+            data={danhSach}
             columns={[
               { header: "ID", render: (r) => r.id },
               { header: "Tiêu đề", render: (r) => r.title },
@@ -153,18 +158,18 @@ export default function SupportRequestsPage() {
                 header: "Thao tác",
                 render: (r) => (
                   <div className="table-actions">
-                    <button className="btn" onClick={() => setDetail(r)}>
+                    <button className="btn" onClick={() => setChiTiet(r)}>
                       <IconEye /> Xem mô tả
                     </button>
                     <button
                       className="btn btn-secondary"
-                      onClick={() => markResolved(r)}
+                      onClick={() => danhDauDaXuLy(r)}
                     >
                       <IconCheck /> Đã xử lý
                     </button>
                     <button
                       className={`btn btn-secondary ${!r.tenant?.email ? "btn-disabled" : ""}`}
-                      onClick={() => sendMail(r)}
+                      onClick={() => guiEmail(r)}
                       aria-disabled={!r.tenant?.email}
                       title={
                         !r.tenant?.email ? "Thiếu email khách thuê" : undefined
@@ -179,18 +184,18 @@ export default function SupportRequestsPage() {
           />
         </div>
 
-        {detail && (
+        {chiTiet && (
           <div className="modal-backdrop">
             <div className="modal-card">
               <h3>Mô tả sự cố</h3>
               <p>
-                <strong>{detail.title}</strong>
+                <strong>{chiTiet.title}</strong>
               </p>
-              <p>{detail.description || "Không có mô tả."}</p>
+              <p>{chiTiet.description || "Không có mô tả."}</p>
               <div className="modal-actions">
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setDetail(null)}
+                  onClick={() => setChiTiet(null)}
                 >
                   <IconTimes /> Đóng
                 </button>
@@ -199,6 +204,6 @@ export default function SupportRequestsPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

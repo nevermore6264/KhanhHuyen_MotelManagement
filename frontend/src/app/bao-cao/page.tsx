@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import { IconRefresh, IconEye } from "@/components/Icons";
-import SimpleTable from "@/components/SimpleTable";
+import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 
@@ -59,7 +59,7 @@ type Occupancy = {
   occupancyRatePercent: number;
 };
 
-export default function ReportsPage() {
+export default function TrangBaoCao() {
   const now = new Date();
   const [month, setMonth] = useState(String(now.getMonth() + 1));
   const [year, setYear] = useState(String(now.getFullYear()));
@@ -138,21 +138,21 @@ export default function ReportsPage() {
 
   if (!canView) {
     return (
-      <ProtectedPage>
-        <NavBar />
+      <TrangBaoVe>
+        <ThanhDieuHuong />
         <div className="container">
           <h2>Báo cáo</h2>
           <div className="card">
             <p className="form-error">Bạn không có quyền xem báo cáo.</p>
           </div>
         </div>
-      </ProtectedPage>
+      </TrangBaoVe>
     );
   }
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Báo cáo &amp; thống kê</h2>
 
@@ -321,7 +321,7 @@ export default function ReportsPage() {
                 <strong>Tổng doanh thu năm {revenueYear.year}:</strong>{" "}
                 {formatMoney(revenueYear.total)}
               </p>
-              <SimpleTable
+              <BangDonGian
                 data={revenueYear.months || []}
                 columns={[
                   {
@@ -346,7 +346,7 @@ export default function ReportsPage() {
             {formatMoney(debtDetail?.totalDebt)} ({debtDetail?.count ?? 0} hóa
             đơn).
           </p>
-          <SimpleTable
+          <BangDonGian
             data={debtDetail?.invoices ?? []}
             columns={[
               { header: "ID", render: (r: DebtInvoice) => r.id },
@@ -376,7 +376,7 @@ export default function ReportsPage() {
           <p className="card-subtitle mb-3">
             Các phòng đang trống ({vacantData?.vacantRooms ?? 0} phòng).
           </p>
-          <SimpleTable
+          <BangDonGian
             data={vacantData?.rooms ?? []}
             columns={[
               { header: "Mã phòng", render: (r: VacantRoom) => r.code },
@@ -498,6 +498,6 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

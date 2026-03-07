@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
   IconPencil,
@@ -13,7 +13,7 @@ import {
 } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole, getToken } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type Tenant = {
   id: number;
@@ -50,7 +50,7 @@ const validateTenant = (data: {
   return "";
 };
 
-export default function TenantsPage() {
+export default function TrangKhachThue() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [fullName, setFullName] = useState("");
@@ -426,8 +426,8 @@ export default function TenantsPage() {
   const selectedEditUser = users.find((u) => String(u.id) === editUserId);
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Quản lý khách thuê</h2>
         <div className="card">
@@ -454,7 +454,7 @@ export default function TenantsPage() {
           )}
         </div>
         <div className="card">
-          <SimpleTable
+          <BangDonGian
             data={filtered}
             columns={[
               { header: "ID", render: (t) => t.id },
@@ -908,6 +908,6 @@ export default function TenantsPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

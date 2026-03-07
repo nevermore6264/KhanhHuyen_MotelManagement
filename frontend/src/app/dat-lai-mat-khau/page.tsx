@@ -5,51 +5,52 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
 
-function ResetPasswordForm() {
+function FormDatLaiMatKhau() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [matKhau, setMatKhau] = useState("");
+  const [xacNhanMatKhau, setXacNhanMatKhau] = useState("");
+  const [dangTai, setDangTai] = useState(false);
+  const [loi, setLoi] = useState("");
+  const [thanhCong, setThanhCong] = useState(false);
 
   useEffect(() => {
-    if (!token) setError("Link đặt lại mật khẩu không hợp lệ (thiếu token).");
+    if (!token) setLoi("Link đặt lại mật khẩu không hợp lệ (thiếu token).");
   }, [token]);
 
-  const submit = async (e: React.FormEvent) => {
+  const gui = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setLoi("");
     if (!token) return;
-    if (password.length < 6) {
-      setError("Mật khẩu tối thiểu 6 ký tự.");
+    if (matKhau.length < 6) {
+      setLoi("Mật khẩu tối thiểu 6 ký tự.");
       return;
     }
-    if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+    if (matKhau !== xacNhanMatKhau) {
+      setLoi("Mật khẩu xác nhận không khớp.");
       return;
     }
-    setLoading(true);
+    setDangTai(true);
     try {
       await api.post("/xac-thuc/dat-lai-mat-khau", {
         token,
-        newPassword: password,
+        newPassword: matKhau,
       });
-      setSuccess(true);
+      setThanhCong(true);
       setTimeout(() => router.replace("/dang-nhap"), 2000);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
+    } catch (err: unknown) {
+      const ax = err as { response?: { data?: { message?: string } } };
+      setLoi(
+        ax?.response?.data?.message ||
           "Link không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.",
       );
     } finally {
-      setLoading(false);
+      setDangTai(false);
     }
   };
 
-  if (success) {
+  if (thanhCong) {
     return (
       <div className="login-success-box">
         <p className="login-success-message">
@@ -85,9 +86,9 @@ function ResetPasswordForm() {
   }
 
   return (
-    <form onSubmit={submit} className="login-form">
+    <form onSubmit={gui} className="login-form">
       <div className="login-field">
-        <label htmlFor="password">Mật khẩu mới</label>
+        <label htmlFor="matKhau">Mật khẩu mới</label>
         <div className="input-icon-wrap">
           <span className="input-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -109,18 +110,18 @@ function ResetPasswordForm() {
             </svg>
           </span>
           <input
-            id="password"
+            id="matKhau"
             type="password"
             placeholder="Tối thiểu 6 ký tự"
             autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
+            value={matKhau}
+            onChange={(e) => setMatKhau(e.target.value)}
+            disabled={dangTai}
           />
         </div>
       </div>
       <div className="login-field">
-        <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
+        <label htmlFor="xacNhanMatKhau">Xác nhận mật khẩu</label>
         <div className="input-icon-wrap">
           <span className="input-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -142,19 +143,19 @@ function ResetPasswordForm() {
             </svg>
           </span>
           <input
-            id="confirmPassword"
+            id="xacNhanMatKhau"
             type="password"
             placeholder="Nhập lại mật khẩu"
             autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={loading}
+            value={xacNhanMatKhau}
+            onChange={(e) => setXacNhanMatKhau(e.target.value)}
+            disabled={dangTai}
           />
         </div>
       </div>
-      {error && <div className="login-error">{error}</div>}
-      <button className="btn login-btn" type="submit" disabled={loading}>
-        {loading ? "Đang xử lý…" : "Đặt lại mật khẩu"}
+      {loi && <div className="login-error">{loi}</div>}
+      <button className="btn login-btn" type="submit" disabled={dangTai}>
+        {dangTai ? "Đang xử lý…" : "Đặt lại mật khẩu"}
       </button>
       <p className="login-forgot-wrap">
         <Link href="/dang-nhap" className="login-forgot-link">
@@ -165,7 +166,7 @@ function ResetPasswordForm() {
   );
 }
 
-export default function ResetPasswordPage() {
+export default function TrangDatLaiMatKhau() {
   return (
     <div className="login-page">
       <div className="login-orbits" aria-hidden="true">
@@ -192,7 +193,7 @@ export default function ResetPasswordPage() {
             <span className="login-subtitle">Đặt lại mật khẩu</span>
           </div>
           <Suspense fallback={<p className="login-forgot-desc">Đang tải…</p>}>
-            <ResetPasswordForm />
+            <FormDatLaiMatKhau />
           </Suspense>
         </div>
       </div>

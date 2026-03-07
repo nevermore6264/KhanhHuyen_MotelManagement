@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import { IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type Area = { id: number; name: string };
 type Room = { id: number; code: string; area?: Area };
@@ -22,148 +22,148 @@ type MeterReading = {
   totalCost?: number;
 };
 
-const formatMoney = (n?: number | null) => {
+const dinhDangTien = (n?: number | null) => {
   if (n == null || isNaN(n)) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
 };
 
 /** Chỉ cho phép tháng hiện tại hoặc tháng trước đó */
-const isMonthAllowed = (month: number, year: number): boolean => {
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
-  if (year === currentYear && month === currentMonth) return true;
-  if (currentMonth === 1) {
-    return year === currentYear - 1 && month === 12;
+const laThangChoPhep = (thang: number, nam: number): boolean => {
+  const bayGio = new Date();
+  const thangHienTai = bayGio.getMonth() + 1;
+  const namHienTai = bayGio.getFullYear();
+  if (nam === namHienTai && thang === thangHienTai) return true;
+  if (thangHienTai === 1) {
+    return nam === namHienTai - 1 && thang === 12;
   }
-  return year === currentYear && month === currentMonth - 1;
+  return nam === namHienTai && thang === thangHienTai - 1;
 };
 
-export default function MeterReadingsPage() {
-  const [readings, setReadings] = useState<MeterReading[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [areaId, setAreaId] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [roomId, setRoomId] = useState("");
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-  const [oldElectric, setOldElectric] = useState("");
-  const [newElectric, setNewElectric] = useState("");
-  const [oldWater, setOldWater] = useState("");
-  const [newWater, setNewWater] = useState("");
-  const [error, setError] = useState("");
-  const [filterAreaId, setFilterAreaId] = useState("");
-  const [filterRoomId, setFilterRoomId] = useState("");
+export default function TrangChiSoDienNuoc() {
+  const [danhSachChiSo, setDanhSachChiSo] = useState<MeterReading[]>([]);
+  const [danhSachPhong, setDanhSachPhong] = useState<Room[]>([]);
+  const [danhSachKhu, setDanhSachKhu] = useState<Area[]>([]);
+  const [idKhu, setIdKhu] = useState("");
+  const [phongDangChon, setPhongDangChon] = useState<Room | null>(null);
+  const [idPhong, setIdPhong] = useState("");
+  const [thang, setThang] = useState("");
+  const [nam, setNam] = useState("");
+  const [dienCu, setDienCu] = useState("");
+  const [dienMoi, setDienMoi] = useState("");
+  const [nuocCu, setNuocCu] = useState("");
+  const [nuocMoi, setNuocMoi] = useState("");
+  const [loi, setLoi] = useState("");
+  const [idKhuLoc, setIdKhuLoc] = useState("");
+  const [idPhongLoc, setIdPhongLoc] = useState("");
   const { notify } = useToast();
 
-  const load = async () => {
-    const [rRes, rmRes, aRes] = await Promise.all([
+  const tai = async () => {
+    const [resChiSo, resPhong, resKhu] = await Promise.all([
       api.get("/chi-so-dien-nuoc"),
       api.get("/phong"),
       api.get("/khu-vuc"),
     ]);
-    setReadings(rRes.data);
-    setRooms(rmRes.data);
-    setAreas(aRes.data);
+    setDanhSachChiSo(resChiSo.data);
+    setDanhSachPhong(resPhong.data);
+    setDanhSachKhu(resKhu.data);
   };
 
   useEffect(() => {
-    load();
+    tai();
   }, []);
 
-  const roomsByArea = useMemo(() => {
-    if (!areaId) return rooms;
-    return rooms.filter((r) => String(r.area?.id) === areaId);
-  }, [rooms, areaId]);
+  const phongTheoKhu = useMemo(() => {
+    if (!idKhu) return danhSachPhong;
+    return danhSachPhong.filter((r) => String(r.area?.id) === idKhu);
+  }, [danhSachPhong, idKhu]);
 
-  const roomHistory = useMemo(() => {
-    if (!selectedRoom) return [];
-    return readings
-      .filter((r) => r.room?.id === selectedRoom.id)
+  const lichSuPhong = useMemo(() => {
+    if (!phongDangChon) return [];
+    return danhSachChiSo
+      .filter((r) => r.room?.id === phongDangChon.id)
       .sort((a, b) =>
         a.year === b.year ? b.month - a.month : b.year - a.year,
       );
-  }, [readings, selectedRoom]);
+  }, [danhSachChiSo, phongDangChon]);
 
-  const filteredReadings = useMemo(() => {
-    if (!filterRoomId) return readings;
-    return readings.filter((r) => String(r.room?.id) === filterRoomId);
-  }, [readings, filterRoomId]);
+  const danhSachChiSoLoc = useMemo(() => {
+    if (!idPhongLoc) return danhSachChiSo;
+    return danhSachChiSo.filter((r) => String(r.room?.id) === idPhongLoc);
+  }, [danhSachChiSo, idPhongLoc]);
 
-  const roomsByFilterArea = useMemo(() => {
-    if (!filterAreaId) return rooms;
-    return rooms.filter((r) => String(r.area?.id) === filterAreaId);
-  }, [rooms, filterAreaId]);
+  const phongTheoKhuLoc = useMemo(() => {
+    if (!idKhuLoc) return danhSachPhong;
+    return danhSachPhong.filter((r) => String(r.area?.id) === idKhuLoc);
+  }, [danhSachPhong, idKhuLoc]);
 
   useEffect(() => {
-    if (!selectedRoom) return;
-    setRoomId(String(selectedRoom.id));
-    const now = new Date();
-    setMonth(String(now.getMonth() + 1));
-    setYear(String(now.getFullYear()));
-    const latest = roomHistory[0];
-    setOldElectric(latest ? String(latest.newElectric ?? 0) : "");
-    setOldWater(latest ? String(latest.newWater ?? 0) : "");
-    setNewElectric("");
-    setNewWater("");
-    setError("");
-  }, [selectedRoom, roomHistory]);
+    if (!phongDangChon) return;
+    setIdPhong(String(phongDangChon.id));
+    const bayGio = new Date();
+    setThang(String(bayGio.getMonth() + 1));
+    setNam(String(bayGio.getFullYear()));
+    const moiNhat = lichSuPhong[0];
+    setDienCu(moiNhat ? String(moiNhat.newElectric ?? 0) : "");
+    setNuocCu(moiNhat ? String(moiNhat.newWater ?? 0) : "");
+    setDienMoi("");
+    setNuocMoi("");
+    setLoi("");
+  }, [phongDangChon, lichSuPhong]);
 
-  const create = async (e: React.FormEvent) => {
+  const tao = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomId) {
-      setError("Vui lòng chọn phòng");
+    if (!idPhong) {
+      setLoi("Vui lòng chọn phòng");
       return;
     }
-    if (!month || !year) {
-      setError("Vui lòng nhập tháng và năm");
+    if (!thang || !nam) {
+      setLoi("Vui lòng nhập tháng và năm");
       return;
     }
-    const m = Number(month);
-    const y = Number(year);
-    if (!isMonthAllowed(m, y)) {
-      setError("Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó.");
+    const m = Number(thang);
+    const y = Number(nam);
+    if (!laThangChoPhep(m, y)) {
+      setLoi("Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó.");
       return;
     }
-    setError("");
+    setLoi("");
     try {
       await api.post("/chi-so-dien-nuoc", {
-        room: { id: Number(roomId) },
-        month: Number(month),
-        year: Number(year),
-        oldElectric: Number(oldElectric || 0),
-        newElectric: Number(newElectric || 0),
-        oldWater: Number(oldWater || 0),
-        newWater: Number(newWater || 0),
+        room: { id: Number(idPhong) },
+        month: m,
+        year: y,
+        oldElectric: Number(dienCu || 0),
+        newElectric: Number(dienMoi || 0),
+        oldWater: Number(nuocCu || 0),
+        newWater: Number(nuocMoi || 0),
       });
       notify("Lưu chỉ số thành công", "success");
-      setRoomId("");
-      setMonth("");
-      setYear("");
-      setOldElectric("");
-      setNewElectric("");
-      setOldWater("");
-      setNewWater("");
-      setSelectedRoom(null);
-      load();
+      setIdPhong("");
+      setThang("");
+      setNam("");
+      setDienCu("");
+      setDienMoi("");
+      setNuocCu("");
+      setNuocMoi("");
+      setPhongDangChon(null);
+      tai();
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const status = ax?.response?.status;
-      const message =
+      const thongBao =
         status === 403
           ? "Bạn không có quyền thao tác"
           : status === 400
             ? "Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó."
             : "Lưu chỉ số thất bại";
-      setError(message);
-      notify(message, "error");
+      setLoi(thongBao);
+      notify(thongBao, "error");
     }
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Nhập chỉ số điện nước</h2>
         <div className="card">
@@ -175,43 +175,43 @@ export default function MeterReadingsPage() {
           </div>
           <div className="area-selector">
             <button
-              className={`area-pill ${areaId === "" ? "active" : ""}`}
-              onClick={() => setAreaId("")}
+              className={`area-pill ${idKhu === "" ? "active" : ""}`}
+              onClick={() => setIdKhu("")}
             >
               Tất cả
             </button>
-            {areas.map((a) => (
+            {danhSachKhu.map((a) => (
               <button
                 key={a.id}
-                className={`area-pill ${String(a.id) === areaId ? "active" : ""}`}
-                onClick={() => setAreaId(String(a.id))}
+                className={`area-pill ${String(a.id) === idKhu ? "active" : ""}`}
+                onClick={() => setIdKhu(String(a.id))}
               >
                 {a.name}
               </button>
             ))}
           </div>
           <div className="room-list">
-            {roomsByArea.map((r) => (
+            {phongTheoKhu.map((r) => (
               <button
                 key={r.id}
-                className={`room-row ${selectedRoom?.id === r.id ? "active" : ""}`}
-                onClick={() => setSelectedRoom(r)}
+                className={`room-row ${phongDangChon?.id === r.id ? "active" : ""}`}
+                onClick={() => setPhongDangChon(r)}
               >
                 <span>{r.code}</span>
                 <span className="room-sub">Xem chỉ số</span>
               </button>
             ))}
-            {roomsByArea.length === 0 && (
+            {phongTheoKhu.length === 0 && (
               <div className="room-empty">Không có phòng trong khu này.</div>
             )}
           </div>
         </div>
 
-        {selectedRoom && (
+        {phongDangChon && (
           <div className="card meter-panel">
             <div className="card-header">
               <div>
-                <h3>Phòng {selectedRoom.code}</h3>
+                <h3>Phòng {phongDangChon.code}</h3>
                 <p className="card-subtitle">
                   Xem lịch sử và nhập chỉ số tháng hiện tại
                 </p>
@@ -221,10 +221,10 @@ export default function MeterReadingsPage() {
               <div className="meter-history">
                 <div className="chart-title">Các tháng trước</div>
                 <div className="history-list">
-                  {roomHistory.length === 0 && (
+                  {lichSuPhong.length === 0 && (
                     <div className="history-empty">Chưa có dữ liệu.</div>
                   )}
-                  {roomHistory.map((r) => (
+                  {lichSuPhong.map((r) => (
                     <div key={r.id} className="history-row">
                       <div className="history-title">
                         {r.month}/{r.year}
@@ -234,62 +234,62 @@ export default function MeterReadingsPage() {
                         {r.oldWater}-{r.newWater}
                       </div>
                       <div className="history-total">
-                        Tổng: {formatMoney(r.totalCost)}
+                        Tổng: {dinhDangTien(r.totalCost)}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <form onSubmit={create} className="form-grid">
+              <form onSubmit={tao} className="form-grid">
                 <div>
                   <label className="field-label">Tháng</label>
                   <input
                     placeholder="Tháng"
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
+                    value={thang}
+                    onChange={(e) => setThang(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">Năm</label>
                   <input
                     placeholder="Năm"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
+                    value={nam}
+                    onChange={(e) => setNam(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">Số điện cũ</label>
                   <input
                     placeholder="Số điện cũ"
-                    value={oldElectric}
-                    onChange={(e) => setOldElectric(e.target.value)}
+                    value={dienCu}
+                    onChange={(e) => setDienCu(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">Số điện mới</label>
                   <input
                     placeholder="Số điện mới"
-                    value={newElectric}
-                    onChange={(e) => setNewElectric(e.target.value)}
+                    value={dienMoi}
+                    onChange={(e) => setDienMoi(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">Số nước cũ</label>
                   <input
                     placeholder="Số nước cũ"
-                    value={oldWater}
-                    onChange={(e) => setOldWater(e.target.value)}
+                    value={nuocCu}
+                    onChange={(e) => setNuocCu(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">Số nước mới</label>
                   <input
                     placeholder="Số nước mới"
-                    value={newWater}
-                    onChange={(e) => setNewWater(e.target.value)}
+                    value={nuocMoi}
+                    onChange={(e) => setNuocMoi(e.target.value)}
                   />
                 </div>
-                {error && <div className="form-error">{error}</div>}
+                {loi && <div className="form-error">{loi}</div>}
                 <div className="form-actions">
                   <button className="btn" type="submit">
                     <IconCheck /> Lưu chỉ số
@@ -308,14 +308,14 @@ export default function MeterReadingsPage() {
             <div>
               <label className="field-label">Lọc theo khu</label>
               <select
-                value={filterAreaId}
+                value={idKhuLoc}
                 onChange={(e) => {
-                  setFilterAreaId(e.target.value);
-                  setFilterRoomId("");
+                  setIdKhuLoc(e.target.value);
+                  setIdPhongLoc("");
                 }}
               >
                 <option value="">Tất cả khu</option>
-                {areas.map((a) => (
+                {danhSachKhu.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
                   </option>
@@ -325,11 +325,11 @@ export default function MeterReadingsPage() {
             <div>
               <label className="field-label">Lọc theo phòng</label>
               <select
-                value={filterRoomId}
-                onChange={(e) => setFilterRoomId(e.target.value)}
+                value={idPhongLoc}
+                onChange={(e) => setIdPhongLoc(e.target.value)}
               >
                 <option value="">Tất cả phòng</option>
-                {roomsByFilterArea.map((r) => (
+                {phongTheoKhuLoc.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.code}
                     {r.area?.name ? ` (${r.area.name})` : ""}
@@ -338,8 +338,8 @@ export default function MeterReadingsPage() {
               </select>
             </div>
           </div>
-          <SimpleTable
-            data={filteredReadings}
+          <BangDonGian
+            data={danhSachChiSoLoc}
             columns={[
               { header: "ID", render: (r: MeterReading) => r.id },
               {
@@ -361,12 +361,12 @@ export default function MeterReadingsPage() {
               },
               {
                 header: "Tổng tiền",
-                render: (r: MeterReading) => formatMoney(r.totalCost),
+                render: (r: MeterReading) => dinhDangTien(r.totalCost),
               },
             ]}
           />
         </div>
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

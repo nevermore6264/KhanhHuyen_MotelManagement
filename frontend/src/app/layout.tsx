@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import React from "react";
-import AppShell from "@/components/AppShell";
+import VoUngDung from "@/components/VoUngDung";
 
 export const metadata = {
   title: "iTro",
@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <main className="main-content">
-          <AppShell>{children}</AppShell>
+          <VoUngDung>{children}</VoUngDung>
         </main>
       </body>
     </html>

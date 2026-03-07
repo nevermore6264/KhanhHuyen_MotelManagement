@@ -7,22 +7,25 @@ import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 
 /** Trang đăng nhập: form tài khoản/mật khẩu, gọi API xác thực, lưu token và chuyển dashboard. */
-export default function LoginPage() {
+export default function TrangDangNhap() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin123");
-  const [error, setError] = useState("");
+  const [tenDangNhap, setTenDangNhap] = useState("admin");
+  const [matKhau, setMatKhau] = useState("admin123");
+  const [loi, setLoi] = useState("");
 
-  /** Gửi form đăng nhập: gọi POST /auth/login, lưu token/role/fullName, chuyển /dashboard. */
-  const submit = async (e: React.FormEvent) => {
+  /** Gửi form đăng nhập: gọi POST xac-thuc/dang-nhap, lưu token/role/fullName, chuyển tong-quan. */
+  const gui = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setLoi("");
     try {
-      const res = await api.post("/xac-thuc/dang-nhap", { username, password });
-      setAuth(res.data.token, res.data.role, res.data.fullName);
+      const phanHoi = await api.post("/xac-thuc/dang-nhap", {
+        username: tenDangNhap,
+        password: matKhau,
+      });
+      setAuth(phanHoi.data.token, phanHoi.data.role, phanHoi.data.fullName);
       router.replace("/tong-quan");
-    } catch (err: any) {
-      setError("Đăng nhập thất bại");
+    } catch (_err: unknown) {
+      setLoi("Đăng nhập thất bại");
     }
   };
 
@@ -115,7 +118,7 @@ export default function LoginPage() {
             <span className="login-subtitle">Đăng nhập</span>
           </div>
 
-          <form onSubmit={submit} className="login-form">
+          <form onSubmit={gui} className="login-form">
             <div className="login-field">
               <label htmlFor="username">Tài khoản</label>
               <div className="input-icon-wrap">
@@ -138,8 +141,8 @@ export default function LoginPage() {
                   id="username"
                   placeholder="Nhập tài khoản"
                   autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={tenDangNhap}
+                  onChange={(e) => setTenDangNhap(e.target.value)}
                 />
               </div>
             </div>
@@ -171,13 +174,13 @@ export default function LoginPage() {
                   type="password"
                   placeholder="Nhập mật khẩu"
                   autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={matKhau}
+                  onChange={(e) => setMatKhau(e.target.value)}
                 />
               </div>
             </div>
 
-            {error && <div className="login-error">{error}</div>}
+            {loi && <div className="login-error">{loi}</div>}
 
             <button className="btn login-btn" type="submit">
               <span className="login-btn-icon" aria-hidden="true">

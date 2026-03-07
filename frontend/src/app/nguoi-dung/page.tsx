@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
   IconPencil,
@@ -14,7 +14,7 @@ import {
 } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type User = {
   id: number;
@@ -82,183 +82,196 @@ const validateTenant = (data: {
   return "";
 };
 
-export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("STAFF");
-  const [tenantId, setTenantId] = useState("");
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [roleFilter, setRoleFilter] = useState("");
-  const [query, setQuery] = useState("");
-  const [error, setError] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [editing, setEditing] = useState<User | null>(null);
-  const [editFullName, setEditFullName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editTenantId, setEditTenantId] = useState("");
-  const [editPassword, setEditPassword] = useState("");
-  const [editError, setEditError] = useState("");
-  const [linkUserModal, setLinkUserModal] = useState<User | null>(null);
-  const [linkMode, setLinkMode] = useState<"existing" | "new">("existing");
-  const [linkTenantId, setLinkTenantId] = useState("");
-  const [linkError, setLinkError] = useState("");
-  const [newTenantFullName, setNewTenantFullName] = useState("");
-  const [newTenantPhone, setNewTenantPhone] = useState("");
-  const [newTenantIdNumber, setNewTenantIdNumber] = useState("");
-  const [newTenantAddress, setNewTenantAddress] = useState("");
-  const [newTenantEmail, setNewTenantEmail] = useState("");
-  const [newTenantError, setNewTenantError] = useState("");
-  const roleCurrent = getRole();
-  const isAdmin = roleCurrent === "ADMIN";
+export default function TrangNguoiDung() {
+  const [danhSach, setDanhSach] = useState<User[]>([]);
+  const [tenDangNhap, setTenDangNhap] = useState("");
+  const [matKhau, setMatKhau] = useState("");
+  const [vaiTro, setVaiTro] = useState("STAFF");
+  const [idKhachThue, setIdKhachThue] = useState("");
+  const [danhSachKhachThue, setDanhSachKhachThue] = useState<Tenant[]>([]);
+  const [locVaiTro, setLocVaiTro] = useState("");
+  const [tuKhoa, setTuKhoa] = useState("");
+  const [loi, setLoi] = useState("");
+  const [hienThiTaoMoi, setHienThiTaoMoi] = useState(false);
+  const [phanTuDangSua, setPhanTuDangSua] = useState<User | null>(null);
+  const [hoTenSua, setHoTenSua] = useState("");
+  const [sdtSua, setSdtSua] = useState("");
+  const [idKhachThueSua, setIdKhachThueSua] = useState("");
+  const [matKhauSua, setMatKhauSua] = useState("");
+  const [loiSua, setLoiSua] = useState("");
+  const [nguoiDungLienKet, setNguoiDungLienKet] = useState<User | null>(null);
+  const [cheDoLienKet, setCheDoLienKet] = useState<"existing" | "new">(
+    "existing",
+  );
+  const [idKhachThueLienKet, setIdKhachThueLienKet] = useState("");
+  const [loiLienKet, setLoiLienKet] = useState("");
+  const [hoTenKhachMoi, setHoTenKhachMoi] = useState("");
+  const [sdtKhachMoi, setSdtKhachMoi] = useState("");
+  const [cccdKhachMoi, setCccdKhachMoi] = useState("");
+  const [diaChiKhachMoi, setDiaChiKhachMoi] = useState("");
+  const [emailKhachMoi, setEmailKhachMoi] = useState("");
+  const [loiKhachMoi, setLoiKhachMoi] = useState("");
+  const vaiTroHienTai = getRole();
+  const laQuanTri = vaiTroHienTai === "ADMIN";
   const { notify } = useToast();
 
-  const load = async () => {
-    const res = await api.get("/nguoi-dung");
-    setUsers(res.data);
+  const tai = async () => {
+    const phanHoi = await api.get("/nguoi-dung");
+    setDanhSach(phanHoi.data);
   };
 
-  const loadTenants = async () => {
+  const taiKhachThue = async () => {
     try {
-      const res = await api.get("/khach-thue");
-      setTenants(res.data || []);
+      const phanHoi = await api.get("/khach-thue");
+      setDanhSachKhachThue(phanHoi.data || []);
     } catch {
-      setTenants([]);
+      setDanhSachKhachThue([]);
     }
   };
 
   useEffect(() => {
-    load();
-    loadTenants();
+    tai();
+    taiKhachThue();
   }, []);
 
-  const create = async (e: React.FormEvent) => {
+  const tao = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedUsername = username.trim();
-    if (!trimmedUsername || !password.trim()) {
-      setError("Vui lòng nhập tài khoản và mật khẩu");
+    const ten = tenDangNhap.trim();
+    if (!ten || !matKhau.trim()) {
+      setLoi("Vui lòng nhập tài khoản và mật khẩu");
       return;
     }
-    setError("");
+    setLoi("");
     try {
       await api.post("/nguoi-dung", {
-        username: trimmedUsername,
-        password,
-        role,
+        username: ten,
+        password: matKhau,
+        role: vaiTro,
         active: true,
-        tenantId: role === "TENANT" && tenantId ? Number(tenantId) : null,
+        idKhachThue:
+          vaiTro === "TENANT" && idKhachThue ? Number(idKhachThue) : null,
       });
       notify("Tạo tài khoản thành công", "success");
-    } catch (err: any) {
-      const message =
-        err?.response?.status === 403
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const thongBao =
+        ax?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Tạo tài khoản thất bại";
-      setError(message);
-      notify(message, "error");
+      setLoi(thongBao);
+      notify(thongBao, "error");
       return;
     }
-    setUsername("");
-    setPassword("");
-    setRole("STAFF");
-    setTenantId("");
-    setShowCreate(false);
-    load();
+    setTenDangNhap("");
+    setMatKhau("");
+    setVaiTro("STAFF");
+    setIdKhachThue("");
+    setHienThiTaoMoi(false);
+    tai();
   };
 
-  const startEdit = (user: User) => {
-    setEditing(user);
-    setEditFullName(user.fullName || "");
-    setEditPhone((user as any).phone || "");
-    setEditTenantId("");
-    setEditPassword("");
-    setEditError("");
-    loadTenants();
+  const batDauSua = (user: User) => {
+    setPhanTuDangSua(user);
+    setHoTenSua(user.fullName || "");
+    setSdtSua((user as User & { phone?: string }).phone || "");
+    setIdKhachThueSua("");
+    setMatKhauSua("");
+    setLoiSua("");
+    taiKhachThue();
   };
 
   useEffect(() => {
-    if (editing && tenants.length > 0) {
-      const linked = tenants.find((t) => t.user?.id === editing.id);
-      setEditTenantId(linked ? String(linked.id) : "");
+    if (phanTuDangSua && danhSachKhachThue.length > 0) {
+      const lienKet = danhSachKhachThue.find(
+        (t) => t.user?.id === phanTuDangSua.id,
+      );
+      setIdKhachThueSua(lienKet ? String(lienKet.id) : "");
     }
-  }, [editing?.id, tenants]);
+  }, [phanTuDangSua?.id, danhSachKhachThue]);
 
-  const saveEdit = async () => {
-    if (!editing) return;
+  const luuSua = async () => {
+    if (!phanTuDangSua) return;
     try {
-      await api.put(`/nguoi-dung/${editing.id}`, {
-        fullName: editFullName.trim(),
-        phone: editPhone.trim(),
-        role: editing.role,
-        active: editing.active,
-        password: editPassword.trim() || null,
+      await api.put(`/nguoi-dung/${phanTuDangSua.id}`, {
+        fullName: hoTenSua.trim(),
+        phone: sdtSua.trim(),
+        role: phanTuDangSua.role,
+        active: phanTuDangSua.active,
+        password: matKhauSua.trim() || null,
       });
-      await api.put(`/nguoi-dung/${editing.id}/khach-thue`, {
-        tenantId: editTenantId ? Number(editTenantId) : null,
+      await api.put(`/nguoi-dung/${phanTuDangSua.id}/khach-thue`, {
+        idKhachThue: idKhachThueSua ? Number(idKhachThueSua) : null,
       });
       notify("Cập nhật người dùng thành công", "success");
-    } catch (err: any) {
-      const message =
-        err?.response?.status === 403
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const thongBao =
+        ax?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Cập nhật thất bại";
-      setEditError(message);
-      notify(message, "error");
+      setLoiSua(thongBao);
+      notify(thongBao, "error");
       return;
     }
-    setEditing(null);
-    setEditFullName("");
-    setEditPhone("");
-    setEditTenantId("");
-    setEditPassword("");
-    load();
+    setPhanTuDangSua(null);
+    setHoTenSua("");
+    setSdtSua("");
+    setIdKhachThueSua("");
+    setMatKhauSua("");
+    tai();
   };
 
-  const openLinkModal = (user: User) => {
-    setLinkUserModal(user);
-    setLinkMode("existing");
-    setLinkTenantId("");
-    setLinkError("");
-    setNewTenantFullName("");
-    setNewTenantPhone("");
-    setNewTenantIdNumber("");
-    setNewTenantAddress("");
-    setNewTenantEmail("");
-    setNewTenantError("");
-    loadTenants();
+  const moModalLienKet = (user: User) => {
+    setNguoiDungLienKet(user);
+    setCheDoLienKet("existing");
+    setIdKhachThueLienKet("");
+    setLoiLienKet("");
+    setHoTenKhachMoi("");
+    setSdtKhachMoi("");
+    setCccdKhachMoi("");
+    setDiaChiKhachMoi("");
+    setEmailKhachMoi("");
+    setLoiKhachMoi("");
+    taiKhachThue();
   };
 
   useEffect(() => {
-    if (linkUserModal && tenants.length > 0 && !linkTenantId) {
-      const linked = tenants.find((t) => t.user?.id === linkUserModal.id);
-      setLinkTenantId(linked ? String(linked.id) : "");
+    if (
+      nguoiDungLienKet &&
+      danhSachKhachThue.length > 0 &&
+      !idKhachThueLienKet
+    ) {
+      const linked = danhSachKhachThue.find(
+        (t) => t.user?.id === nguoiDungLienKet.id,
+      );
+      setIdKhachThueLienKet(linked ? String(linked.id) : "");
     }
-  }, [linkUserModal?.id, tenants]);
+  }, [nguoiDungLienKet?.id, tenants]);
 
   const saveLinkTenant = async () => {
-    if (!linkUserModal) return;
-    setLinkError("");
+    if (!nguoiDungLienKet) return;
+    setLoiLienKet("");
     try {
-      await api.put(`/nguoi-dung/${linkUserModal.id}/khach-thue`, {
-        tenantId: linkTenantId ? Number(linkTenantId) : null,
+      await api.put(`/nguoi-dung/${nguoiDungLienKet.id}/khach-thue`, {
+        idKhachThue: idKhachThueLienKet ? Number(idKhachThueLienKet) : null,
       });
       notify("Gắn khách thuê thành công", "success");
-      setLinkUserModal(null);
-      setLinkTenantId("");
-      load();
+      setNguoiDungLienKet(null);
+      setIdKhachThueLienKet("");
+      tai();
     } catch (err: any) {
       const msg =
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Gắn khách thuê thất bại";
-      setLinkError(msg);
+      setLoiLienKet(msg);
       notify(msg, "error");
     }
   };
 
   const createAndLinkTenant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!linkUserModal) return;
+    if (!nguoiDungLienKet) return;
     const msg = validateTenant({
       fullName: newTenantFullName,
       phone: newTenantPhone,
@@ -279,18 +292,18 @@ export default function UsersPage() {
         idNumber: newTenantIdNumber.trim() || null,
         address: newTenantAddress.trim() || null,
         email: newTenantEmail.trim() || null,
-        userId: linkUserModal.id,
+        userId: nguoiDungLienKet.id,
       });
       notify("Tạo khách thuê và gắn tài khoản thành công", "success");
-      setLinkUserModal(null);
-      setLinkMode("existing");
+      setNguoiDungLienKet(null);
+      setCheDoLienKet("existing");
       setNewTenantFullName("");
       setNewTenantPhone("");
       setNewTenantIdNumber("");
       setNewTenantAddress("");
       setNewTenantEmail("");
-      load();
-      loadTenants();
+      tai();
+      taiKhachThue();
     } catch (err: any) {
       const text =
         err?.response?.status === 403
@@ -302,12 +315,12 @@ export default function UsersPage() {
   };
 
   const cancelEdit = () => {
-    setEditing(null);
-    setEditFullName("");
-    setEditPhone("");
-    setEditTenantId("");
-    setEditPassword("");
-    setEditError("");
+    setPhanTuDangSua(null);
+    setHoTenSua("");
+    setSdtSua("");
+    setIdKhachThueSua("");
+    setMatKhauSua("");
+    setLoiSua("");
   };
 
   const toggleLock = async (user: User) => {
@@ -326,27 +339,27 @@ export default function UsersPage() {
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Cập nhật thất bại";
-      setError(message);
+      setLoi(message);
       notify(message, "error");
       return;
     }
-    load();
+    tai();
   };
 
-  const filtered = users.filter((u) => {
+  const filtered = danhSach.filter((u) => {
     const q = query.trim().toLowerCase();
     const matchesQuery = !q
       ? true
       : u.username?.toLowerCase().includes(q) ||
         u.fullName?.toLowerCase().includes(q) ||
         u.role?.toLowerCase().includes(q);
-    const matchesRole = roleFilter ? u.role === roleFilter : true;
+    const matchesRole = locVaiTro ? u.role === locVaiTro : true;
     return matchesQuery && matchesRole;
   });
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Quản lý người dùng</h2>
         <div className="card">
@@ -354,24 +367,24 @@ export default function UsersPage() {
             <input
               placeholder="Tìm kiếm theo tài khoản, họ tên, chức vụ..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => setTuKhoa(e.target.value)}
             />
             <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              value={locVaiTro}
+              onChange={(e) => setLocVaiTro(e.target.value)}
             >
               <option value="">Tất cả chức vụ</option>
               <option value="ADMIN">Quản trị</option>
               <option value="STAFF">Nhân viên</option>
               <option value="TENANT">Khách thuê</option>
             </select>
-            {isAdmin && (
+            {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button
                   className="btn"
                   onClick={() => {
-                    setShowCreate(true);
-                    loadTenants();
+                    setHienThiTaoMoi(true);
+                    taiKhachThue();
                   }}
                 >
                   <IconPlus /> Tạo tài khoản
@@ -379,14 +392,14 @@ export default function UsersPage() {
               </div>
             )}
           </div>
-          {!isAdmin && (
+          {!laQuanTri && (
             <div className="form-error" style={{ marginTop: 12 }}>
               Bạn chỉ có quyền xem dữ liệu.
             </div>
           )}
         </div>
         <div className="card">
-          <SimpleTable
+          <BangDonGian
             data={filtered}
             columns={[
               { header: "ID", render: (u) => u.id },
@@ -394,21 +407,27 @@ export default function UsersPage() {
               {
                 header: "Họ tên",
                 render: (u) => {
-                  const linked = tenants.find((t) => t.user?.id === u.id);
+                  const linked = danhSachKhachThue.find(
+                    (t) => t.user?.id === u.id,
+                  );
                   return linked?.fullName ?? u.fullName ?? "—";
                 },
               },
               {
                 header: "SĐT",
                 render: (u) => {
-                  const linked = tenants.find((t) => t.user?.id === u.id);
+                  const linked = danhSachKhachThue.find(
+                    (t) => t.user?.id === u.id,
+                  );
                   return linked?.phone ?? "—";
                 },
               },
               {
                 header: "CCCD",
                 render: (u) => {
-                  const linked = tenants.find((t) => t.user?.id === u.id);
+                  const linked = danhSachKhachThue.find(
+                    (t) => t.user?.id === u.id,
+                  );
                   return linked?.idNumber ?? "—";
                 },
               },
@@ -428,18 +447,18 @@ export default function UsersPage() {
                   </span>
                 ),
               },
-              ...(isAdmin
+              ...(laQuanTri
                 ? [
                     {
                       header: "Thao tác",
                       render: (u: User) => (
                         <div className="table-actions">
-                          <button className="btn" onClick={() => startEdit(u)}>
+                          <button className="btn" onClick={() => batDauSua(u)}>
                             <IconPencil /> Sửa
                           </button>
                           <button
                             className="btn btn-secondary"
-                            onClick={() => openLinkModal(u)}
+                            onClick={() => moModalLienKet(u)}
                             title="Gắn tài khoản với khách thuê"
                           >
                             <IconLink /> Gắn người dùng
@@ -467,7 +486,7 @@ export default function UsersPage() {
           />
         </div>
 
-        {showCreate && isAdmin && (
+        {hienThiTaoMoi && laQuanTri && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <div className="card-header">
@@ -481,8 +500,8 @@ export default function UsersPage() {
                   <label className="field-label">Tài khoản</label>
                   <input
                     placeholder="Nhập tên đăng nhập"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={tenDangNhap}
+                    onChange={(e) => setTenDangNhap(e.target.value)}
                     autoComplete="username"
                   />
                 </div>
@@ -492,7 +511,7 @@ export default function UsersPage() {
                     placeholder="Nhập mật khẩu"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setMatKhau(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
@@ -500,8 +519,8 @@ export default function UsersPage() {
                   <select
                     value={role}
                     onChange={(e) => {
-                      setRole(e.target.value);
-                      if (e.target.value !== "TENANT") setTenantId("");
+                      setVaiTro(e.target.value);
+                      if (e.target.value !== "TENANT") setIdKhachThue("");
                     }}
                   >
                     <option value="ADMIN">Quản trị</option>
@@ -515,8 +534,8 @@ export default function UsersPage() {
                       Gắn với khách thuê (người được thuê)
                     </label>
                     <select
-                      value={tenantId}
-                      onChange={(e) => setTenantId(e.target.value)}
+                      value={idKhachThue}
+                      onChange={(e) => setIdKhachThue(e.target.value)}
                     >
                       <option value="">— Không gắn / Tạo mới —</option>
                       {tenants
@@ -538,7 +557,7 @@ export default function UsersPage() {
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setShowCreate(false)}
+                    onClick={() => setHienThiTaoMoi(false)}
                   >
                     <IconTimes /> Hủy
                   </button>
@@ -551,14 +570,14 @@ export default function UsersPage() {
           </div>
         )}
 
-        {linkUserModal && (
+        {nguoiDungLienKet && (
           <div className="modal-backdrop">
             <div className="modal-card form-card link-tenant-modal">
               <div className="card-header">
                 <div>
                   <h3>Gắn người dùng với khách thuê</h3>
                   <p className="card-subtitle">
-                    Tài khoản: <strong>{linkUserModal.username}</strong>
+                    Tài khoản: <strong>{nguoiDungLienKet.username}</strong>
                   </p>
                 </div>
               </div>
@@ -566,54 +585,54 @@ export default function UsersPage() {
                 <label className="link-mode-radio">
                   <input
                     type="radio"
-                    name="linkMode"
-                    checked={linkMode === "existing"}
-                    onChange={() => setLinkMode("existing")}
+                    name="cheDoLienKet"
+                    checked={cheDoLienKet === "existing"}
+                    onChange={() => setCheDoLienKet("existing")}
                   />
                   <span>Chọn khách thuê có sẵn</span>
                 </label>
                 <label className="link-mode-radio">
                   <input
                     type="radio"
-                    name="linkMode"
-                    checked={linkMode === "new"}
-                    onChange={() => setLinkMode("new")}
+                    name="cheDoLienKet"
+                    checked={cheDoLienKet === "new"}
+                    onChange={() => setCheDoLienKet("new")}
                   />
                   <span>Tạo khách thuê mới</span>
                 </label>
               </div>
 
-              {linkMode === "existing" ? (
+              {cheDoLienKet === "existing" ? (
                 <>
                   <div className="form-grid">
                     <div className="form-span-2">
                       <label className="field-label">Khách thuê</label>
                       <select
-                        value={linkTenantId}
-                        onChange={(e) => setLinkTenantId(e.target.value)}
+                        value={idKhachThueLienKet}
+                        onChange={(e) => setIdKhachThueLienKet(e.target.value)}
                       >
                         <option value="">— Không gắn —</option>
-                        {tenants.map((t) => (
+                        {danhSachKhachThue.map((t) => (
                           <option key={t.id} value={t.id}>
                             {t.fullName} (ID: {t.id})
-                            {t.user?.id === linkUserModal.id
+                            {t.user?.id === nguoiDungLienKet.id
                               ? " ✓ đang gắn"
                               : ""}
                           </option>
                         ))}
                       </select>
                     </div>
-                    {linkError && (
-                      <div className="form-error form-span-2">{linkError}</div>
+                    {loiLienKet && (
+                      <div className="form-error form-span-2">{loiLienKet}</div>
                     )}
                   </div>
                   <div className="modal-actions" style={{ marginTop: 16 }}>
                     <button
                       className="btn btn-secondary"
                       onClick={() => {
-                        setLinkUserModal(null);
-                        setLinkTenantId("");
-                        setLinkError("");
+                        setNguoiDungLienKet(null);
+                        setIdKhachThueLienKet("");
+                        setLoiLienKet("");
                       }}
                     >
                       <IconTimes /> Hủy
@@ -682,8 +701,8 @@ export default function UsersPage() {
                       className="btn btn-secondary"
                       type="button"
                       onClick={() => {
-                        setLinkUserModal(null);
-                        setLinkMode("existing");
+                        setNguoiDungLienKet(null);
+                        setCheDoLienKet("existing");
                         setNewTenantError("");
                       }}
                     >
@@ -699,7 +718,7 @@ export default function UsersPage() {
           </div>
         )}
 
-        {editing && (
+        {phanTuDangSua && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <h3>Chỉnh sửa người dùng</h3>
@@ -708,22 +727,22 @@ export default function UsersPage() {
                   <label className="field-label">Họ tên</label>
                   <input
                     placeholder="Họ tên"
-                    value={editFullName}
-                    onChange={(e) => setEditFullName(e.target.value)}
+                    value={hoTenSua}
+                    onChange={(e) => setHoTenSua(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">SĐT</label>
                   <input
                     placeholder="SĐT"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
+                    value={sdtSua}
+                    onChange={(e) => setSdtSua(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">Chức vụ</label>
                   <div className="readonly-field">
-                    {editing ? roleLabel(editing.role) : "—"}
+                    {phanTuDangSua ? roleLabel(phanTuDangSua.role) : "—"}
                   </div>
                 </div>
                 <div>
@@ -731,30 +750,32 @@ export default function UsersPage() {
                   <input
                     placeholder="Để trống nếu không đổi"
                     type="password"
-                    value={editPassword}
-                    onChange={(e) => setEditPassword(e.target.value)}
+                    value={matKhauSua}
+                    onChange={(e) => setMatKhauSua(e.target.value)}
                   />
                 </div>
-                {editing?.role === "TENANT" && (
+                {phanTuDangSua?.role === "TENANT" && (
                   <div className="form-span-2">
                     <label className="field-label">
                       Gắn với khách thuê (người được thuê)
                     </label>
                     <select
-                      value={editTenantId}
-                      onChange={(e) => setEditTenantId(e.target.value)}
+                      value={idKhachThueSua}
+                      onChange={(e) => setIdKhachThueSua(e.target.value)}
                     >
                       <option value="">— Không gắn —</option>
-                      {tenants.map((t) => (
+                      {danhSachKhachThue.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.fullName} (ID: {t.id})
-                          {t.user?.id === editing?.id ? " ✓ đang gắn" : ""}
+                          {t.user?.id === phanTuDangSua?.id
+                            ? " ✓ đang gắn"
+                            : ""}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
-                {editError && <div className="form-error">{editError}</div>}
+                {loiSua && <div className="form-error">{loiSua}</div>}
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
@@ -768,6 +789,6 @@ export default function UsersPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

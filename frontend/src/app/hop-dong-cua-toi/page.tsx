@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import { IconEye, IconDownload, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
 import { buildContractDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type Room = { id: number; code: string; currentPrice?: number };
 type Tenant = {
@@ -64,7 +64,7 @@ const formatDateDMY = (dateStr?: string) => {
   return `${day}/${month}/${year}`;
 };
 
-export default function MyContractsPage() {
+export default function TrangHopDongCuaToi() {
   const [items, setItems] = useState<Contract[]>([]);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -130,12 +130,12 @@ export default function MyContractsPage() {
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Hợp đồng của tôi</h2>
         <div className="card">
-          <SimpleTable
+          <BangDonGian
             data={items}
             columns={[
               { header: "ID", render: (c) => c.id },
@@ -247,6 +247,6 @@ export default function MyContractsPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

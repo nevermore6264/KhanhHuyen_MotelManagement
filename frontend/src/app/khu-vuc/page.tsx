@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
   IconPencil,
@@ -15,7 +15,7 @@ import {
 } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type Area = {
   id: number;
@@ -26,214 +26,211 @@ type Area = {
   canDelete?: boolean;
 };
 
-export default function AreasPage() {
-  const [mounted, setMounted] = useState(false);
-  const [data, setData] = useState<Area[]>([]);
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
-  const [confirmId, setConfirmId] = useState<number | null>(null);
-  const [confirmName, setConfirmName] = useState("");
-  const [query, setQuery] = useState("");
-  const [editing, setEditing] = useState<Area | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editAddress, setEditAddress] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editError, setEditError] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const role = mounted ? getRole() : null;
-  const isAdmin = role === "ADMIN";
+export default function TrangKhuVuc() {
+  const [daMount, setDaMount] = useState(false);
+  const [danhSach, setDanhSach] = useState<Area[]>([]);
+  const [ten, setTen] = useState("");
+  const [diaChi, setDiaChi] = useState("");
+  const [moTa, setMoTa] = useState("");
+  const [loi, setLoi] = useState("");
+  const [idXacNhanXoa, setIdXacNhanXoa] = useState<number | null>(null);
+  const [tenXacNhanXoa, setTenXacNhanXoa] = useState("");
+  const [tuKhoa, setTuKhoa] = useState("");
+  const [phanTuDangSua, setPhanTuDangSua] = useState<Area | null>(null);
+  const [tenSua, setTenSua] = useState("");
+  const [diaChiSua, setDiaChiSua] = useState("");
+  const [moTaSua, setMoTaSua] = useState("");
+  const [loiSua, setLoiSua] = useState("");
+  const [hienThiTaoMoi, setHienThiTaoMoi] = useState(false);
+  const vaiTro = daMount ? getRole() : null;
+  const laQuanTri = vaiTro === "ADMIN";
   const { notify } = useToast();
 
   useEffect(() => {
-    setMounted(true);
+    setDaMount(true);
   }, []);
 
-  const load = async () => {
-    const res = await api.get("/khu-vuc");
-    setData(res.data);
+  const tai = async () => {
+    const phanHoi = await api.get("/khu-vuc");
+    setDanhSach(phanHoi.data);
   };
 
   useEffect(() => {
-    if (mounted) load();
-  }, [mounted]);
+    if (daMount) tai();
+  }, [daMount]);
 
-  const create = async (e: React.FormEvent) => {
+  const tao = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedName = name.trim();
-    const trimmedAddress = address.trim();
-    const trimmedDescription = description.trim();
-    if (!trimmedName || !trimmedAddress || !trimmedDescription) {
-      setError("Vui lòng nhập đầy đủ Tên khu, Địa chỉ, Mô tả");
+    const t = ten.trim();
+    const dc = diaChi.trim();
+    const mt = moTa.trim();
+    if (!t || !dc || !mt) {
+      setLoi("Vui lòng nhập đầy đủ Tên khu, Địa chỉ, Mô tả");
       return;
     }
-    setError("");
+    setLoi("");
     try {
-      await api.post("/khu-vuc", {
-        name: trimmedName,
-        address: trimmedAddress,
-        description: trimmedDescription,
-      });
+      await api.post("/khu-vuc", { name: t, address: dc, description: mt });
       notify("Thêm khu thành công", "success");
-    } catch (err: any) {
-      const message =
-        err?.response?.status === 403
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const thongBao =
+        ax?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Thêm khu thất bại";
-      setError(message);
-      notify(message, "error");
+      setLoi(thongBao);
+      notify(thongBao, "error");
       return;
     }
-    setName("");
-    setAddress("");
-    setDescription("");
-    setShowCreate(false);
-    load();
+    setTen("");
+    setDiaChi("");
+    setMoTa("");
+    setHienThiTaoMoi(false);
+    tai();
   };
 
-  const askRemove = (area: Area) => {
-    if (area.canDelete === false) {
+  const yeuCauXoa = (khu: Area) => {
+    if (khu.canDelete === false) {
       notify("Khu còn phòng đang thuê, không thể xóa", "error");
       return;
     }
-    setConfirmId(area.id);
-    setConfirmName(area.name);
+    setIdXacNhanXoa(khu.id);
+    setTenXacNhanXoa(khu.name);
   };
 
-  const startEdit = (area: Area) => {
-    setEditing(area);
-    setEditName(area.name || "");
-    setEditAddress(area.address || "");
-    setEditDescription(area.description || "");
-    setEditError("");
+  const batDauSua = (khu: Area) => {
+    setPhanTuDangSua(khu);
+    setTenSua(khu.name || "");
+    setDiaChiSua(khu.address || "");
+    setMoTaSua(khu.description || "");
+    setLoiSua("");
   };
 
-  const saveEdit = async () => {
-    if (!editing) {
+  const luuSua = async () => {
+    if (!phanTuDangSua) return;
+    const t = tenSua.trim();
+    const dc = diaChiSua.trim();
+    const mt = moTaSua.trim();
+    if (!t || !dc || !mt) {
+      setLoiSua("Vui lòng nhập đầy đủ Tên khu, Địa chỉ, Mô tả");
       return;
     }
-    const trimmedName = editName.trim();
-    const trimmedAddress = editAddress.trim();
-    const trimmedDescription = editDescription.trim();
-    if (!trimmedName || !trimmedAddress || !trimmedDescription) {
-      setEditError("Vui lòng nhập đầy đủ Tên khu, Địa chỉ, Mô tả");
-      return;
-    }
-    setEditError("");
+    setLoiSua("");
     try {
-      await api.put(`/khu-vuc/${editing.id}`, {
-        name: trimmedName,
-        address: trimmedAddress,
-        description: trimmedDescription,
+      await api.put(`/khu-vuc/${phanTuDangSua.id}`, {
+        name: t,
+        address: dc,
+        description: mt,
       });
       notify("Cập nhật khu thành công", "success");
-    } catch (err: any) {
-      const message =
-        err?.response?.status === 403
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const thongBao =
+        ax?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Cập nhật thất bại";
-      setEditError(message);
-      notify(message, "error");
+      setLoiSua(thongBao);
+      notify(thongBao, "error");
       return;
     }
-    setEditing(null);
-    setEditName("");
-    setEditAddress("");
-    setEditDescription("");
-    load();
+    setPhanTuDangSua(null);
+    setTenSua("");
+    setDiaChiSua("");
+    setMoTaSua("");
+    tai();
   };
 
-  const cancelEdit = () => {
-    setEditing(null);
-    setEditName("");
-    setEditAddress("");
-    setEditDescription("");
-    setEditError("");
+  const huySua = () => {
+    setPhanTuDangSua(null);
+    setTenSua("");
+    setDiaChiSua("");
+    setMoTaSua("");
+    setLoiSua("");
   };
 
-  const confirmRemove = async () => {
-    if (confirmId == null) {
-      return;
-    }
-    const area = data.find((a) => a.id === confirmId);
-    if (area?.canDelete === false) {
+  const xacNhanXoa = async () => {
+    if (idXacNhanXoa == null) return;
+    const khu = danhSach.find((a) => a.id === idXacNhanXoa);
+    if (khu?.canDelete === false) {
       notify("Khu còn phòng đang thuê, không thể xóa", "error");
-      setConfirmId(null);
-      setConfirmName("");
+      setIdXacNhanXoa(null);
+      setTenXacNhanXoa("");
       return;
     }
     try {
-      await api.delete(`/khu-vuc/${confirmId}`);
+      await api.delete(`/khu-vuc/${idXacNhanXoa}`);
       notify("Xóa khu thành công", "success");
-    } catch (err: any) {
-      setConfirmId(null);
-      setConfirmName("");
-      const status = err?.response?.status;
-      const data = err?.response?.data;
-      const message =
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number; data?: unknown } };
+      setIdXacNhanXoa(null);
+      setTenXacNhanXoa("");
+      const status = ax?.response?.status;
+      const resData = ax?.response?.data;
+      const thongBao =
         status === 403
           ? "Bạn không có quyền thao tác"
-          : status === 400 && (typeof data === "string" || data?.message)
-            ? typeof data === "string"
-              ? data
-              : data.message
+          : status === 400 &&
+              (typeof resData === "string" ||
+                (resData &&
+                  typeof (resData as { message?: string }).message ===
+                    "string"))
+            ? typeof resData === "string"
+              ? resData
+              : (resData as { message: string }).message
             : "Xóa thất bại";
-      setError(message);
-      notify(message, "error");
+      setLoi(thongBao);
+      notify(thongBao, "error");
       return;
     }
-    setConfirmId(null);
-    setConfirmName("");
-    load();
+    setIdXacNhanXoa(null);
+    setTenXacNhanXoa("");
+    tai();
   };
 
-  const cancelRemove = () => {
-    setConfirmId(null);
-    setConfirmName("");
+  const huyXoa = () => {
+    setIdXacNhanXoa(null);
+    setTenXacNhanXoa("");
   };
 
-  const filtered = data.filter((item) => {
-    const q = query.trim().toLowerCase();
-    if (!q) {
-      return true;
-    }
+  const danhSachLoc = danhSach.filter((phanTu) => {
+    const q = tuKhoa.trim().toLowerCase();
+    if (!q) return true;
     return (
-      item.name?.toLowerCase().includes(q) ||
-      item.address?.toLowerCase().includes(q) ||
-      item.description?.toLowerCase().includes(q)
+      phanTu.name?.toLowerCase().includes(q) ||
+      phanTu.address?.toLowerCase().includes(q) ||
+      phanTu.description?.toLowerCase().includes(q)
     );
   });
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Quản lý khu</h2>
         <div className="card">
           <div className="grid grid-2">
             <input
               placeholder="Tìm kiếm theo tên, địa chỉ, mô tả..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={tuKhoa}
+              onChange={(e) => setTuKhoa(e.target.value)}
             />
-            {isAdmin && (
+            {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button className="btn" onClick={() => setShowCreate(true)}>
+                <button className="btn" onClick={() => setHienThiTaoMoi(true)}>
                   <IconPlus /> Thêm khu mới
                 </button>
               </div>
             )}
           </div>
-          {!isAdmin && (
+          {!laQuanTri && (
             <div className="form-error" style={{ marginTop: 12 }}>
               Bạn chỉ có quyền xem dữ liệu.
             </div>
           )}
         </div>
         <div className="card">
-          <SimpleTable
-            data={filtered}
+          <BangDonGian
+            data={danhSachLoc}
             columns={[
               { header: "ID", render: (r) => r.id },
               { header: "Tên", render: (r) => r.name },
@@ -265,7 +262,7 @@ export default function AreasPage() {
                   </Link>
                 ),
               },
-              ...(isAdmin
+              ...(laQuanTri
                 ? [
                     {
                       header: "Thao tác",
@@ -275,13 +272,13 @@ export default function AreasPage() {
                           <div className="table-actions">
                             <button
                               className="btn"
-                              onClick={() => startEdit(r)}
+                              onClick={() => batDauSua(r)}
                             >
                               <IconPencil /> Sửa
                             </button>
                             <button
                               className={`btn btn-secondary ${locked ? "btn-disabled" : ""}`}
-                              onClick={() => askRemove(r)}
+                              onClick={() => yeuCauXoa(r)}
                               title={
                                 locked
                                   ? "Khu còn phòng đang thuê, không thể xóa"
@@ -300,19 +297,19 @@ export default function AreasPage() {
           />
         </div>
 
-        {confirmId != null && (
+        {idXacNhanXoa != null && (
           <div className="modal-backdrop">
             <div className="modal-card">
               <h3>Xác nhận xóa</h3>
               <p>
-                Bạn có chắc muốn xóa khu <strong>{confirmName || "này"}</strong>
-                ?
+                Bạn có chắc muốn xóa khu{" "}
+                <strong>{tenXacNhanXoa || "này"}</strong>?
               </p>
               <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={cancelRemove}>
+                <button className="btn btn-secondary" onClick={huyXoa}>
                   <IconTimes /> Hủy
                 </button>
-                <button className="btn" onClick={confirmRemove}>
+                <button className="btn" onClick={xacNhanXoa}>
                   <IconTrash /> Xóa
                 </button>
               </div>
@@ -320,7 +317,7 @@ export default function AreasPage() {
           </div>
         )}
 
-        {editing && (
+        {phanTuDangSua && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <h3>Chỉnh sửa khu</h3>
@@ -331,8 +328,8 @@ export default function AreasPage() {
                   </label>
                   <input
                     placeholder="Tên khu"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    value={tenSua}
+                    onChange={(e) => setTenSua(e.target.value)}
                   />
                 </div>
                 <div>
@@ -341,8 +338,8 @@ export default function AreasPage() {
                   </label>
                   <input
                     placeholder="Địa chỉ"
-                    value={editAddress}
-                    onChange={(e) => setEditAddress(e.target.value)}
+                    value={diaChiSua}
+                    onChange={(e) => setDiaChiSua(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
@@ -351,17 +348,17 @@ export default function AreasPage() {
                   </label>
                   <input
                     placeholder="Mô tả"
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
+                    value={moTaSua}
+                    onChange={(e) => setMoTaSua(e.target.value)}
                   />
                 </div>
-                {editError && <div className="form-error">{editError}</div>}
+                {loiSua && <div className="form-error">{loiSua}</div>}
               </div>
               <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={cancelEdit}>
+                <button className="btn btn-secondary" onClick={huySua}>
                   <IconTimes /> Hủy
                 </button>
-                <button className="btn" onClick={saveEdit}>
+                <button className="btn" onClick={luuSua}>
                   <IconCheck /> Lưu
                 </button>
               </div>
@@ -369,7 +366,7 @@ export default function AreasPage() {
           </div>
         )}
 
-        {showCreate && isAdmin && (
+        {hienThiTaoMoi && laQuanTri && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <div className="card-header">
@@ -378,15 +375,15 @@ export default function AreasPage() {
                   <p className="card-subtitle">Điền thông tin cơ bản của khu</p>
                 </div>
               </div>
-              <form onSubmit={create} className="form-grid">
+              <form onSubmit={tao} className="form-grid">
                 <div>
                   <label className="field-label">
                     Tên khu <span className="required">*</span>
                   </label>
                   <input
                     placeholder="Ví dụ: Khu A"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={ten}
+                    onChange={(e) => setTen(e.target.value)}
                   />
                 </div>
                 <div>
@@ -395,8 +392,8 @@ export default function AreasPage() {
                   </label>
                   <input
                     placeholder="Số nhà, đường, phường..."
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    value={diaChi}
+                    onChange={(e) => setDiaChi(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
@@ -405,16 +402,16 @@ export default function AreasPage() {
                   </label>
                   <input
                     placeholder="Ghi chú thêm về khu"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    value={moTa}
+                    onChange={(e) => setMoTa(e.target.value)}
                   />
                 </div>
-                {error && <div className="form-error">{error}</div>}
+                {loi && <div className="form-error">{loi}</div>}
                 <div className="form-actions">
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setShowCreate(false)}
+                    onClick={() => setHienThiTaoMoi(false)}
                   >
                     <IconTimes /> Hủy
                   </button>
@@ -427,6 +424,6 @@ export default function AreasPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

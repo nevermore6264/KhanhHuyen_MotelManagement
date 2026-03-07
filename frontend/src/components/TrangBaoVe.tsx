@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/auth";
 
 /** Bọc trang cần đăng nhập: không có token thì chuyển hướng về /dang-nhap. */
-export default function ProtectedPage({
+export default function TrangBaoVe({
   children,
 }: {
   children: React.ReactNode;

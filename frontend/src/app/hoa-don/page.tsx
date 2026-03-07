@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import {
   IconTimes,
   IconCheck,
@@ -13,7 +13,7 @@ import {
 } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type Room = { id: number; code: string };
 type Tenant = {
@@ -90,7 +90,7 @@ const invoiceStatusBadge = (value?: string) => {
   }
 };
 
-export default function InvoicesPage() {
+export default function TrangHoaDon() {
   const [mounted, setMounted] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -214,8 +214,8 @@ export default function InvoicesPage() {
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Hóa đơn</h2>
         <div className="card">
@@ -296,7 +296,7 @@ export default function InvoicesPage() {
               </div>
             </div>
           )}
-          <SimpleTable
+          <BangDonGian
             data={filteredInvoices}
             columns={[
               { header: "Phòng", render: (i: Invoice) => i.room?.code ?? "—" },
@@ -614,6 +614,6 @@ export default function InvoicesPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

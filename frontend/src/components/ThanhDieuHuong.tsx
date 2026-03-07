@@ -5,7 +5,7 @@ import { IconLogout } from "@/components/Icons";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
-import { useNotification } from "./NotificationProvider";
+import { useThongBao } from "./NhaCungCapThongBao";
 
 /** Một mục menu (nhãn + đường dẫn) */
 type MucMenu = { label: string; href: string };
@@ -90,11 +90,12 @@ const menuTheoVaiTro: Record<string, NhomMenu[]> = {
   ],
 };
 
-export default function NavBar() {
+/** Thanh điều hướng chính: menu theo vai trò, chuông thông báo, đăng xuất. */
+export default function ThanhDieuHuong() {
   const router = useRouter();
   const [vaiTro, setVaiTro] = useState("ADMIN");
   const [ten, setTen] = useState("User");
-  const contextThongBao = useNotification();
+  const contextThongBao = useThongBao();
 
   useEffect(() => {
     setVaiTro(getRole() || "ADMIN");

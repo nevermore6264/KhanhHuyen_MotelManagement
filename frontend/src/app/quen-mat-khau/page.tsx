@@ -4,43 +4,42 @@ import { useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
 
-export default function ForgotPasswordPage() {
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState<{
+export default function TrangQuenMatKhau() {
+  const [tenDangNhap, setTenDangNhap] = useState("");
+  const [dangTai, setDangTai] = useState(false);
+  const [loi, setLoi] = useState("");
+  const [thanhCong, setThanhCong] = useState<{
     message: string;
     resetLink?: string;
   } | null>(null);
 
-  const submit = async (e: React.FormEvent) => {
+  const gui = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess(null);
-    if (!username.trim()) {
-      setError("Vui lòng nhập tài khoản.");
+    setLoi("");
+    setThanhCong(null);
+    if (!tenDangNhap.trim()) {
+      setLoi("Vui lòng nhập tài khoản.");
       return;
     }
-    setLoading(true);
+    setDangTai(true);
     try {
-      const baseUrl =
+      const gocUrl =
         typeof window !== "undefined"
           ? window.location.origin
           : "http://localhost:4002";
-      const res = await api.post("/xac-thuc/quen-mat-khau", {
-        username: username.trim(),
-        resetBaseUrl: baseUrl,
+      const phanHoi = await api.post("/xac-thuc/quen-mat-khau", {
+        username: tenDangNhap.trim(),
+        resetBaseUrl: gocUrl,
       });
-      setSuccess({
-        message: res.data.message,
-        resetLink: res.data.resetLink || undefined,
+      setThanhCong({
+        message: phanHoi.data.message,
+        resetLink: phanHoi.data.resetLink || undefined,
       });
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.",
-      );
+    } catch (err: unknown) {
+      const ax = err as { response?: { data?: { message?: string } } };
+      setLoi(ax?.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
-      setLoading(false);
+      setDangTai(false);
     }
   };
 
@@ -70,10 +69,10 @@ export default function ForgotPasswordPage() {
             <span className="login-subtitle">Quên mật khẩu</span>
           </div>
 
-          {success ? (
+          {thanhCong ? (
             <div className="login-success-box">
-              <p className="login-success-message">{success.message}</p>
-              {success.resetLink && (
+              <p className="login-success-message">{thanhCong.message}</p>
+              {thanhCong.resetLink && (
                 <div className="login-reset-link-box">
                   <label>
                     Link đặt lại mật khẩu (sao chép hoặc nhấn để mở):
@@ -97,7 +96,7 @@ export default function ForgotPasswordPage() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={submit} className="login-form">
+            <form onSubmit={gui} className="login-form">
               <p className="login-forgot-desc">
                 Nhập tài khoản để nhận hướng dẫn đặt lại mật khẩu.
               </p>
@@ -123,19 +122,19 @@ export default function ForgotPasswordPage() {
                     id="username"
                     placeholder="Nhập tài khoản"
                     autoComplete="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={loading}
+                    value={tenDangNhap}
+                    onChange={(e) => setTenDangNhap(e.target.value)}
+                    disabled={dangTai}
                   />
                 </div>
               </div>
-              {error && <div className="login-error">{error}</div>}
+              {loi && <div className="login-error">{loi}</div>}
               <button
                 className="btn login-btn"
                 type="submit"
-                disabled={loading}
+                disabled={dangTai}
               >
-                {loading ? "Đang xử lý…" : "Gửi yêu cầu"}
+                {dangTai ? "Đang xử lý…" : "Gửi yêu cầu"}
               </button>
               <p className="login-forgot-wrap">
                 <Link href="/dang-nhap" className="login-forgot-link">

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import { IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
 
@@ -49,7 +49,7 @@ const invoiceStatusBadge = (value?: string) => {
 
 const canPay = (status?: string) => status === "UNPAID" || status === "PARTIAL";
 
-export default function MyInvoicesPage() {
+export default function TrangHoaDonCuaToi() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<Invoice[]>([]);
   const [payingId, setPayingId] = useState<number | null>(null);
@@ -94,8 +94,8 @@ export default function MyInvoicesPage() {
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Hóa đơn của tôi</h2>
         {message && (
@@ -121,7 +121,7 @@ export default function MyInvoicesPage() {
           </div>
         )}
         <div className="card">
-          <SimpleTable
+          <BangDonGian
             data={items}
             columns={[
               { header: "ID", render: (i) => i.id },
@@ -164,6 +164,6 @@ export default function MyInvoicesPage() {
           />
         </div>
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

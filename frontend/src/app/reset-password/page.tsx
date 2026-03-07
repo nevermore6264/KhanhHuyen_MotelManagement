@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 
-function RedirectContent() {
+function NoiDungChuyenHuong() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -17,10 +17,10 @@ function RedirectContent() {
 }
 
 /** Chuyển hướng từ link cũ /reset-password sang /dat-lai-mat-khau (giữ query token). */
-export default function ResetPasswordRedirect() {
+export default function TrangChuyenHuongDatLaiMatKhau() {
   return (
     <Suspense fallback={<div className="container">Đang tải…</div>}>
-      <RedirectContent />
+      <NoiDungChuyenHuong />
     </Suspense>
   );
 }

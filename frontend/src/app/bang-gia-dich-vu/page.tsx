@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
   IconPencil,
@@ -13,7 +13,7 @@ import {
 } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type ServicePrice = {
   id: number;
@@ -23,12 +23,12 @@ type ServicePrice = {
   effectiveFrom?: string;
 };
 
-const formatMoney = (n?: number | null) => {
+const dinhDangTien = (n?: number | null) => {
   if (n == null || isNaN(n)) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
 };
 
-const formatDateDMY = (dateStr?: string) => {
+const dinhDangNgayDMY = (dateStr?: string) => {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
@@ -38,116 +38,116 @@ const formatDateDMY = (dateStr?: string) => {
   return `${day}/${month}/${year}`;
 };
 
-const formatCurrencyInput = (value: string) => {
+const dinhDangNhapTien = (value: string) => {
   const digits = value.replace(/\D/g, "");
   if (!digits) return "";
   return new Intl.NumberFormat("vi-VN").format(Number(digits));
 };
 
-const parseCurrencyInput = (value: string) => {
+const parseNhapTien = (value: string) => {
   const digits = value.replace(/\D/g, "");
   return digits ? Number(digits) : null;
 };
 
-export default function ServicePricesPage() {
-  const [items, setItems] = useState<ServicePrice[]>([]);
-  const [electricityPrice, setElectricityPrice] = useState("");
-  const [waterPrice, setWaterPrice] = useState("");
-  const [effectiveFrom, setEffectiveFrom] = useState("");
-  const [error, setError] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [editing, setEditing] = useState<ServicePrice | null>(null);
-  const [editElectricityPrice, setEditElectricityPrice] = useState("");
-  const [editWaterPrice, setEditWaterPrice] = useState("");
-  const [editEffectiveFrom, setEditEffectiveFrom] = useState("");
-  const [editError, setEditError] = useState("");
-  const [role, setRole] = useState<string | null>(null);
-  const isAdmin = role === "ADMIN";
+export default function TrangBangGiaDichVu() {
+  const [danhSach, setDanhSach] = useState<ServicePrice[]>([]);
+  const [giaDien, setGiaDien] = useState("");
+  const [giaNuoc, setGiaNuoc] = useState("");
+  const [ngayHieuLuc, setNgayHieuLuc] = useState("");
+  const [loi, setLoi] = useState("");
+  const [hienThiTaoMoi, setHienThiTaoMoi] = useState(false);
+  const [phanTuDangSua, setPhanTuDangSua] = useState<ServicePrice | null>(null);
+  const [giaDienSua, setGiaDienSua] = useState("");
+  const [giaNuocSua, setGiaNuocSua] = useState("");
+  const [ngayHieuLucSua, setNgayHieuLucSua] = useState("");
+  const [loiSua, setLoiSua] = useState("");
+  const [vaiTro, setVaiTro] = useState<string | null>(null);
+  const laQuanTri = vaiTro === "ADMIN";
   const { notify } = useToast();
 
   useEffect(() => {
-    setRole(getRole());
+    setVaiTro(getRole());
   }, []);
 
-  const load = async () => {
-    const res = await api.get("/bang-gia-dich-vu");
-    setItems(res.data);
+  const tai = async () => {
+    const phanHoi = await api.get("/bang-gia-dich-vu");
+    setDanhSach(phanHoi.data);
   };
 
   useEffect(() => {
-    if (role !== null) load();
-  }, [role]);
+    if (vaiTro !== null) tai();
+  }, [vaiTro]);
 
-  const create = async (e: React.FormEvent) => {
+  const tao = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ep = parseCurrencyInput(electricityPrice);
-    const wp = parseCurrencyInput(waterPrice);
-    if (ep == null || wp == null || !effectiveFrom) {
-      setError("Vui lòng nhập đầy đủ giá điện, giá nước và ngày hiệu lực");
+    const gd = parseNhapTien(giaDien);
+    const gn = parseNhapTien(giaNuoc);
+    if (gd == null || gn == null || !ngayHieuLuc) {
+      setLoi("Vui lòng nhập đầy đủ giá điện, giá nước và ngày hiệu lực");
       return;
     }
-    setError("");
+    setLoi("");
     await api.post("/bang-gia-dich-vu", {
       roomPrice: null,
-      electricityPrice: ep,
-      waterPrice: wp,
-      effectiveFrom,
+      electricityPrice: gd,
+      waterPrice: gn,
+      effectiveFrom: ngayHieuLuc,
     });
     notify("Thêm bảng giá thành công", "success");
-    setElectricityPrice("");
-    setWaterPrice("");
-    setEffectiveFrom("");
-    setShowCreate(false);
-    load();
+    setGiaDien("");
+    setGiaNuoc("");
+    setNgayHieuLuc("");
+    setHienThiTaoMoi(false);
+    tai();
   };
 
-  const startEdit = (item: ServicePrice) => {
-    setEditing(item);
-    setEditElectricityPrice(
-      item.electricityPrice != null
-        ? formatCurrencyInput(String(item.electricityPrice))
+  const batDauSua = (phanTu: ServicePrice) => {
+    setPhanTuDangSua(phanTu);
+    setGiaDienSua(
+      phanTu.electricityPrice != null
+        ? dinhDangNhapTien(String(phanTu.electricityPrice))
         : "",
     );
-    setEditWaterPrice(
-      item.waterPrice != null
-        ? formatCurrencyInput(String(item.waterPrice))
+    setGiaNuocSua(
+      phanTu.waterPrice != null
+        ? dinhDangNhapTien(String(phanTu.waterPrice))
         : "",
     );
-    setEditEffectiveFrom(item.effectiveFrom || "");
-    setEditError("");
+    setNgayHieuLucSua(phanTu.effectiveFrom || "");
+    setLoiSua("");
   };
 
-  const saveEdit = async (e: React.FormEvent) => {
+  const luuSua = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editing) return;
-    const ep = parseCurrencyInput(editElectricityPrice);
-    const wp = parseCurrencyInput(editWaterPrice);
-    if (ep == null || wp == null || !editEffectiveFrom) {
-      setEditError("Vui lòng nhập đầy đủ giá điện, giá nước và ngày hiệu lực");
+    if (!phanTuDangSua) return;
+    const gd = parseNhapTien(giaDienSua);
+    const gn = parseNhapTien(giaNuocSua);
+    if (gd == null || gn == null || !ngayHieuLucSua) {
+      setLoiSua("Vui lòng nhập đầy đủ giá điện, giá nước và ngày hiệu lực");
       return;
     }
-    setEditError("");
-    await api.put(`/bang-gia-dich-vu/${editing.id}`, {
+    setLoiSua("");
+    await api.put(`/bang-gia-dich-vu/${phanTuDangSua.id}`, {
       roomPrice: null,
-      electricityPrice: ep,
-      waterPrice: wp,
-      effectiveFrom: editEffectiveFrom,
+      electricityPrice: gd,
+      waterPrice: gn,
+      effectiveFrom: ngayHieuLucSua,
     });
     notify("Cập nhật bảng giá thành công", "success");
-    setEditing(null);
-    load();
+    setPhanTuDangSua(null);
+    tai();
   };
 
-  const deleteItem = async (id: number) => {
+  const xoaPhanTu = async (id: number) => {
     if (!confirm("Bạn có chắc muốn xóa bảng giá này?")) return;
     await api.delete(`/bang-gia-dich-vu/${id}`);
     notify("Đã xóa bảng giá", "success");
-    load();
+    tai();
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Bảng giá dịch vụ</h2>
         <div className="card service-price-intro">
@@ -174,14 +174,14 @@ export default function ServicePricesPage() {
             <div>
               <h3>Bảng giá hiện hành</h3>
               <p className="card-subtitle">
-                {items.length === 0
+                {danhSach.length === 0
                   ? "Chưa có giá. Bấm bên phải để thiết lập giá điện và giá nước (chỉ cần một bộ giá)."
                   : "Chỉ cần một bộ giá điện + giá nước. Dùng Sửa để cập nhật, không cần thêm bản ghi mới."}
               </p>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              {isAdmin && items.length === 0 && (
-                <button className="btn" onClick={() => setShowCreate(true)}>
+              {laQuanTri && danhSach.length === 0 && (
+                <button className="btn" onClick={() => setHienThiTaoMoi(true)}>
                   <IconPlus /> Thiết lập giá điện & nước
                 </button>
               )}
@@ -193,23 +193,23 @@ export default function ServicePricesPage() {
             Giá điện (VNĐ/kWh) và giá nước (VNĐ/m³) dùng để tính tiền theo số
             công tơ. Giá phòng lấy theo từng phòng (cấu hình ở mục Phòng).
           </p>
-          <SimpleTable
-            data={items}
+          <BangDonGian
+            data={danhSach}
             columns={[
               { header: "ID", render: (i: ServicePrice) => i.id },
               {
                 header: "Giá điện (VNĐ/kWh)",
-                render: (i: ServicePrice) => formatMoney(i.electricityPrice),
+                render: (i: ServicePrice) => dinhDangTien(i.electricityPrice),
               },
               {
                 header: "Giá nước (VNĐ/m³)",
-                render: (i: ServicePrice) => formatMoney(i.waterPrice),
+                render: (i: ServicePrice) => dinhDangTien(i.waterPrice),
               },
               {
                 header: "Ngày hiệu lực",
-                render: (i: ServicePrice) => formatDateDMY(i.effectiveFrom),
+                render: (i: ServicePrice) => dinhDangNgayDMY(i.effectiveFrom),
               },
-              ...(isAdmin
+              ...(laQuanTri
                 ? [
                     {
                       header: "Thao tác",
@@ -224,15 +224,15 @@ export default function ServicePricesPage() {
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-primary"
-                            onClick={() => startEdit(i)}
+                            onClick={() => batDauSua(i)}
                           >
                             <IconPencil /> Sửa
                           </button>
-                          {items.length > 1 && (
+                          {danhSach.length > 1 && (
                             <button
                               type="button"
                               className="btn btn-sm btn-secondary"
-                              onClick={() => deleteItem(i.id)}
+                              onClick={() => xoaPhanTu(i.id)}
                             >
                               <IconTrash /> Xóa
                             </button>
@@ -246,7 +246,7 @@ export default function ServicePricesPage() {
           />
         </div>
 
-        {showCreate && (
+        {hienThiTaoMoi && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <div className="card-header">
@@ -255,7 +255,7 @@ export default function ServicePricesPage() {
                   <p className="card-subtitle">Thiết lập giá dịch vụ</p>
                 </div>
               </div>
-              <form onSubmit={create} className="form-grid">
+              <form onSubmit={tao} className="form-grid">
                 <div>
                   <label className="field-label">
                     Giá điện (VNĐ/kWh) <span className="required">*</span>
@@ -264,9 +264,9 @@ export default function ServicePricesPage() {
                     <input
                       placeholder="VD: 3.500"
                       inputMode="numeric"
-                      value={electricityPrice}
+                      value={giaDien}
                       onChange={(e) =>
-                        setElectricityPrice(formatCurrencyInput(e.target.value))
+                        setGiaDien(dinhDangNhapTien(e.target.value))
                       }
                     />
                     <span>VNĐ</span>
@@ -280,9 +280,9 @@ export default function ServicePricesPage() {
                     <input
                       placeholder="VD: 15.000"
                       inputMode="numeric"
-                      value={waterPrice}
+                      value={giaNuoc}
                       onChange={(e) =>
-                        setWaterPrice(formatCurrencyInput(e.target.value))
+                        setGiaNuoc(dinhDangNhapTien(e.target.value))
                       }
                     />
                     <span>VNĐ</span>
@@ -294,16 +294,16 @@ export default function ServicePricesPage() {
                   </label>
                   <input
                     type="date"
-                    value={effectiveFrom}
-                    onChange={(e) => setEffectiveFrom(e.target.value)}
+                    value={ngayHieuLuc}
+                    onChange={(e) => setNgayHieuLuc(e.target.value)}
                   />
                 </div>
-                {error && <div className="form-error">{error}</div>}
+                {loi && <div className="form-error">{loi}</div>}
                 <div className="form-actions">
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setShowCreate(false)}
+                    onClick={() => setHienThiTaoMoi(false)}
                   >
                     <IconTimes /> Hủy
                   </button>
@@ -316,7 +316,7 @@ export default function ServicePricesPage() {
           </div>
         )}
 
-        {editing && (
+        {phanTuDangSua && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <div className="card-header">
@@ -327,7 +327,7 @@ export default function ServicePricesPage() {
                   </p>
                 </div>
               </div>
-              <form onSubmit={saveEdit} className="form-grid">
+              <form onSubmit={luuSua} className="form-grid">
                 <div>
                   <label className="field-label">
                     Giá điện (VNĐ/kWh) <span className="required">*</span>
@@ -336,11 +336,9 @@ export default function ServicePricesPage() {
                     <input
                       placeholder="VD: 3.500"
                       inputMode="numeric"
-                      value={editElectricityPrice}
+                      value={giaDienSua}
                       onChange={(e) =>
-                        setEditElectricityPrice(
-                          formatCurrencyInput(e.target.value),
-                        )
+                        setGiaDienSua(dinhDangNhapTien(e.target.value))
                       }
                     />
                     <span>VNĐ</span>
@@ -354,9 +352,9 @@ export default function ServicePricesPage() {
                     <input
                       placeholder="VD: 15.000"
                       inputMode="numeric"
-                      value={editWaterPrice}
+                      value={giaNuocSua}
                       onChange={(e) =>
-                        setEditWaterPrice(formatCurrencyInput(e.target.value))
+                        setGiaNuocSua(dinhDangNhapTien(e.target.value))
                       }
                     />
                     <span>VNĐ</span>
@@ -368,16 +366,16 @@ export default function ServicePricesPage() {
                   </label>
                   <input
                     type="date"
-                    value={editEffectiveFrom}
-                    onChange={(e) => setEditEffectiveFrom(e.target.value)}
+                    value={ngayHieuLucSua}
+                    onChange={(e) => setNgayHieuLucSua(e.target.value)}
                   />
                 </div>
-                {editError && <div className="form-error">{editError}</div>}
+                {loiSua && <div className="form-error">{loiSua}</div>}
                 <div className="form-actions">
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setEditing(null)}
+                    onClick={() => setPhanTuDangSua(null)}
                   >
                     <IconTimes /> Hủy
                   </button>
@@ -390,6 +388,6 @@ export default function ServicePricesPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import {
   createNotificationClient,
   type NotificationPayload,
 } from "@/lib/notificationSocket";
-import { useToast } from "@/components/ToastProvider";
-import { useNotification } from "@/components/NotificationProvider";
+import { useToast } from "@/components/NhaCungCapToast";
+import { useThongBao } from "@/components/NhaCungCapThongBao";
 import { IconPlus, IconTimes, IconSend, IconCheck } from "@/components/Icons";
 
 type Notification = {
@@ -22,40 +22,40 @@ type Notification = {
 };
 type User = { id: number; username: string; fullName?: string };
 
-export default function NotificationsPage() {
-  const [mounted, setMounted] = useState(false);
-  const [items, setItems] = useState<Notification[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [message, setMessage] = useState("");
-  const [userId, setUserId] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [error, setError] = useState("");
-  const [creating, setCreating] = useState(false);
-  const role = mounted ? getRole() : null;
-  const isAdmin = role === "ADMIN";
+export default function TrangThongBao() {
+  const [daMount, setDaMount] = useState(false);
+  const [danhSach, setDanhSach] = useState<Notification[]>([]);
+  const [danhSachNguoiDung, setDanhSachNguoiDung] = useState<User[]>([]);
+  const [noiDung, setNoiDung] = useState("");
+  const [idNguoiNhan, setIdNguoiNhan] = useState("");
+  const [hienThiTaoMoi, setHienThiTaoMoi] = useState(false);
+  const [loi, setLoi] = useState("");
+  const [dangTao, setDangTao] = useState(false);
+  const vaiTro = daMount ? getRole() : null;
+  const laQuanTri = vaiTro === "ADMIN";
   const { notify } = useToast();
-  const notificationContext = useNotification();
+  const contextThongBao = useThongBao();
   const clientRef = useRef<ReturnType<typeof createNotificationClient>>(null);
 
   useEffect(() => {
-    setMounted(true);
+    setDaMount(true);
   }, []);
 
-  const load = async () => {
-    const res = await api.get("/thong-bao");
-    const data = res.data || [];
-    setItems(data);
-    notificationContext?.refetchUnread(data);
+  const tai = async () => {
+    const phanHoi = await api.get("/thong-bao");
+    const duLieu = phanHoi.data || [];
+    setDanhSach(duLieu);
+    contextThongBao?.refetchUnread(duLieu);
   };
 
   useEffect(() => {
-    if (mounted) load();
-  }, [mounted]);
+    if (daMount) tai();
+  }, [daMount]);
 
   useEffect(() => {
-    if (!mounted || !notificationContext?.lastIncoming) return;
-    const p = notificationContext.lastIncoming;
-    setItems((prev) => [
+    if (!daMount || !contextThongBao?.lastIncoming) return;
+    const p = contextThongBao.lastIncoming;
+    setDanhSach((prev) => [
       {
         id: p.id,
         message: p.message,
@@ -64,27 +64,27 @@ export default function NotificationsPage() {
       },
       ...prev,
     ]);
-    notificationContext.clearLastIncoming();
-  }, [mounted, notificationContext?.lastIncoming]);
+    contextThongBao.clearLastIncoming();
+  }, [daMount, contextThongBao?.lastIncoming]);
 
   useEffect(() => {
-    if (!mounted || !isAdmin) return;
-    const loadUsers = async () => {
+    if (!daMount || !laQuanTri) return;
+    const taiNguoiDung = async () => {
       try {
-        const res = await api.get("/nguoi-dung");
-        setUsers(res.data || []);
+        const phanHoi = await api.get("/nguoi-dung");
+        setDanhSachNguoiDung(phanHoi.data || []);
       } catch {
-        setUsers([]);
+        setDanhSachNguoiDung([]);
       }
     };
-    loadUsers();
-  }, [mounted, isAdmin]);
+    taiNguoiDung();
+  }, [daMount, laQuanTri]);
 
   useEffect(() => {
-    if (!mounted || !isAdmin) return;
+    if (!daMount || !laQuanTri) return;
     const client = createNotificationClient(
       (payload: NotificationPayload) => {
-        setItems((prev) => [
+        setDanhSach((prev) => [
           {
             id: payload.id,
             message: payload.message,
@@ -111,63 +111,63 @@ export default function NotificationsPage() {
       clientRef.current?.deactivate?.();
       clientRef.current = null;
     };
-  }, [mounted, isAdmin, notify]);
+  }, [daMount, laQuanTri, notify]);
 
-  const markRead = async (id: number) => {
+  const danhDauDaDoc = async (id: number) => {
     await api.put(`/thong-bao/${id}/da-doc`);
-    await load();
-    notificationContext?.refetchUnread();
+    await tai();
+    contextThongBao?.refetchUnread();
   };
 
-  const createNotification = async (e: React.FormEvent) => {
+  const taoThongBao = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = message.trim();
-    if (!trimmed) {
-      setError("Vui lòng nhập nội dung thông báo");
+    const nd = noiDung.trim();
+    if (!nd) {
+      setLoi("Vui lòng nhập nội dung thông báo");
       return;
     }
-    setError("");
-    setCreating(true);
+    setLoi("");
+    setDangTao(true);
     try {
       await api.post("/thong-bao", {
-        message: trimmed,
-        userId: userId ? Number(userId) : null,
+        message: nd,
+        userId: idNguoiNhan ? Number(idNguoiNhan) : null,
       });
       notify("Đã gửi thông báo", "success");
-      setMessage("");
-      setUserId("");
-      setShowCreate(false);
-      load();
+      setNoiDung("");
+      setIdNguoiNhan("");
+      setHienThiTaoMoi(false);
+      tai();
     } catch (err: unknown) {
       const ax = err as {
         response?: { data?: { message?: string }; status?: number };
       };
-      const msg =
+      const thongBao =
         ax?.response?.data?.message ||
         (ax?.response?.status === 403
           ? "Bạn không có quyền"
           : "Gửi thông báo thất bại");
-      setError(msg);
-      notify(msg, "error");
+      setLoi(thongBao);
+      notify(thongBao, "error");
     } finally {
-      setCreating(false);
+      setDangTao(false);
     }
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Thông báo</h2>
-        {mounted && isAdmin && (
+        {daMount && laQuanTri && (
           <div className="card">
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
                 type="button"
                 className="btn"
                 onClick={() => {
-                  setShowCreate(true);
-                  setError("");
+                  setHienThiTaoMoi(true);
+                  setLoi("");
                 }}
               >
                 <IconPlus /> Tạo thông báo
@@ -176,8 +176,8 @@ export default function NotificationsPage() {
           </div>
         )}
         <div className="card">
-          <SimpleTable
-            data={items}
+          <BangDonGian
+            data={danhSach}
             columns={[
               { header: "ID", render: (n) => n.id },
               { header: "Nội dung", render: (n) => n.message },
@@ -191,7 +191,7 @@ export default function NotificationsPage() {
                   <button
                     type="button"
                     className="btn"
-                    onClick={() => markRead(n.id)}
+                    onClick={() => danhDauDaDoc(n.id)}
                   >
                     <IconCheck /> Đánh dấu đã đọc
                   </button>
@@ -201,7 +201,7 @@ export default function NotificationsPage() {
           />
         </div>
 
-        {mounted && showCreate && isAdmin && (
+        {daMount && hienThiTaoMoi && laQuanTri && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <div className="card-header">
@@ -213,15 +213,15 @@ export default function NotificationsPage() {
                   </p>
                 </div>
               </div>
-              <form onSubmit={createNotification} className="form-grid">
+              <form onSubmit={taoThongBao} className="form-grid">
                 <div className="form-span-2">
                   <label className="field-label">
                     Nội dung <span className="required">*</span>
                   </label>
                   <textarea
                     placeholder="Nội dung thông báo..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    value={noiDung}
+                    onChange={(e) => setNoiDung(e.target.value)}
                     rows={4}
                     style={{ width: "100%", resize: "vertical" }}
                   />
@@ -229,31 +229,31 @@ export default function NotificationsPage() {
                 <div className="form-span-2">
                   <label className="field-label">Gửi đến</label>
                   <select
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
+                    value={idNguoiNhan}
+                    onChange={(e) => setIdNguoiNhan(e.target.value)}
                   >
                     <option value="">Tất cả người dùng</option>
-                    {users.map((u) => (
+                    {danhSachNguoiDung.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.username} {u.fullName ? `(${u.fullName})` : ""}
                       </option>
                     ))}
                   </select>
                 </div>
-                {error && <div className="form-error form-span-2">{error}</div>}
+                {loi && <div className="form-error form-span-2">{loi}</div>}
                 <div className="form-actions form-span-2">
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => {
-                      setShowCreate(false);
-                      setError("");
+                      setHienThiTaoMoi(false);
+                      setLoi("");
                     }}
                   >
                     <IconTimes /> Hủy
                   </button>
-                  <button type="submit" className="btn" disabled={creating}>
-                    {creating ? (
+                  <button type="submit" className="btn" disabled={dangTao}>
+                    {dangTao ? (
                       "Đang gửi…"
                     ) : (
                       <>
@@ -267,6 +267,6 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/auth";
 
-export default function HomePage() {
+export default function TrangChu() {
   const router = useRouter();
 
   useEffect(() => {

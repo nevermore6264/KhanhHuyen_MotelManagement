@@ -5,9 +5,9 @@
  * xem/tải Word, phân quyền Admin/Staff/Tenant.
  */
 import { useEffect, useRef, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
   IconTimes,
@@ -18,7 +18,7 @@ import {
 } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 import { buildContractDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 
@@ -121,7 +121,7 @@ const addMonthsToDate = (startYMD: string, months: number): string => {
   return `${y}-${m}-${day}`;
 };
 
-export default function ContractsPage() {
+export default function TrangHopDong() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -357,8 +357,8 @@ export default function ContractsPage() {
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Quản lý hợp đồng</h2>
         <div className="card">
@@ -385,7 +385,7 @@ export default function ContractsPage() {
           )}
         </div>
         <div className="card">
-          <SimpleTable
+          <BangDonGian
             className="table-nowrap contracts-table-fit"
             data={filtered}
             columns={[
@@ -741,6 +741,6 @@ export default function ContractsPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }

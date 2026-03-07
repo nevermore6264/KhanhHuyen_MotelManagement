@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProtectedPage from "@/components/ProtectedPage";
-import NavBar from "@/components/NavBar";
-import SimpleTable from "@/components/SimpleTable";
+import TrangBaoVe from "@/components/TrangBaoVe";
+import ThanhDieuHuong from "@/components/ThanhDieuHuong";
+import BangDonGian from "@/components/BangDonGian";
 import { IconPencil, IconTimes, IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
-import { useToast } from "@/components/ToastProvider";
+import { useToast } from "@/components/NhaCungCapToast";
 
 type Room = { id: number; code: string };
 type Tenant = { id: number; fullName: string };
@@ -52,7 +52,7 @@ const invoiceStatusBadge = (value?: string) => {
   }
 };
 
-export default function PaymentsPage() {
+export default function TrangThanhToan() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [updatingInvoice, setUpdatingInvoice] = useState<Invoice | null>(null);
   const [amount, setAmount] = useState("");
@@ -125,8 +125,8 @@ export default function PaymentsPage() {
   };
 
   return (
-    <ProtectedPage>
-      <NavBar />
+    <TrangBaoVe>
+      <ThanhDieuHuong />
       <div className="container">
         <h2>Ghi nhận thanh toán</h2>
         <div className="card">
@@ -134,7 +134,7 @@ export default function PaymentsPage() {
             Danh sách hóa đơn theo kỳ (tháng/năm). Bấm &quot;Cập nhật thủ
             công&quot; để ghi nhận thanh toán cho từng hóa đơn.
           </p>
-          <SimpleTable
+          <BangDonGian
             data={invoices}
             columns={[
               {
@@ -245,6 +245,6 @@ export default function PaymentsPage() {
           </div>
         )}
       </div>
-    </ProtectedPage>
+    </TrangBaoVe>
   );
 }
