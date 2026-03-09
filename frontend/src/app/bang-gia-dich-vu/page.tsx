@@ -17,10 +17,10 @@ import { useToast } from "@/components/NhaCungCapToast";
 
 type ServicePrice = {
   id: number;
-  roomPrice?: number;
-  electricityPrice?: number;
-  waterPrice?: number;
-  effectiveFrom?: string;
+  giaPhong?: number;
+  giaDien?: number;
+  giaNuoc?: number;
+  hieuLucTu?: string;
 };
 
 const dinhDangTien = (n?: number | null) => {
@@ -88,10 +88,10 @@ export default function TrangBangGiaDichVu() {
     }
     setLoi("");
     await api.post("/bang-gia-dich-vu", {
-      roomPrice: null,
-      electricityPrice: gd,
-      waterPrice: gn,
-      effectiveFrom: ngayHieuLuc,
+      giaPhong: null,
+      giaDien: gd,
+      giaNuoc: gn,
+      hieuLucTu: ngayHieuLuc,
     });
     notify("Thêm bảng giá thành công", "success");
     setGiaDien("");
@@ -104,16 +104,16 @@ export default function TrangBangGiaDichVu() {
   const batDauSua = (phanTu: ServicePrice) => {
     setPhanTuDangSua(phanTu);
     setGiaDienSua(
-      phanTu.electricityPrice != null
-        ? dinhDangNhapTien(String(phanTu.electricityPrice))
+      phanTu.giaDien != null
+        ? dinhDangNhapTien(String(phanTu.giaDien))
         : "",
     );
     setGiaNuocSua(
-      phanTu.waterPrice != null
-        ? dinhDangNhapTien(String(phanTu.waterPrice))
+      phanTu.giaNuoc != null
+        ? dinhDangNhapTien(String(phanTu.giaNuoc))
         : "",
     );
-    setNgayHieuLucSua(phanTu.effectiveFrom || "");
+    setNgayHieuLucSua(phanTu.hieuLucTu || "");
     setLoiSua("");
   };
 
@@ -128,10 +128,10 @@ export default function TrangBangGiaDichVu() {
     }
     setLoiSua("");
     await api.put(`/bang-gia-dich-vu/${phanTuDangSua.id}`, {
-      roomPrice: null,
-      electricityPrice: gd,
-      waterPrice: gn,
-      effectiveFrom: ngayHieuLucSua,
+      giaPhong: null,
+      giaDien: gd,
+      giaNuoc: gn,
+      hieuLucTu: ngayHieuLucSua,
     });
     notify("Cập nhật bảng giá thành công", "success");
     setPhanTuDangSua(null);
@@ -199,15 +199,15 @@ export default function TrangBangGiaDichVu() {
               { header: "ID", render: (i: ServicePrice) => i.id },
               {
                 header: "Giá điện (VNĐ/kWh)",
-                render: (i: ServicePrice) => dinhDangTien(i.electricityPrice),
+                render: (i: ServicePrice) => dinhDangTien(i.giaDien),
               },
               {
                 header: "Giá nước (VNĐ/m³)",
-                render: (i: ServicePrice) => dinhDangTien(i.waterPrice),
+                render: (i: ServicePrice) => dinhDangTien(i.giaNuoc),
               },
               {
                 header: "Ngày hiệu lực",
-                render: (i: ServicePrice) => dinhDangNgayDMY(i.effectiveFrom),
+                render: (i: ServicePrice) => dinhDangNgayDMY(i.hieuLucTu),
               },
               ...(laQuanTri
                 ? [

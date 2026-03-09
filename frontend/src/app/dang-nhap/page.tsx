@@ -19,10 +19,10 @@ export default function TrangDangNhap() {
     setLoi("");
     try {
       const phanHoi = await api.post("/xac-thuc/dang-nhap", {
-        username: tenDangNhap,
-        password: matKhau,
+        tenDangNhap,
+        matKhau,
       });
-      setAuth(phanHoi.data.token, phanHoi.data.role, phanHoi.data.fullName);
+      setAuth(phanHoi.data.token, phanHoi.data.vaiTro, phanHoi.data.hoTen);
       router.replace("/tong-quan");
     } catch (_err: unknown) {
       setLoi("Đăng nhập thất bại");

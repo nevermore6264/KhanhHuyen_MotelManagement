@@ -129,13 +129,13 @@ export default function TrangChiSoDienNuoc() {
     setLoi("");
     try {
       await api.post("/chi-so-dien-nuoc", {
-        room: { id: Number(idPhong) },
-        month: m,
-        year: y,
-        oldElectric: Number(dienCu || 0),
-        newElectric: Number(dienMoi || 0),
-        oldWater: Number(nuocCu || 0),
-        newWater: Number(nuocMoi || 0),
+        phong: { id: Number(idPhong) },
+        thang: m,
+        nam: y,
+        dienCu: Number(dienCu || 0),
+        dienMoi: Number(dienMoi || 0),
+        nuocCu: Number(nuocCu || 0),
+        nuocMoi: Number(nuocMoi || 0),
       });
       notify("Lưu chỉ số thành công", "success");
       setIdPhong("");

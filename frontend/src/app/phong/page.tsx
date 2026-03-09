@@ -18,14 +18,14 @@ import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 
-type Area = { id: number; name: string };
+type Area = { id: number; ten: string };
 type Room = {
   id: number;
-  code: string;
-  floor?: string;
-  status: string;
-  area?: Area;
-  currentPrice?: number;
+  maPhong: string;
+  tang?: string;
+  trangThai: string;
+  khuVuc?: Area;
+  giaHienTai?: number;
 };
 
 const dinhDangNhapTien = (value: string) => {
@@ -129,11 +129,11 @@ export default function TrangPhong() {
     setLoi("");
     try {
       await api.post("/phong", {
-        code: ma,
-        floor: tang.trim() || null,
-        status: trangThaiPhong,
-        currentPrice: giaSo,
-        area: idKhu ? { id: Number(idKhu) } : null,
+        maPhong: ma,
+        tang: tang.trim() || null,
+        trangThai: trangThaiPhong,
+        giaHienTai: giaSo,
+        khuVuc: idKhu ? { id: Number(idKhu) } : null,
       });
       notify("Thêm phòng thành công", "success");
     } catch (err: unknown) {
@@ -158,13 +158,13 @@ export default function TrangPhong() {
 
   const batDauSua = (phong: Room) => {
     setPhanTuDangSua(phong);
-    setMaPhongSua(phong.code || "");
-    setTangSua(phong.floor || "");
-    setTrangThaiSua(phong.status || "AVAILABLE");
-    setIdKhuSua(phong.area?.id ? String(phong.area.id) : "");
+    setMaPhongSua(phong.maPhong || "");
+    setTangSua(phong.tang || "");
+    setTrangThaiSua(phong.trangThai || "AVAILABLE");
+    setIdKhuSua(phong.khuVuc?.id ? String(phong.khuVuc.id) : "");
     setGiaSua(
-      phong.currentPrice != null
-        ? dinhDangNhapTien(String(phong.currentPrice))
+      phong.giaHienTai != null
+        ? dinhDangNhapTien(String(phong.giaHienTai))
         : "",
     );
     setLoiSua("");
@@ -181,11 +181,11 @@ export default function TrangPhong() {
     setLoiSua("");
     try {
       await api.put(`/phong/${phanTuDangSua.id}`, {
-        code: ma,
-        floor: tangSua.trim() || null,
-        status: trangThaiSua,
-        currentPrice: giaSo,
-        area: idKhuSua ? { id: Number(idKhuSua) } : null,
+        maPhong: ma,
+        tang: tangSua.trim() || null,
+        trangThai: trangThaiSua,
+        giaHienTai: giaSo,
+        khuVuc: idKhuSua ? { id: Number(idKhuSua) } : null,
       });
       notify("Cập nhật phòng thành công", "success");
     } catch (err: unknown) {
@@ -221,7 +221,7 @@ export default function TrangPhong() {
       return;
     }
     setIdXacNhanXoa(phong.id);
-    setTenXacNhanXoa(phong.code);
+    setTenXacNhanXoa(phong.maPhong);
   };
 
   const xacNhanXoa = async () => {
@@ -262,22 +262,22 @@ export default function TrangPhong() {
     const q = tuKhoa.trim().toLowerCase();
     const khopTuKhoa = !q
       ? true
-      : phong.code?.toLowerCase().includes(q) ||
-        phong.floor?.toLowerCase().includes(q) ||
-        phong.status?.toLowerCase().includes(q) ||
-        phong.area?.name?.toLowerCase().includes(q);
-    const khopTrangThai = locTrangThai ? phong.status === locTrangThai : true;
-    const khopKhu = idKhuTuUrl == null ? true : phong.area?.id === idKhuTuUrl;
+      : phong.maPhong?.toLowerCase().includes(q) ||
+        phong.tang?.toLowerCase().includes(q) ||
+        phong.trangThai?.toLowerCase().includes(q) ||
+        phong.khuVuc?.ten?.toLowerCase().includes(q);
+    const khopTrangThai = locTrangThai ? phong.trangThai === locTrangThai : true;
+    const khopKhu = idKhuTuUrl == null ? true : phong.khuVuc?.id === idKhuTuUrl;
     return khopTuKhoa && khopTrangThai && khopKhu;
   });
 
   const tenKhuLoc =
     idKhuTuUrl != null
-      ? (danhSachKhu.find((a) => a.id === idKhuTuUrl)?.name ??
+      ? (danhSachKhu.find((a) => a.id === idKhuTuUrl)?.ten ??
         `Khu #${idKhuTuUrl}`)
       : null;
 
-  const khoaSua = phanTuDangSua ? isLockedStatus(phanTuDangSua.status) : false;
+  const khoaSua = phanTuDangSua ? isLockedStatus(phanTuDangSua.trangThai) : false;
 
   return (
     <TrangBaoVe>
@@ -333,30 +333,30 @@ export default function TrangPhong() {
             data={danhSachLoc}
             columns={[
               { header: "ID", render: (r) => r.id },
-              { header: "Mã", render: (r) => r.code },
-              { header: "Tầng", render: (r) => r.floor },
+              { header: "Mã", render: (r) => r.maPhong },
+              { header: "Tầng", render: (r) => r.tang },
               {
                 header: "Trạng thái",
                 render: (r) => (
-                  <span className={`status-badge ${statusClass(r.status)}`}>
-                    {statusLabel(r.status)}
+                  <span className={`status-badge ${statusClass(r.trangThai)}`}>
+                    {statusLabel(r.trangThai)}
                   </span>
                 ),
               },
-              { header: "Khu", render: (r) => r.area?.name },
+              { header: "Khu", render: (r) => r.khuVuc?.ten },
               {
                 header: "Giá",
                 render: (r) =>
-                  r.currentPrice == null
+                  r.giaHienTai == null
                     ? ""
-                    : `${dinhDangSo(r.currentPrice)} VNĐ`,
+                    : `${dinhDangSo(r.giaHienTai)} VNĐ`,
               },
               ...(laQuanTri
                 ? [
                     {
                       header: "Thao tác",
                       render: (r: Room) => {
-                        const locked = isLockedStatus(r.status);
+                        const locked = isLockedStatus(r.trangThai);
                         return (
                           <div className="table-actions">
                             <button
@@ -438,7 +438,7 @@ export default function TrangPhong() {
                     <option value="">Chọn khu</option>
                     {danhSachKhu.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.name}
+                        {a.ten}
                       </option>
                     ))}
                   </select>
@@ -524,7 +524,7 @@ export default function TrangPhong() {
                     <option value="">Chọn khu</option>
                     {danhSachKhu.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.name}
+                        {a.ten}
                       </option>
                     ))}
                   </select>

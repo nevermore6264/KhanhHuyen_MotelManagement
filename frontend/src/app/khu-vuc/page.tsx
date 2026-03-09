@@ -19,11 +19,11 @@ import { useToast } from "@/components/NhaCungCapToast";
 
 type Area = {
   id: number;
-  name: string;
-  address?: string;
-  description?: string;
-  roomCount?: number;
-  canDelete?: boolean;
+  ten: string;
+  diaChi?: string;
+  moTa?: string;
+  soPhong?: number;
+  coTheXoa?: boolean;
 };
 
 export default function TrangKhuVuc() {
@@ -70,7 +70,7 @@ export default function TrangKhuVuc() {
     }
     setLoi("");
     try {
-      await api.post("/khu-vuc", { name: t, address: dc, description: mt });
+      await api.post("/khu-vuc", { ten: t, diaChi: dc, moTa: mt });
       notify("Thêm khu thành công", "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
@@ -95,12 +95,12 @@ export default function TrangKhuVuc() {
       return;
     }
     setIdXacNhanXoa(khu.id);
-    setTenXacNhanXoa(khu.name);
+    setTenXacNhanXoa(khu.ten);
   };
 
   const batDauSua = (khu: Area) => {
     setPhanTuDangSua(khu);
-    setTenSua(khu.name || "");
+    setTenSua(khu.ten || "");
     setDiaChiSua(khu.address || "");
     setMoTaSua(khu.description || "");
     setLoiSua("");
@@ -118,9 +118,9 @@ export default function TrangKhuVuc() {
     setLoiSua("");
     try {
       await api.put(`/khu-vuc/${phanTuDangSua.id}`, {
-        name: t,
-        address: dc,
-        description: mt,
+        ten: t,
+        diaChi: dc,
+        moTa: mt,
       });
       notify("Cập nhật khu thành công", "success");
     } catch (err: unknown) {
@@ -151,7 +151,7 @@ export default function TrangKhuVuc() {
   const xacNhanXoa = async () => {
     if (idXacNhanXoa == null) return;
     const khu = danhSach.find((a) => a.id === idXacNhanXoa);
-    if (khu?.canDelete === false) {
+    if (khu?.coTheXoa === false) {
       notify("Khu còn phòng đang thuê, không thể xóa", "error");
       setIdXacNhanXoa(null);
       setTenXacNhanXoa("");
@@ -196,9 +196,9 @@ export default function TrangKhuVuc() {
     const q = tuKhoa.trim().toLowerCase();
     if (!q) return true;
     return (
-      phanTu.name?.toLowerCase().includes(q) ||
-      phanTu.address?.toLowerCase().includes(q) ||
-      phanTu.description?.toLowerCase().includes(q)
+      phanTu.ten?.toLowerCase().includes(q) ||
+      phanTu.diaChi?.toLowerCase().includes(q) ||
+      phanTu.moTa?.toLowerCase().includes(q)
     );
   });
 
@@ -233,13 +233,13 @@ export default function TrangKhuVuc() {
             data={danhSachLoc}
             columns={[
               { header: "ID", render: (r) => r.id },
-              { header: "Tên", render: (r) => r.name },
-              { header: "Địa chỉ", render: (r) => r.address },
+              { header: "Tên", render: (r) => r.ten },
+              { header: "Địa chỉ", render: (r) => r.diaChi },
               {
                 header: "Mô tả",
                 render: (r) => (
-                  <span className="table-ellipsis" title={r.description || ""}>
-                    {r.description || ""}
+                  <span className="table-ellipsis" title={r.moTa || ""}>
+                    {r.moTa || ""}
                   </span>
                 ),
               },
@@ -247,7 +247,7 @@ export default function TrangKhuVuc() {
                 header: "Số phòng",
                 render: (r: Area) => (
                   <span>
-                    {typeof r.roomCount === "number" ? r.roomCount : "—"}
+                    {typeof r.soPhong === "number" ? r.soPhong : "—"}
                   </span>
                 ),
               },
@@ -267,7 +267,7 @@ export default function TrangKhuVuc() {
                     {
                       header: "Thao tác",
                       render: (r: Area) => {
-                        const locked = r.canDelete === false;
+                        const locked = r.coTheXoa === false;
                         return (
                           <div className="table-actions">
                             <button

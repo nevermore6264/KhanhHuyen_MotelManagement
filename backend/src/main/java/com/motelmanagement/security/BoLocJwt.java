@@ -1,10 +1,8 @@
 package com.motelmanagement.security;
 
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,8 +11,11 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.List;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /** Filter đọc JWT từ header Authorization và đặt thông tin đăng nhập vào SecurityContext. */
 @Component
@@ -36,8 +37,9 @@ public class BoLocJwt extends OncePerRequestFilter {
                 String username = claims.getSubject();
                 String vaiTro = claims.get("role", String.class);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    String role = (vaiTro != null && !vaiTro.isBlank()) ? ("ROLE_" + vaiTro) : "ROLE_USER";
                     UsernamePasswordAuthenticationToken xacThuc = new UsernamePasswordAuthenticationToken(
-                            username, null, List.of(new SimpleGrantedAuthority("ROLE_" + vaiTro))
+                            username, null, List.of(new SimpleGrantedAuthority(role))
                     );
                     xacThuc.setDetails(new WebAuthenticationDetailsSource().buildDetails(yeuCau));
                     SecurityContextHolder.getContext().setAuthentication(xacThuc);

@@ -12,10 +12,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AreaWithRoomCountDto {
     private Long id;
-    private String name;
-    private String address;
-    private String description;
-    private long roomCount;
+    private String ten;
+    private String diaChi;
+    private String moTa;
+    private long soPhong;
     /** True khi không còn phòng nào đang có hợp đồng thuê (ACTIVE) — cho phép xóa khu. */
-    private boolean canDelete;
+    private boolean coTheXoa;
 }

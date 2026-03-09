@@ -28,12 +28,12 @@ export default function TrangQuenMatKhau() {
           ? window.location.origin
           : "http://localhost:4002";
       const phanHoi = await api.post("/xac-thuc/quen-mat-khau", {
-        username: tenDangNhap.trim(),
+        tenDangNhap: tenDangNhap.trim(),
         resetBaseUrl: gocUrl,
       });
       setThanhCong({
         message: phanHoi.data.message,
-        resetLink: phanHoi.data.resetLink || undefined,
+        resetLink: phanHoi.data.resetLink ?? undefined,
       });
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
