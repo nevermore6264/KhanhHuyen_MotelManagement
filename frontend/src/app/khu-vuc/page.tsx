@@ -90,7 +90,7 @@ export default function TrangKhuVuc() {
   };
 
   const yeuCauXoa = (khu: Area) => {
-    if (khu.canDelete === false) {
+    if (khu.coTheXoa === false) {
       notify("Khu còn phòng đang thuê, không thể xóa", "error");
       return;
     }
@@ -101,8 +101,8 @@ export default function TrangKhuVuc() {
   const batDauSua = (khu: Area) => {
     setPhanTuDangSua(khu);
     setTenSua(khu.ten || "");
-    setDiaChiSua(khu.address || "");
-    setMoTaSua(khu.description || "");
+    setDiaChiSua(khu.diaChi || "");
+    setMoTaSua(khu.moTa || "");
     setLoiSua("");
   };
 
@@ -246,9 +246,7 @@ export default function TrangKhuVuc() {
               {
                 header: "Số phòng",
                 render: (r: Area) => (
-                  <span>
-                    {typeof r.soPhong === "number" ? r.soPhong : "—"}
-                  </span>
+                  <span>{typeof r.soPhong === "number" ? r.soPhong : "—"}</span>
                 ),
               },
               {
