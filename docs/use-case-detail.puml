@@ -1,0 +1,269 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam dpi 220
+skinparam defaultFontSize 15
+
+title Use Case chi tiet - he thong quan ly nha tro iTro
+
+actor "Admin (ADMIN)" as ADMIN
+actor "Nhan vien (STAFF)" as STAFF
+actor "Khach thue (TENANT)" as TENANT
+
+actor "Cổng thanh toán PayOS" as PAYOS
+actor "Kênh Email/SMS" as CHANNEL
+actor "Dịch vụ thông báo realtime" as WS
+
+rectangle "He thong iTro (Spring Boot + React)" {
+
+  package "Xac thuc & tai khoan" {
+    (Dang nhap) as UC_LOGIN
+    (Dang xuat) as UC_LOGOUT
+    (Quen mat khau) as UC_FORGOT_PASSWORD
+    (Dat lai mat khau) as UC_RESET_PASSWORD
+
+    (Thao tac nguoi dung - CRUD) as UC_USER_MGMT
+    (Khoa/Mo khoa tai khoan) as UC_USER_TOGGLE_LOCK
+    (Gan nguoi dung voi khach thue) as UC_LINK_USER_TENANT
+  }
+
+  package "Tong quan & bao cao" {
+    (Xem tong quan/dashboard) as UC_DASHBOARD
+    (Xem bao cao & thong ke) as UC_REPORTS
+    (Xem cong no chi tiet) as UC_REPORT_DEBT_DETAIL
+    (Xem doanh thu theo ky) as UC_REPORT_REVENUE
+    (Xem ti le lap phong/phong trong) as UC_REPORT_OCCUPANCY
+  }
+
+  package "Khu vuc" {
+    (Xem danh sach khu) as UC_AREA_VIEW
+    (Them khu moi) as UC_AREA_CREATE
+    (Chinh sua khu) as UC_AREA_EDIT
+    (Xoa khu) as UC_AREA_DELETE
+  }
+
+  package "Phong" {
+    (Xem danh sach phong) as UC_ROOM_VIEW
+    (Loc/tim kiem phong) as UC_ROOM_FILTER
+    (Them phong moi) as UC_ROOM_CREATE
+    (Chinh sua phong) as UC_ROOM_EDIT
+    (Xoa phong) as UC_ROOM_DELETE
+  }
+
+  package "Khach thue (ho so)" {
+    (Xem danh sach khach thue) as UC_TENANT_VIEW
+    (Them khach thue) as UC_TENANT_CREATE
+    (Chinh sua khach thue) as UC_TENANT_EDIT
+    (Upload anh CCCD/chan dung) as UC_TENANT_UPLOAD
+    (Gan user cho khach thue) as UC_TENANT_LINK_USER
+  }
+
+  package "Hop dong" {
+    (Xem danh sach hop dong) as UC_CONTRACT_VIEW
+    (Tao hop dong) as UC_CONTRACT_CREATE
+    (Gia han hop dong) as UC_CONTRACT_EXTEND
+    (Ket thuc hop dong) as UC_CONTRACT_END
+
+    (Xem noi dung hop dong) as UC_CONTRACT_VIEW_DOC
+    (Tai file hop dong DOCX) as UC_CONTRACT_DOWNLOAD_DOC
+
+    (Xem hop dong cua toi) as UC_MY_CONTRACT_VIEW
+    (Tai hop dong cua toi DOCX) as UC_MY_CONTRACT_DOWNLOAD
+  }
+
+  package "Hoa don" {
+    (Xem danh sach hoa don) as UC_INVOICE_VIEW
+    (Xem hoa don cua toi) as UC_MY_INVOICE_VIEW
+    (Sinh hoa don tu dong) as UC_INVOICE_AUTO_GENERATE
+    (Sinh hoa don ngay manual) as UC_INVOICE_MANUAL_GENERATE
+    (Xem chi tiet hoa don) as UC_INVOICE_DETAIL
+    (Gui nhac no hoa don email/sms) as UC_INVOICE_SEND_REMINDER
+  }
+
+  package "Thanh toan" {
+    (Ghi nhan thanh toan thu cong) as UC_PAYMENT_MANUAL
+    (Tao link thanh toan PayOS) as UC_PAYOS_CREATE_LINK
+    (Thanh toan truc tuyen qua PayOS) as UC_PAYOS_PAY
+    (Cap nhat trang thai thanh toan webhook PayOS) as UC_PAYOS_WEBHOOK_UPDATE
+    (Xem lich su thanh toan cua toi) as UC_MY_PAYMENT_HISTORY
+  }
+
+  package "Bang gia dich vu" {
+    (Thao tac bang gia dich vu - CRUD) as UC_PRICING_CRUD
+    (Them/Chinh sua bang gia) as UC_PRICING_EDIT
+    (Xoa bang gia) as UC_PRICING_DELETE
+  }
+
+  package "Dien nuoc" {
+    (Xem lich su chi so dien nuoc) as UC_METER_HISTORY
+    (Nhap chi so dien nuoc theo ky) as UC_METER_INPUT
+    (Cap nhat tien dien/nuoc vao hoa don) as UC_METER_COMPUTE_TO_INVOICE
+  }
+
+  package "Thong bao" {
+    (Xem danh sach thong bao) as UC_NOTIFY_VIEW
+    (Danh dau da doc) as UC_NOTIFY_MARK_READ
+    (Tao thong bao ADMIN) as UC_NOTIFY_CREATE
+    (Nhan thong bao realtime qua WebSocket) as UC_NOTIFY_REALTIME
+  }
+
+  package "Yeu cau ho tro" {
+    (Gui yeu cau ho tro) as UC_SUPPORT_CREATE
+    (Xem danh sach yeu cau ho tro) as UC_SUPPORT_VIEW
+    (Cap nhat trang thai yeu cau) as UC_SUPPORT_UPDATE
+    (Danh dau da xu ly yeu cau) as UC_SUPPORT_RESOLVE
+    (Gui email phan hoi yeu cau) as UC_SUPPORT_EMAIL
+  }
+}
+
+'
+' ------------------- Quan he: AI/role -> Use case -------------------
+'
+ADMIN --> UC_LOGIN
+ADMIN --> UC_LOGOUT
+ADMIN --> UC_DASHBOARD
+ADMIN --> UC_REPORTS
+ADMIN --> UC_REPORT_DEBT_DETAIL
+ADMIN --> UC_REPORT_REVENUE
+ADMIN --> UC_REPORT_OCCUPANCY
+
+ADMIN --> UC_AREA_VIEW
+ADMIN --> UC_AREA_CREATE
+ADMIN --> UC_AREA_EDIT
+ADMIN --> UC_AREA_DELETE
+
+ADMIN --> UC_ROOM_VIEW
+ADMIN --> UC_ROOM_FILTER
+ADMIN --> UC_ROOM_CREATE
+ADMIN --> UC_ROOM_EDIT
+ADMIN --> UC_ROOM_DELETE
+
+ADMIN --> UC_TENANT_VIEW
+ADMIN --> UC_TENANT_CREATE
+ADMIN --> UC_TENANT_EDIT
+ADMIN --> UC_TENANT_UPLOAD
+ADMIN --> UC_TENANT_LINK_USER
+
+ADMIN --> UC_CONTRACT_VIEW
+ADMIN --> UC_CONTRACT_CREATE
+ADMIN --> UC_CONTRACT_EXTEND
+ADMIN --> UC_CONTRACT_END
+ADMIN --> UC_CONTRACT_VIEW_DOC
+ADMIN --> UC_CONTRACT_DOWNLOAD_DOC
+
+ADMIN --> UC_INVOICE_VIEW
+ADMIN --> UC_INVOICE_AUTO_GENERATE
+ADMIN --> UC_INVOICE_MANUAL_GENERATE
+ADMIN --> UC_INVOICE_DETAIL
+ADMIN --> UC_INVOICE_SEND_REMINDER
+
+ADMIN --> UC_PAYMENT_MANUAL
+
+ADMIN --> UC_PRICING_CRUD
+ADMIN --> UC_PRICING_EDIT
+ADMIN --> UC_PRICING_DELETE
+
+ADMIN --> UC_METER_HISTORY
+ADMIN --> UC_METER_INPUT
+
+ADMIN --> UC_NOTIFY_VIEW
+ADMIN --> UC_NOTIFY_MARK_READ
+ADMIN --> UC_NOTIFY_CREATE
+
+ADMIN --> UC_SUPPORT_VIEW
+ADMIN --> UC_SUPPORT_UPDATE
+ADMIN --> UC_SUPPORT_RESOLVE
+ADMIN --> UC_SUPPORT_EMAIL
+
+ADMIN --> UC_USER_MGMT
+ADMIN --> UC_USER_TOGGLE_LOCK
+ADMIN --> UC_LINK_USER_TENANT
+
+'
+' ------------------- STAFF role -------------------
+'
+STAFF --> UC_LOGIN
+STAFF --> UC_LOGOUT
+STAFF --> UC_DASHBOARD
+STAFF --> UC_REPORTS
+STAFF --> UC_REPORT_DEBT_DETAIL
+STAFF --> UC_REPORT_REVENUE
+STAFF --> UC_REPORT_OCCUPANCY
+
+STAFF --> UC_AREA_VIEW
+STAFF --> UC_ROOM_VIEW
+STAFF --> UC_ROOM_FILTER
+STAFF --> UC_ROOM_CREATE
+STAFF --> UC_ROOM_EDIT
+STAFF --> UC_ROOM_DELETE
+
+STAFF --> UC_TENANT_VIEW
+STAFF --> UC_TENANT_CREATE
+STAFF --> UC_TENANT_EDIT
+STAFF --> UC_TENANT_UPLOAD
+STAFF --> UC_TENANT_LINK_USER
+
+STAFF --> UC_CONTRACT_VIEW
+STAFF --> UC_CONTRACT_CREATE
+STAFF --> UC_CONTRACT_EXTEND
+STAFF --> UC_CONTRACT_END
+STAFF --> UC_CONTRACT_VIEW_DOC
+STAFF --> UC_CONTRACT_DOWNLOAD_DOC
+
+STAFF --> UC_INVOICE_VIEW
+STAFF --> UC_INVOICE_DETAIL
+STAFF --> UC_INVOICE_SEND_REMINDER
+STAFF --> UC_PAYMENT_MANUAL
+
+STAFF --> UC_METER_HISTORY
+STAFF --> UC_METER_INPUT
+
+STAFF --> UC_NOTIFY_VIEW
+STAFF --> UC_NOTIFY_MARK_READ
+STAFF --> UC_NOTIFY_REALTIME
+
+STAFF --> UC_SUPPORT_VIEW
+STAFF --> UC_SUPPORT_UPDATE
+STAFF --> UC_SUPPORT_RESOLVE
+STAFF --> UC_SUPPORT_EMAIL
+
+'
+' ------------------- TENANT role -------------------
+'
+TENANT --> UC_LOGIN
+TENANT --> UC_LOGOUT
+TENANT --> UC_DASHBOARD
+
+TENANT --> UC_MY_CONTRACT_VIEW
+TENANT --> UC_MY_CONTRACT_DOWNLOAD
+TENANT --> UC_MY_INVOICE_VIEW
+TENANT --> UC_PAYOS_CREATE_LINK
+TENANT --> UC_MY_PAYMENT_HISTORY
+TENANT --> UC_SUPPORT_CREATE
+TENANT --> UC_NOTIFY_VIEW
+TENANT --> UC_NOTIFY_MARK_READ
+TENANT --> UC_NOTIFY_REALTIME
+
+'
+' ------------------- Quan he: he thong ben ngoai -> Use case -------------------
+PAYOS --> UC_PAYOS_WEBHOOK_UPDATE
+PAYOS --> UC_PAYOS_CREATE_LINK
+CHANNEL --> UC_INVOICE_SEND_REMINDER
+CHANNEL --> UC_SUPPORT_EMAIL
+WS --> UC_NOTIFY_REALTIME
+
+'
+' ------------------- <<include>> (cac thao tac phu thuoc/ket hop) -------------------
+'
+UC_PAYOS_PAY ..> UC_PAYOS_CREATE_LINK : <<include>>
+UC_PAYOS_PAY ..> UC_PAYOS_WEBHOOK_UPDATE : <<include>>
+
+UC_INVOICE_SEND_REMINDER ..> UC_INVOICE_DETAIL : <<include>>
+
+UC_METER_INPUT ..> UC_METER_COMPUTE_TO_INVOICE : <<include>>
+
+UC_SUPPORT_RESOLVE ..> UC_SUPPORT_UPDATE : <<include>>
+
+@enduml
+
