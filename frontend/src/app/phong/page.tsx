@@ -90,7 +90,8 @@ export default function TrangPhong() {
   const [tenXacNhanXoa, setTenXacNhanXoa] = useState("");
   const [locTrangThai, setLocTrangThai] = useState("");
   const [idKhuTuUrl, setIdKhuTuUrl] = useState<number | null>(null);
-  const vaiTro = getRole();
+  const [mounted, setMounted] = useState(false);
+  const vaiTro = mounted ? getRole() : null;
   const laQuanTri = vaiTro === "ADMIN";
   const searchParams = useSearchParams();
   const { notify } = useToast();
@@ -104,6 +105,10 @@ export default function TrangPhong() {
       setIdKhuTuUrl(null);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const tai = async () => {
     const [resPhong, resKhu] = await Promise.all([
@@ -266,7 +271,9 @@ export default function TrangPhong() {
         phong.tang?.toLowerCase().includes(q) ||
         phong.trangThai?.toLowerCase().includes(q) ||
         phong.khuVuc?.ten?.toLowerCase().includes(q);
-    const khopTrangThai = locTrangThai ? phong.trangThai === locTrangThai : true;
+    const khopTrangThai = locTrangThai
+      ? phong.trangThai === locTrangThai
+      : true;
     const khopKhu = idKhuTuUrl == null ? true : phong.khuVuc?.id === idKhuTuUrl;
     return khopTuKhoa && khopTrangThai && khopKhu;
   });
@@ -277,7 +284,9 @@ export default function TrangPhong() {
         `Khu #${idKhuTuUrl}`)
       : null;
 
-  const khoaSua = phanTuDangSua ? isLockedStatus(phanTuDangSua.trangThai) : false;
+  const khoaSua = phanTuDangSua
+    ? isLockedStatus(phanTuDangSua.trangThai)
+    : false;
 
   return (
     <TrangBaoVe>
@@ -347,9 +356,7 @@ export default function TrangPhong() {
               {
                 header: "Giá",
                 render: (r) =>
-                  r.giaHienTai == null
-                    ? ""
-                    : `${dinhDangSo(r.giaHienTai)} VNĐ`,
+                  r.giaHienTai == null ? "" : `${dinhDangSo(r.giaHienTai)} VNĐ`,
               },
               ...(laQuanTri
                 ? [

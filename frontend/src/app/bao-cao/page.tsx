@@ -85,7 +85,8 @@ export default function TrangBaoCao() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const role = getRole();
+  const [mounted, setMounted] = useState(false);
+  const role = mounted ? getRole() : null;
   const canView = role === "ADMIN" || role === "STAFF";
 
   const loadAll = async () => {
@@ -129,12 +130,18 @@ export default function TrangBaoCao() {
   };
 
   useEffect(() => {
-    loadAll();
-  }, []);
+    if (mounted && canView) {
+      loadAll();
+    }
+  }, [mounted, canView]);
 
   useEffect(() => {
-    if (yearRevenue && canView) loadRevenueYear();
-  }, [yearRevenue]);
+    if (mounted && yearRevenue && canView) loadRevenueYear();
+  }, [mounted, yearRevenue, canView]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!canView) {
     return (

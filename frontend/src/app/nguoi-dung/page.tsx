@@ -111,7 +111,8 @@ export default function TrangNguoiDung() {
   const [diaChiKhachMoi, setDiaChiKhachMoi] = useState("");
   const [emailKhachMoi, setEmailKhachMoi] = useState("");
   const [loiKhachMoi, setLoiKhachMoi] = useState("");
-  const vaiTroHienTai = getRole();
+  const [mounted, setMounted] = useState(false);
+  const vaiTroHienTai = mounted ? getRole() : null;
   const laQuanTri = vaiTroHienTai === "ADMIN";
   const { notify } = useToast();
 
@@ -132,6 +133,10 @@ export default function TrangNguoiDung() {
   useEffect(() => {
     tai();
     taiKhachThue();
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   const tao = async (e: React.FormEvent) => {
