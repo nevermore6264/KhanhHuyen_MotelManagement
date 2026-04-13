@@ -78,7 +78,6 @@ public class ChiSoDienNuocController {
 
         chiSo.setTienDien(donGiaDien.multiply(BigDecimal.valueOf(dungDien)));
         chiSo.setTienNuoc(donGiaNuoc.multiply(BigDecimal.valueOf(dungNuoc)));
-        chiSo.setTongTien(chiSo.getTienDien().add(chiSo.getTienNuoc()));
 
         ChiSoDienNuoc daLuu = chiSoDienNuocRepository.save(chiSo);
         tinhTienService.taoHoacCapNhatHoaDonTuChiSo(daLuu);

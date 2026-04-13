@@ -1,0 +1,48 @@
+' 2.2.7.3a — Tao link thanh toan PayOS (Tenant)
+@startuml seq-2-2-7-03a-payos-tao-link
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.3a — Tao link thanh toan PayOS (Tenant)
+actor "Khach thue" as T
+participant "Trang hoa don" as FE <<boundary>>
+participant "ThanhToanController" as TTC <<control>>
+participant "NguoiDungHienTaiService" as ND <<control>>
+participant "KhachThueRepository" as KTR <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+participant "PayOSService" as POS <<control>>
+participant "DonHangPayOSRepository" as DHR <<control>>
+participant "PayOS Merchant API" as PAY <<boundary>>
+
+T -> FE : chon "Thanh toan PayOS"
+FE -> TTC : POST /api/thanh-toan/tao-link\n{ invoiceId }
+activate TTC
+TTC -> ND : layNguoiDungHienTai()
+activate ND
+ND --> TTC : NguoiDung
+deactivate ND
+TTC -> KTR : findByNguoiDung_Id(userId)
+activate KTR
+KTR --> TTC : KhachThue
+deactivate KTR
+TTC -> HDR : findById(maHoaDon)
+activate HDR
+HDR --> TTC : HoaDon
+deactivate HDR
+TTC -> TTC : kiem tra hoa don thuoc khach
+TTC -> POS : taoLinkThanhToan(hoaDon)
+activate POS
+POS -> PAY : POST /v2/payment-requests\n(RestTemplate)
+activate PAY
+PAY --> POS : checkoutUrl, code
+deactivate PAY
+POS -> DHR : save(DonHangPayOS)
+activate DHR
+DHR --> POS
+deactivate DHR
+POS --> TTC : link thanh toan hoac null
+deactivate POS
+TTC --> FE : { paymentUrl }
+deactivate TTC
+FE -> T : "mo link hoac QR PayOS"
+@enduml

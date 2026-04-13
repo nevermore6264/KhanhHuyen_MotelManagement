@@ -1,0 +1,21 @@
+' 2.2.7.27 — Admin xem nhat ky he thong
+@startuml seq-2-2-7-27-nhat-ky-he-thong
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.27 — Nhat ky he thong (Admin)
+actor "Admin" as A
+participant "Trang - API nhat ky" as FE <<boundary>>
+participant "NhatKyController" as NKC <<control>>
+participant "NhatKyHeThongRepository" as NKR <<control>>
+
+A -> FE : mo nhat ky
+FE -> NKC : GET /api/nhat-ky
+activate NKC
+NKC -> NKR : findAll()
+activate NKR
+NKR --> NKC : List NhatKyHeThong
+deactivate NKR
+NKC --> FE : JSON
+deactivate NKC
+@enduml

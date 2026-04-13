@@ -2,8 +2,26 @@
 left to right direction
 skinparam shadowing false
 skinparam packageStyle rectangle
-skinparam dpi 220
-skinparam defaultFontSize 15
+skinparam dpi 260
+skinparam defaultFontSize 17
+skinparam backgroundColor #FFFFFF
+
+skinparam actor {
+  FontSize 20
+  FontColor #0F172A
+  BackgroundColor #E0F2FE
+  BorderColor #0284C7
+}
+
+skinparam usecase {
+  FontSize 18
+  FontColor #0F172A
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  ArrowColor #334155
+}
+
+skinparam packageTitleFontSize 20
 
 title Use Case chi tiet - he thong quan ly nha tro iTro
 

@@ -1,0 +1,25 @@
+' 2.2.7.26 — Tenant xem lich su thanh toan gan day
+@startuml seq-2-2-7-26-thanh-toan-cua-toi
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.26 — Lich su thanh toan cua toi (Tenant)
+actor "Khach thue" as T
+participant "Trang thanh toan cua toi" as FE <<boundary>>
+participant "ThanhToanController" as TTC <<control>>
+participant "NguoiDungHienTaiService" as ND <<control>>
+participant "KhachThueRepository" as KTR <<control>>
+participant "ThanhToanRepository" as TTR <<control>>
+
+T -> FE : xem giao dich gan day
+FE -> TTC : GET /api/thanh-toan/cua-toi?gioiHan=...
+activate TTC
+TTC -> ND : layNguoiDungHienTai()
+TTC -> KTR : findByNguoiDung_Id
+TTC -> TTR : findByHoaDon_KhachThue_IdOrderBy...\n(PageRequest)
+activate TTR
+TTR --> TTC : List ThanhToan
+deactivate TTR
+TTC --> FE : JSON
+deactivate TTC
+@enduml

@@ -1,0 +1,31 @@
+' 2.2.6.11 — Xem hoa don
+@startuml robust-2-2-6-11-hoa-don
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.11 — Xem hoa don - chi tiet
+left to right direction
+actor "Admin - Staff - Tenant" as U
+class "Trang hoa don" as B <<boundary>>
+class "HoaDonController" as C <<control>>
+class "HoaDon" as E1 <<entity>>
+class "Phong\nKhachThue" as E2 <<entity>>
+
+U --> B
+B --> C : "GET /api/hoa-don"
+C --> E1
+C --> E2 : thong tin lien ket
+@enduml

@@ -1,0 +1,25 @@
+' 2.2.7.24 — Tenant gui yeu cau ho tro
+@startuml seq-2-2-7-24-yeu-cau-ho-tro-gui
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.24 — Gui yeu cau ho tro (Tenant)
+actor "Khach thue" as T
+participant "Trang yeu cau" as FE <<boundary>>
+participant "YeuCauHoTroController" as YC <<control>>
+participant "NguoiDungHienTaiService" as ND <<control>>
+participant "KhachThueRepository" as KTR <<control>>
+participant "YeuCauHoTroRepository" as YR <<control>>
+
+T -> FE : dien tieu de, mo ta
+FE -> YC : POST /api/yeu-cau-ho-tro\n(YeuCauHoTro JSON)
+activate YC
+YC -> ND : layNguoiDungHienTai()
+YC -> KTR : findByNguoiDung_Id\n(hoac tao KhachThue moi)
+YC -> YR : save(yeuCau)
+activate YR
+YR --> YC : YeuCauHoTro
+deactivate YR
+YC --> FE : 200
+deactivate YC
+@enduml

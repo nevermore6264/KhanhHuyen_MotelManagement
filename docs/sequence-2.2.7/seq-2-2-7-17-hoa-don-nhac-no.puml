@@ -1,0 +1,23 @@
+' 2.2.7.17 — Gui nhac no hoa don (email - SMS)
+@startuml seq-2-2-7-17-hoa-don-nhac-no
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.17 — Gui nhac no hoa don
+actor "Admin - Staff" as S
+actor "Email - SMS" as CH
+participant "Trang hoa don" as FE <<boundary>>
+participant "HoaDonController" as HDC <<control>>
+participant "NhacNoHoaDonService" as NNS <<control>>
+
+S -> FE : chon hoa don, kenh gui
+FE -> HDC : POST /api/hoa-don/{id}/nhac-no\n(RemindRequest channel)
+activate HDC
+HDC -> NNS : guiNhacNo(maHoaDon, kenh)
+activate NNS
+NNS -> CH : gui noi dung
+NNS --> HDC : Optional loi hoac thanh cong
+deactivate NNS
+HDC --> FE : 200 hoac 400
+deactivate HDC
+@enduml

@@ -1,0 +1,21 @@
+' 2.2.7.18 — Lay danh sach chi so dien nuoc
+@startuml seq-2-2-7-18-chi-so-lay-danh-sach
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.18 — Xem danh sach chi so dien nuoc
+actor "Admin - Staff" as S
+participant "Trang chi so" as FE <<boundary>>
+participant "ChiSoDienNuocController" as CSC <<control>>
+participant "ChiSoDienNuocRepository" as CSR <<control>>
+
+S -> FE : mo lich su chi so
+FE -> CSC : GET /api/chi-so-dien-nuoc
+activate CSC
+CSC -> CSR : findAll()
+activate CSR
+CSR --> CSC : List ChiSoDienNuoc
+deactivate CSR
+CSC --> FE : JSON
+deactivate CSC
+@enduml

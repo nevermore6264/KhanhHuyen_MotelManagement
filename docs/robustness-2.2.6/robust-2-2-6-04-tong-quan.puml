@@ -1,0 +1,30 @@
+' 2.2.6.4 — Tong quan (dashboard)
+@startuml robust-2-2-6-04-tong-quan
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.4 — Xem tong quan (dashboard)
+left to right direction
+actor "Admin - Staff - Tenant" as U
+class "Trang tong quan" as B <<boundary>>
+class "BaoCaoController\nPhongController\nHoaDonController..." as C <<control>>
+class "HopDong\nHoaDon\nPhong" as E <<entity>>
+
+U --> B
+B --> C : "GET thong ke, dem phong, hop dong"
+C --> E : truy van tong hop
+C --> B : JSON hien thi bieu do, so lieu
+@enduml

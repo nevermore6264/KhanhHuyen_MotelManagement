@@ -19,12 +19,21 @@ type MeterReading = {
   newElectric: number;
   oldWater: number;
   newWater: number;
-  totalCost?: number;
+  /** Tiền điện/nước (VNĐ) — tổng chỉ số = tienDien + tienNuoc, không lưu trong CSDL */
+  tienDien?: number;
+  tienNuoc?: number;
 };
 
 const dinhDangTien = (n?: number | null) => {
   if (n == null || isNaN(n)) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
+};
+
+const tongTienDienNuoc = (r: MeterReading) => {
+  const d = Number(r.tienDien ?? 0);
+  const n = Number(r.tienNuoc ?? 0);
+  if (!d && !n) return null;
+  return d + n;
 };
 
 /** Chỉ cho phép tháng hiện tại hoặc tháng trước đó */
@@ -360,8 +369,8 @@ export default function TrangChiSoDienNuoc() {
                 render: (r: MeterReading) => `${r.oldWater} → ${r.newWater}`,
               },
               {
-                header: "Tổng tiền",
-                render: (r: MeterReading) => dinhDangTien(r.totalCost),
+                header: "Tổng tiền (ĐN)",
+                render: (r: MeterReading) => dinhDangTien(tongTienDienNuoc(r)),
               },
             ]}
           />

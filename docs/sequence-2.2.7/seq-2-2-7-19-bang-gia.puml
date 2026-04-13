@@ -1,0 +1,26 @@
+' 2.2.7.19 — Bang gia dich vu (CRUD rut gon)
+@startuml seq-2-2-7-19-bang-gia
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.19 — Bang gia dich vu
+actor "Admin" as A
+participant "Trang bang gia" as FE <<boundary>>
+participant "BangGiaController" as BGC <<control>>
+participant "BangGiaDichVuRepository" as BGR <<control>>
+
+A -> FE : xem don gia
+FE -> BGC : GET /api/bang-gia-dich-vu
+activate BGC
+BGC -> BGR : findAll()
+BGR --> BGC : List
+BGC --> FE : JSON
+deactivate BGC
+
+A -> FE : them - sua bang gia
+FE -> BGC : POST hoac PUT /api/bang-gia-dich-vu/...
+activate BGC
+BGC -> BGR : save hoac findById + cap nhat
+BGC --> FE : 200
+deactivate BGC
+@enduml

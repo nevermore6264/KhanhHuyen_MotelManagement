@@ -1,0 +1,33 @@
+' 2.2.6.1 — Dang nhap
+@startuml robust-2-2-6-01-dang-nhap
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.1 — Đăng nhập
+left to right direction
+actor "Nguoi dung" as U
+class "Trang - form dang nhap" as B <<boundary>>
+class "XacThucController" as C <<control>>
+class "XacThucService" as S <<control>>
+class "NguoiDung" as E <<entity>>
+
+U --> B : nhap tai khoan
+B --> C : "POST /api/xac-thuc/dang-nhap"
+C --> S : dangNhap()
+S --> E : tim theo tenDangNhap, kiem tra mat khau
+S --> C : JWT + PhanHoiXacThuc
+C --> B : HTTP 200 + token
+@enduml

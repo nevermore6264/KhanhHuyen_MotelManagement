@@ -1,0 +1,32 @@
+' 2.2.7.20 — Bao cao doanh thu
+@startuml seq-2-2-7-20-bao-cao-doanh-thu
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.20 — Bao cao doanh thu - cong no (rut gon)
+actor "Admin - Staff" as S
+participant "Trang bao cao" as FE <<boundary>>
+participant "BaoCaoController" as BC <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+participant "PhongRepository" as PR <<control>>
+
+S -> FE : chon thang - nam bao cao
+FE -> BC : GET /api/bao-cao/doanh-thu?month&year
+activate BC
+BC -> HDR : sumRevenueByThang(thang, nam)
+activate HDR
+HDR --> BC : doanh thu
+deactivate HDR
+BC --> FE : Map JSON
+deactivate BC
+
+FE -> BC : GET /api/bao-cao/doanh-thu-theo-nam?year=...
+activate BC
+BC -> HDR : sumRevenueByThangForNam(nam)
+BC --> FE : du lieu theo thang
+deactivate BC
+note right of BC
+  Cac endpoint cong no, phong trong, ...
+  tuong tu: doc HoaDon + Phong.
+end note
+@enduml

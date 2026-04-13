@@ -1,0 +1,53 @@
+' 2.2.7.2 — Nhap chi so va cap nhat - tao hoa don
+@startuml seq-2-2-7-02-nhap-chi-so-va-hoa-don
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.2 — Nhap chi so dien nuoc va cap nhat - tao hoa don
+actor "Nhan vien - Admin" as S
+participant "Trang chi so" as FE <<boundary>>
+participant "ChiSoDienNuocController" as CSC <<control>>
+participant "PhongRepository" as PR <<control>>
+participant "BangGiaDichVuRepository" as BGR <<control>>
+participant "ChiSoDienNuocRepository" as CSR <<control>>
+participant "TinhTienService" as TTS <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+participant "HopDongRepository" as HopR <<control>>
+
+S -> FE : nhap chi so, chon phong - thang
+FE -> CSC : POST /api/chi-so-dien-nuoc\n(ChiSoDienNuoc JSON)
+activate CSC
+CSC -> CSC : choPhepThang(thang, nam)
+CSC -> PR : findById(phongId)
+activate PR
+PR --> CSC : Phong
+deactivate PR
+CSC -> BGR : findFirstByHieuLucTuLessThanEqualOrderByHieuLucTuDesc(ngayKy)
+activate BGR
+BGR --> CSC : BangGiaDichVu
+deactivate BGR
+CSC -> CSC : tinh tienDien, tienNuoc
+CSC -> CSR : save(chiSo)
+activate CSR
+CSR --> CSC : ChiSoDienNuoc daLuu
+deactivate CSR
+CSC -> TTS : taoHoacCapNhatHoaDonTuChiSo(daLuu)
+activate TTS
+TTS -> HDR : findByPhong_IdAndThangAndNam(...)
+activate HDR
+HDR --> TTS : Optional HoaDon
+deactivate HDR
+TTS -> HopR : findByTrangThai(ACTIVE)
+activate HopR
+HopR --> TTS : List HopDong
+deactivate HopR
+TTS -> TTS : gan khach thue tu hop dong ACTIVE cung phong
+TTS -> HDR : save(hoaDon)
+activate HDR
+HDR --> TTS : HoaDon
+deactivate HDR
+TTS --> CSC : HoaDon
+deactivate TTS
+CSC --> FE : 200 + ChiSoDienNuoc
+deactivate CSC
+@enduml

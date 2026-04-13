@@ -1,0 +1,36 @@
+' 2.2.6.30 — Khach gui yeu cau ho tro
+@startuml robust-2-2-6-30-yeu-cau-ho-tro-gui
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.30 — Gui yeu cau ho tro (Tenant)
+left to right direction
+actor "Khach thue" as T
+class "Trang yeu cau" as B <<boundary>>
+class "YeuCauHoTroController" as C <<control>>
+class "NguoiDungHienTaiService" as S1 <<control>>
+class "KhachThueRepository" as R1 <<control>>
+class "YeuCauHoTroRepository" as R2 <<control>>
+class "YeuCauHoTro" as E <<entity>>
+
+T --> B : dien tieu de, mo ta
+B --> C : "POST /api/yeu-cau-ho-tro"
+C --> S1 : layNguoiDungHienTai()
+C --> R1 : tim hoac tao KhachThue
+C --> R2 : save(yeuCau)
+R2 --> E
+C --> B : da gui
+@enduml

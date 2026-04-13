@@ -1,0 +1,34 @@
+' 2.2.7.9 — Khach thue: danh sach va tao (Staff)
+@startuml seq-2-2-7-09-khach-thue
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.9 — Quan ly khach thue (GET co tim kiem, tao)
+actor "Admin - Staff" as S
+participant "Trang khach thue" as FE <<boundary>>
+participant "KhachThueController" as KTC <<control>>
+participant "NguoiDungHienTaiService" as ND <<control>>
+participant "KhachThueRepository" as KTR <<control>>
+
+S -> FE : tim kiem hoac xem tat ca
+FE -> KTC : GET /api/khach-thue?q=...
+activate KTC
+KTC -> ND : layNguoiDungHienTai (phan quyen TENANT)
+KTC -> KTR : findAll() hoac findByHoTenContaining...
+activate KTR
+KTR --> KTC : List KhachThue
+deactivate KTR
+KTC --> FE : JSON
+deactivate KTC
+
+S -> FE : tao khach + tuy chon tai khoan
+FE -> KTC : POST /api/khach-thue\n(TenantCreateDto)
+activate KTC
+KTC -> KTR : save(KhachThue) + lien ket NguoiDung neu co
+KTC --> FE : 200
+deactivate KTC
+note right of KTC
+  Upload anh: endpoint multipart rieng
+  (FileKhachThueService).
+end note
+@enduml

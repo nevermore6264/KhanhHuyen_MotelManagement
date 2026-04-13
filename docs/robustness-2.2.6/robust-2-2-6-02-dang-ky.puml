@@ -1,0 +1,33 @@
+' 2.2.6.2 — Dang ky tai khoan
+@startuml robust-2-2-6-02-dang-ky
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.2 — Dang ky tai khoan
+left to right direction
+actor "Nguoi dung" as U
+class "Form dang ky" as B <<boundary>>
+class "XacThucController" as C <<control>>
+class "XacThucService" as S <<control>>
+class "NguoiDung" as E1 <<entity>>
+class "KhachThue" as E2 <<entity>>
+
+U --> B
+B --> C : "POST /api/xac-thuc/dang-ky"
+C --> S : dangKy()
+S --> E1 : luu NguoiDung (TENANT)
+S --> E2 : luu KhachThue lien ket
+@enduml

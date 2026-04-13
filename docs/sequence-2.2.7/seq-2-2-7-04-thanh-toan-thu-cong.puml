@@ -1,0 +1,35 @@
+' 2.2.7.4 — Ghi nhan thanh toan thu cong (Admin - Staff)
+@startuml seq-2-2-7-04-thanh-toan-thu-cong
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.4 — Ghi nhan thanh toan thu cong (Admin - Staff)
+actor "Nhan vien" as S
+participant "Trang thanh toan" as FE <<boundary>>
+participant "ThanhToanController" as TTC <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+participant "ThanhToanRepository" as TTR <<control>>
+
+S -> FE : nhap so tien, phuong thuc
+FE -> TTC : POST /api/thanh-toan\n(ThanhToan JSON + hoaDon.id)
+activate TTC
+TTC -> HDR : findById(hoaDonId)
+activate HDR
+HDR --> TTC : HoaDon
+deactivate HDR
+TTC -> TTR : save(thanhToan)
+activate TTR
+TTR --> TTC : ThanhToan daLuu
+deactivate TTR
+TTC -> TTR : findByHoaDonId(hoaDonId)
+activate TTR
+TTR --> TTC : List ThanhToan
+deactivate TTR
+TTC -> TTC : tong tien da tra >= tong tien HD?
+TTC -> HDR : "save(hoaDon) PAID hoac PARTIAL"
+activate HDR
+HDR --> TTC
+deactivate HDR
+TTC --> FE : 200 + ThanhToan
+deactivate TTC
+@enduml

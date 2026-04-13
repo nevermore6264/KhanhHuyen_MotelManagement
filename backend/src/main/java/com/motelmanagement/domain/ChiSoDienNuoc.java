@@ -54,9 +54,6 @@ public class ChiSoDienNuoc {
     @Column(name = "tien_nuoc", precision = 12, scale = 2)
     private BigDecimal tienNuoc;
 
-    @Column(name = "tong_tien", precision = 12, scale = 2)
-    private BigDecimal tongTien;
-
     @Column(name = "ngay_tao")
     private LocalDateTime ngayTao = LocalDateTime.now();
 }

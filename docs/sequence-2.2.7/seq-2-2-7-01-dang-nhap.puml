@@ -1,0 +1,33 @@
+' 2.2.7.1 — Dang nhap (JWT)
+@startuml seq-2-2-7-01-dang-nhap
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.1 — Dang nhap (JWT)
+actor "Nguoi dung" as U
+participant "Trang - Client" as FE <<boundary>>
+participant "XacThucController" as XC <<control>>
+participant "XacThucService" as XS <<control>>
+participant "NguoiDungRepository" as R <<control>>
+participant "TienIchJwt" as JWT <<control>>
+
+U -> FE : nhap ten dang nhap, mat khau
+FE -> XC : POST /api/xac-thuc/dang-nhap\n(YeuCauXacThuc)
+activate XC
+XC -> XS : dangNhap(yeuCau)
+activate XS
+XS -> R : findByTenDangNhap(tenDangNhap)
+activate R
+R --> XS : Optional NguoiDung
+deactivate R
+XS -> XS : passwordEncoder.matches(...)
+XS -> JWT : generateToken(tenDangNhap, vaiTro)
+activate JWT
+JWT --> XS : token
+deactivate JWT
+XS --> XC : PhanHoiXacThuc(token, vaiTro, hoTen)
+deactivate XS
+XC --> FE : HTTP 200 + JSON
+deactivate XC
+FE --> U : luu token, chuyen trang
+@enduml

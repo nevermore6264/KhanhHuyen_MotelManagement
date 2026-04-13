@@ -1,0 +1,23 @@
+' 2.2.7.21 — Lay danh sach thong bao
+@startuml seq-2-2-7-21-thong-bao-lay-danh-sach
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.21 — Danh sach thong bao
+actor "Nguoi dung" as U
+participant "Trang thong bao" as FE <<boundary>>
+participant "ThongBaoController" as TBC <<control>>
+participant "NguoiDungHienTaiService" as ND <<control>>
+participant "ThongBaoRepository" as TBR <<control>>
+
+U -> FE : mo thong bao
+FE -> TBC : GET /api/thong-bao
+activate TBC
+TBC -> ND : layNguoiDungHienTai()
+TBC -> TBR : findByNguoiDung(nguoiDung)
+activate TBR
+TBR --> TBC : List ThongBao
+deactivate TBR
+TBC --> FE : JSON
+deactivate TBC
+@enduml

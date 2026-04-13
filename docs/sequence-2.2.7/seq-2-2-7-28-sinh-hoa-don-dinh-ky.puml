@@ -1,0 +1,25 @@
+' 2.2.7.28 — Job dinh ky sinh hoa don (Scheduler)
+@startuml seq-2-2-7-28-sinh-hoa-don-dinh-ky
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.28 — Sinh hoa don tu dong (cron hang ngay)
+participant "He thong (Scheduler)" as SYS <<boundary>>
+participant "CongViecSinhHoaDon" as JOB <<control>>
+participant "TinhTienService" as TTS <<control>>
+participant "HopDongRepository" as HopR <<control>>
+participant "ChiSoDienNuocRepository" as CSR <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+
+SYS -> JOB : @Scheduled cron 0 0 1 * * ?
+activate JOB
+JOB -> JOB : sinhHoaDonHangThang()
+JOB -> TTS : sinhHoaDonChoThang(thang truoc)
+JOB -> TTS : sinhHoaDonChoThang(thang hien tai)
+activate TTS
+TTS -> HopR : findByTrangThai(ACTIVE)
+TTS -> CSR : findByPhongAndThangAndNam (neu co)
+TTS -> HDR : save(HoaDon) neu chua ton tai
+deactivate TTS
+deactivate JOB
+@enduml

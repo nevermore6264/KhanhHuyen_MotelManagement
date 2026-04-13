@@ -1,0 +1,32 @@
+' 2.2.6.27 — Danh dau thong bao da doc
+@startuml robust-2-2-6-27-thong-bao-danh-dau-da-doc
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.27 — Danh dau thong bao da doc
+left to right direction
+actor "Nguoi dung" as U
+class "Trang thong bao" as B <<boundary>>
+class "ThongBaoController" as C <<control>>
+class "ThongBaoRepository" as R <<control>>
+class "ThongBao" as E <<entity>>
+
+U --> B : mo thong bao
+B --> C : "PUT /api/thong-bao/{id}/da-doc"
+C --> R : findById, setDaDoc(true), save
+R --> E
+C --> B : ThongBao da cap nhat
+@enduml

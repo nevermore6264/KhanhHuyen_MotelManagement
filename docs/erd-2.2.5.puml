@@ -1,0 +1,186 @@
+@startuml 2.2.5-ERD
+title 2.2.5. Thiết kế ERD — Hệ thống quản lý nhà trọ
+skinparam linetype ortho
+hide circle
+
+entity "khu_vuc" as khu_vuc {
+  * **id** : BIGINT <<PK>>
+  --
+  * ten : VARCHAR(100)
+  dia_chi : VARCHAR(200)
+  mo_ta : VARCHAR(500)
+}
+
+entity "phong" as phong {
+  * **id** : BIGINT <<PK>>
+  --
+  * ma_phong : VARCHAR(30)
+  tang : VARCHAR(30)
+  * trang_thai : VARCHAR(20)
+  khu_vuc_id : BIGINT <<FK>>
+  gia_hien_tai : DECIMAL(12,2)
+  dien_tich : DECIMAL(8,2)
+}
+
+entity "khach_thue" as khach_thue {
+  * **id** : BIGINT <<PK>>
+  --
+  * ho_ten : VARCHAR(100)
+  so_dien_thoai : VARCHAR(20)
+  so_giay_to : VARCHAR(50)
+  dia_chi : VARCHAR(200)
+  email : VARCHAR(100)
+  anh_chan_dung : VARCHAR(255)
+  anh_giay_to : VARCHAR(255)
+  nguoi_dung_id : BIGINT <<FK, UK>>
+}
+
+entity "nguoi_dung" as nguoi_dung {
+  * **id** : BIGINT <<PK>>
+  --
+  * ten_dang_nhap : VARCHAR(50) <<UK>>
+  * mat_khau : VARCHAR(120)
+  * ho_ten : VARCHAR(100)
+  so_dien_thoai : VARCHAR(20)
+  email : VARCHAR(100)
+  * vai_tro : VARCHAR(20)
+  * kich_hoat : BOOLEAN
+}
+
+entity "hop_dong" as hop_dong {
+  * **id** : BIGINT <<PK>>
+  --
+  phong_id : BIGINT <<FK>>
+  khach_thue_id : BIGINT <<FK>>
+  ngay_bat_dau : DATE
+  ngay_ket_thuc : DATE
+  * trang_thai : VARCHAR(20)
+  tien_coc : DECIMAL(12,2)
+  tien_thue : DECIMAL(12,2)
+  ngay_tao : DATETIME
+}
+
+entity "hoa_don" as hoa_don {
+  * **id** : BIGINT <<PK>>
+  --
+  phong_id : BIGINT <<FK>>
+  khach_thue_id : BIGINT <<FK>>
+  thang : INT
+  nam : INT
+  tien_phong : DECIMAL(12,2)
+  tien_dien : DECIMAL(12,2)
+  tien_nuoc : DECIMAL(12,2)
+  tong_tien : DECIMAL(12,2)
+  * trang_thai : VARCHAR(20)
+  ngay_tao : DATETIME
+  nhac_no_email_lan_cuoi : DATETIME
+  so_lan_nhac_no_email : INT
+  noi_dung_email_cuoi : VARCHAR(2000)
+  nhac_no_sms_lan_cuoi : DATETIME
+  so_lan_nhac_no_sms : INT
+  noi_dung_sms_cuoi : VARCHAR(500)
+}
+
+entity "chi_so_dien_nuoc" as chi_so {
+  * **id** : BIGINT <<PK>>
+  --
+  phong_id : BIGINT <<FK>>
+  thang : INT
+  nam : INT
+  dien_cu : INT
+  dien_moi : INT
+  nuoc_cu : INT
+  nuoc_moi : INT
+  tien_dien : DECIMAL(12,2)
+  tien_nuoc : DECIMAL(12,2)
+  ngay_tao : DATETIME
+}
+
+entity "bang_gia_dich_vu" as bang_gia {
+  * **id** : BIGINT <<PK>>
+  --
+  gia_phong : DECIMAL(12,2)
+  gia_dien : DECIMAL(12,2)
+  gia_nuoc : DECIMAL(12,2)
+  hieu_luc_tu : DATE
+}
+
+entity "thanh_toan" as thanh_toan {
+  * **id** : BIGINT <<PK>>
+  --
+  hoa_don_id : BIGINT <<FK>>
+  so_tien : DECIMAL(12,2)
+  thoi_gian_thanh_toan : DATETIME
+  * phuong_thuc : VARCHAR(20)
+}
+
+entity "thong_bao" as thong_bao {
+  * **id** : BIGINT <<PK>>
+  --
+  nguoi_dung_id : BIGINT <<FK>>
+  * noi_dung : VARCHAR(500)
+  * da_doc : BOOLEAN
+  thoi_gian_gui : DATETIME
+}
+
+entity "yeu_cau_ho_tro" as yeu_cau {
+  * **id** : BIGINT <<PK>>
+  --
+  khach_thue_id : BIGINT <<FK>>
+  phong_id : BIGINT <<FK>>
+  * tieu_de : VARCHAR(150)
+  mo_ta : VARCHAR(2000)
+  * trang_thai : VARCHAR(20)
+  ngay_tao : DATETIME
+  ngay_cap_nhat : DATETIME
+}
+
+entity "phieu_dat_lai_mat_khau" as phieu_mk {
+  * **id** : BIGINT <<PK>>
+  --
+  * ma_token : VARCHAR(64) <<UK>>
+  nguoi_dung_id : BIGINT <<FK>>
+  * het_han_luc : DATETIME
+}
+
+entity "nhat_ky_he_thong" as nhat_ky {
+  * **id** : BIGINT <<PK>>
+  --
+  nguoi_thuc_hien_id : BIGINT <<FK>>
+  * hanh_dong : VARCHAR(100)
+  * loai_thuc_the : VARCHAR(100)
+  ma_thuc_the : VARCHAR(50)
+  chi_tiet : VARCHAR(1000)
+  ngay_tao : DATETIME
+}
+
+entity "don_hang_payos" as payos {
+  * **id** : BIGINT <<PK>>
+  --
+  * ma_don_hang : BIGINT <<UK>>
+  hoa_don_id : BIGINT <<FK logic>>
+  ngay_tao : DATETIME
+}
+
+khu_vuc ||--o{ phong
+phong ||--o{ hop_dong
+khach_thue ||--o{ hop_dong
+phong ||--o{ hoa_don
+khach_thue ||--o{ hoa_don
+phong ||--o{ chi_so
+nguoi_dung ||--o| khach_thue : "tối đa 1 khách / user"
+hoa_don ||--o{ thanh_toan
+nguoi_dung ||--o{ thong_bao
+khach_thue ||--o{ yeu_cau
+phong ||--o{ yeu_cau
+nguoi_dung ||--o{ phieu_mk
+nguoi_dung ||--o{ nhat_ky
+hoa_don ||..o{ payos : "tham chiếu\n(không ràng buộc JPA)"
+
+note right of bang_gia
+  Bảng đơn giá theo
+  ngày hiệu lực;
+  không FK tới bảng khác.
+end note
+
+@enduml

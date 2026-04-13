@@ -1,0 +1,27 @@
+' 2.2.7.6 — Dang ky tai khoan
+@startuml seq-2-2-7-06-dang-ky
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.6 — Dang ky tai khoan
+actor "Nguoi dung" as U
+participant "Trang - Client" as FE <<boundary>>
+participant "XacThucController" as XC <<control>>
+participant "XacThucService" as XS <<control>>
+participant "NguoiDungRepository" as R <<control>>
+
+U -> FE : dien form dang ky
+FE -> XC : POST /api/xac-thuc/dang-ky\n(YeuCauDangKy)
+activate XC
+XC -> XS : dangKy(yeuCau)
+activate XS
+XS -> R : findByTenDangNhap (kiem tra trung)
+XS -> R : save(NguoiDung) mat khau da ma hoa
+activate R
+R --> XS : NguoiDung
+deactivate R
+XS --> XC : NguoiDung
+deactivate XS
+XC --> FE : HTTP 200
+deactivate XC
+@enduml

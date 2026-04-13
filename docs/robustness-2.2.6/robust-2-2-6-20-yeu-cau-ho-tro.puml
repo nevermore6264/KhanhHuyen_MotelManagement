@@ -1,0 +1,35 @@
+' 2.2.6.20 — Yeu cau ho tro
+@startuml robust-2-2-6-20-yeu-cau-ho-tro
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.20 — Yeu cau ho tro
+left to right direction
+actor "Tenant" as T
+actor "Admin - Staff" as S
+actor "Email" as MAIL
+class "Trang yeu cau - yeu cau ho tro" as B <<boundary>>
+class "YeuCauHoTroController" as C <<control>>
+class "YeuCauHoTro" as E1 <<entity>>
+class "KhachThue\nPhong" as E2 <<entity>>
+
+T --> B : tao yeu cau
+S --> B : "xem, cap nhat trang thai"
+B --> C : "REST /api/yeu-cau-ho-tro"
+C --> E1
+C --> E2
+C --> MAIL : email phan hoi (neu co)
+@enduml

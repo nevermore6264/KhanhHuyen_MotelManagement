@@ -1,0 +1,21 @@
+' 2.2.7.13 — Admin - Staff xem tat ca hoa don
+@startuml seq-2-2-7-13-hoa-don-admin
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.13 — Danh sach hoa don (Admin - Staff)
+actor "Admin - Staff" as S
+participant "Trang hoa don" as FE <<boundary>>
+participant "HoaDonController" as HDC <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+
+S -> FE : mo bang hoa don
+FE -> HDC : GET /api/hoa-don
+activate HDC
+HDC -> HDR : findAllWithTenantAndRoom()
+activate HDR
+HDR --> HDC : List HoaDon (co phong, khach)
+deactivate HDR
+HDC --> FE : JSON
+deactivate HDC
+@enduml

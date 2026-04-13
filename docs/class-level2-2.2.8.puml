@@ -1,0 +1,169 @@
+' 2.2.8. So do Class muc 2 — bo sung phuong thuc tu thong diep
+' Ban Mermaid (mermaid.live): docs/class-level2-2.2.8.mmd
+' File .puml: PlantUML (tuy chon)
+
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #FAFAFA
+  BorderColor #263238
+}
+skinparam packageStyle rectangle
+
+
+@startuml class-level2-2-2-8
+title 2.2.8. So do Class muc 2 (REST + Service + Repository + tien ich)
+
+package "Lop dieu khien (REST)" <<Rectangle>> {
+  class XacThucController {
+    +dangNhap(yeuCau: YeuCauXacThuc): ResponseEntity~PhanHoiXacThuc~
+    +dangKy(yeuCau: YeuCauDangKy): ResponseEntity
+    +quenMatKhau(yeuCau: YeuCauQuenMatKhau): ResponseEntity~PhanHoiQuenMatKhau~
+    +datLaiMatKhau(yeuCau: YeuCauDatLaiMatKhau): ResponseEntity
+  }
+
+  class ChiSoDienNuocController {
+    +layDanhSach(): List~ChiSoDienNuoc~
+    +tao(chiSo: ChiSoDienNuoc): ResponseEntity~ChiSoDienNuoc~
+    -choPhepThang(thang: int, nam: int): boolean <<static>>
+  }
+
+  class ThanhToanController {
+    +layThanhToanGanDayCuaToi(gioiHan: int): List~ThanhToan~
+    +layTheoHoaDon(maHoaDon: Long): List~ThanhToan~
+    +taoLinkThanhToan(body: Map): ResponseEntity~Map~
+    +webhookPayOS(body: String): ResponseEntity~Void~
+    +tao(thanhToan: ThanhToan): ResponseEntity~ThanhToan~
+  }
+}
+
+package "Lop nghiep vu (Service)" <<Rectangle>> {
+  class XacThucService {
+    +dangNhap(yeuCau: YeuCauXacThuc): PhanHoiXacThuc
+    +dangKy(yeuCau: YeuCauDangKy): NguoiDung
+    +quenMatKhau(yeuCau: YeuCauQuenMatKhau): PhanHoiQuenMatKhau
+    +datLaiMatKhau(yeuCau: YeuCauDatLaiMatKhau): void
+  }
+
+  class TinhTienService {
+    +taoHoacCapNhatHoaDonTuChiSo(chiSo: ChiSoDienNuoc): HoaDon
+    +sinhHoaDonChoThang(thang: int, nam: int): int
+  }
+
+  class PayOSService {
+    +taoLinkThanhToan(hoaDon: HoaDon): String
+    +xacThucVaXuLyWebhook(noiDungYeuCau: String): boolean
+    -xayChuKyTuData(data: JsonNode): String
+    -hmacSha256(key: String, data: String): String <<static>>
+  }
+
+  class NguoiDungHienTaiService {
+    +layNguoiDungHienTai(): NguoiDung
+  }
+}
+
+package "Tien ich bao mat" <<Rectangle>> {
+  class TienIchJwt {
+    +generateToken(username: String, vaiTro: String): String
+    +parseClaims(token: String): Claims
+  }
+}
+
+package "Lop truy cap du lieu (Repository)" <<Rectangle>> {
+  interface NguoiDungRepository {
+    +findByTenDangNhap(ten: String): Optional~NguoiDung~
+  }
+
+  interface PhieuDatLaiMatKhauRepository {
+    +findByMaToken(maToken: String): Optional~PhieuDatLaiMatKhau~
+    +xoaTheoMaNguoiDung(userId: Long): void
+  }
+
+  interface PhongRepository {
+    +findById(id: Long): Optional~Phong~
+  }
+
+  interface BangGiaDichVuRepository {
+    +findFirstByHieuLucTuLessThanEqualOrderByHieuLucTuDesc(ngay: LocalDate): Optional~BangGiaDichVu~
+  }
+
+  interface ChiSoDienNuocRepository {
+    +findByPhongAndThangAndNam(phong: Phong, thang: int, nam: int): Optional~ChiSoDienNuoc~
+  }
+
+  interface HopDongRepository {
+    +findByTrangThai(trangThai: TrangThaiHopDong): List~HopDong~
+  }
+
+  interface HoaDonRepository {
+    +findByPhong_IdAndThangAndNam(roomId: Long, thang: int, nam: int): Optional~HoaDon~
+    +findById(id: Long): Optional~HoaDon~
+  }
+
+  interface KhachThueRepository {
+    +findByNguoiDung_Id(userId: Long): KhachThue
+  }
+
+  interface ThanhToanRepository {
+    +findByHoaDonId(invoiceId: Long): List~ThanhToan~
+    +findByHoaDon_KhachThue_IdOrderByThoiGianThanhToanDesc(tenantId: Long, page: Pageable): List~ThanhToan~
+  }
+
+  interface DonHangPayOSRepository {
+    +findByMaDonHang(maDonHang: long): Optional~DonHangPayOS~
+  }
+}
+
+package "Mien (rut gon — thuoc tinh + thao tac lien quan luong)" <<Rectangle>> {
+  class PhieuDatLaiMatKhau {
+    +daHetHan(): boolean
+  }
+
+  class ChiSoDienNuoc
+  class HoaDon
+  class ThanhToan
+  class DonHangPayOS
+  class NguoiDung
+  class Phong
+  class BangGiaDichVu
+}
+
+' --- Phu thuoc tu Controller -> Service / Repository (theo luong 2.2.7) ---
+
+XacThucController ..> XacThucService : su dung
+XacThucService ..> NguoiDungRepository
+XacThucService ..> PhieuDatLaiMatKhauRepository
+XacThucService ..> TienIchJwt : generateToken
+
+ChiSoDienNuocController ..> PhongRepository
+ChiSoDienNuocController ..> BangGiaDichVuRepository
+ChiSoDienNuocController ..> ChiSoDienNuocRepository
+ChiSoDienNuocController ..> TinhTienService
+
+TinhTienService ..> HoaDonRepository
+TinhTienService ..> HopDongRepository
+TinhTienService ..> ChiSoDienNuocRepository
+
+ThanhToanController ..> ThanhToanRepository
+ThanhToanController ..> HoaDonRepository
+ThanhToanController ..> KhachThueRepository
+ThanhToanController ..> NguoiDungHienTaiService
+ThanhToanController ..> PayOSService
+
+PayOSService ..> DonHangPayOSRepository
+PayOSService ..> HoaDonRepository
+PayOSService ..> ThanhToanRepository
+
+NguoiDungHienTaiService ..> NguoiDungRepository
+
+note bottom of NguoiDungRepository
+  Cac lop Repository ke thua
+  JpaRepository (save, delete, findAll, ...)
+end note
+
+note right of PayOSService
+  PayOSService goi REST PayOS
+  (RestTemplate) — khong ve tren so do Class
+  muc 2 neu chi tap trung lop ung dung.
+end note
+
+@enduml

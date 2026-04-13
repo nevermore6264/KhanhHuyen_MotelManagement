@@ -1,0 +1,24 @@
+' 2.2.7.16 — Sinh hoa don ngay (go tay)
+@startuml seq-2-2-7-16-hoa-don-sinh-ngay
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.16 — Sinh hoa don ngay (POST sinh)
+actor "Admin - Staff" as S
+participant "Trang hoa don" as FE <<boundary>>
+participant "HoaDonController" as HDC <<control>>
+participant "TinhTienService" as TTS <<control>>
+participant "HopDongRepository" as HopR <<control>>
+participant "HoaDonRepository" as HDR <<control>>
+
+S -> FE : nhan "Sinh hoa don ngay"
+FE -> HDC : POST /api/hoa-don/sinh
+activate HDC
+HDC -> TTS : sinhHoaDonChoThang(thang truoc)\nsinhHoaDonChoThang(thang hien tai)
+activate TTS
+TTS -> HopR : findByTrangThai(ACTIVE)
+TTS -> HDR : save tung HoaDon moi (neu chua co)
+deactivate TTS
+HDC --> FE : JSON message + created
+deactivate HDC
+@enduml

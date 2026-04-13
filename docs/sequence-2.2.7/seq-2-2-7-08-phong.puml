@@ -1,0 +1,33 @@
+' 2.2.7.8 — Phong: danh sach va tao moi
+@startuml seq-2-2-7-08-phong
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.8 — Quan ly phong (GET, POST)
+actor "Admin - Staff" as A
+participant "Trang phong" as FE <<boundary>>
+participant "PhongController" as PC <<control>>
+participant "PhongRepository" as PhR <<control>>
+participant "KhuVucRepository" as KR <<control>>
+
+A -> FE : xem danh sach phong
+FE -> PC : GET /api/phong
+activate PC
+PC -> PhR : findAll()
+activate PhR
+PhR --> PC : List Phong
+deactivate PhR
+PC --> FE : JSON
+deactivate PC
+
+A -> FE : tao phong moi (Admin)
+FE -> PC : POST /api/phong\n(Phong + khuVuc.id)
+activate PC
+PC -> KR : findById(khuVucId)
+PC -> PhR : save(phong)
+activate PhR
+PhR --> PC : Phong
+deactivate PhR
+PC --> FE : 200 + Phong
+deactivate PC
+@enduml

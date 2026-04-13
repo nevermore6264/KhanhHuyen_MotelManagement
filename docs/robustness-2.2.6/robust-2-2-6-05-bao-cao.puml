@@ -1,0 +1,30 @@
+' 2.2.6.5 — Bao cao thong ke
+@startuml robust-2-2-6-05-bao-cao
+allowmixing
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor<<boundary>> #E8F5E9
+  BorderColor<<boundary>> #2E7D32
+  BackgroundColor<<control>> #FFFDE7
+  BorderColor<<control>> #F9A825
+  BackgroundColor<<entity>> #FCE4EC
+  BorderColor<<entity>> #C2185B
+  FontSize 13
+}
+skinparam ArrowColor #37474F
+skinparam ActorBorderColor #1565C0
+skinparam ActorBackgroundColor #E3F2FD
+
+title 2.2.6.5 — Bao cao - thong ke
+left to right direction
+actor "Admin - Staff" as U
+class "Trang bao cao" as B <<boundary>>
+class "BaoCaoController" as C <<control>>
+class "HoaDon\nThanhToan" as E <<entity>>
+
+U --> B
+B --> C : "GET /api/bao-cao/..."
+C --> E : thong ke theo thang, trang thai
+C --> B : du lieu bieu do
+@enduml

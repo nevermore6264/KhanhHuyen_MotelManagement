@@ -1,0 +1,23 @@
+' 2.2.7.23 — Admin tao thong bao + day realtime
+@startuml seq-2-2-7-23-thong-bao-admin-tao
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 20
+title 2.2.7.23 — Admin tao thong bao (taoVaDay)
+actor "Admin" as A
+participant "Trang thong bao" as FE <<boundary>>
+participant "ThongBaoController" as TBC <<control>>
+participant "ThongBaoService" as TBS <<control>>
+participant "ThongBaoRepository" as TBR <<control>>
+
+A -> FE : nhap noi dung, user dich
+FE -> TBC : POST /api/thong-bao\n(NotificationCreateDto)
+activate TBC
+TBC -> TBS : taoVaDay(message, userId)
+activate TBS
+TBS -> TBR : save(ThongBao)
+TBS -> TBS : SimpMessagingTemplate\nconvertAndSend (WebSocket)
+deactivate TBS
+TBC --> FE : 200
+deactivate TBC
+@enduml
