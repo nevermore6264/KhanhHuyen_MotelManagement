@@ -446,6 +446,25 @@ a.btn {
   background: #64748b;
 }
 
+/* Quản lý người dùng: khóa (nguy hiểm) vs mở khóa (kích hoạt lại) */
+.btn-lock {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.btn-lock:hover {
+  box-shadow: 0 8px 16px rgba(220, 38, 38, 0.32);
+  filter: brightness(1.06);
+}
+
+.btn-unlock {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+.btn-unlock:hover {
+  box-shadow: 0 8px 16px rgba(22, 163, 74, 0.32);
+  filter: brightness(1.06);
+}
+
 .btn-disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -2448,28 +2467,10 @@ table .btn {
   border-color: #cbd5f5;
 }
 
-.area-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.area-pill {
-  border: 1px solid var(--blue-200);
-  background: #fff;
-  color: #3b4b6b;
-  border-radius: 999px;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.area-pill.active {
-  background: #eef4ff;
-  border-color: var(--blue-400);
-  color: #2f5bda;
-  font-weight: 600;
+/* Chọn khu trên trang chỉ số điện nước — combobox gọn, có tìm kiếm */
+.meter-area-picker {
+  max-width: min(440px, 100%);
+  margin-bottom: 14px;
 }
 
 .room-list {

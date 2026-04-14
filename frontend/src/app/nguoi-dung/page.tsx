@@ -55,13 +55,19 @@ function chuanHoaNguoiDungTuApi(raw: RawJson): User {
       ? false
       : true;
 
-  const sdt = r.soDienThoai ?? r.phone;
+  const sdt = r.soDienThoai ?? r.so_dien_thoai ?? r.phone;
   return {
     id: Number(r.id),
     username: String(
-      r.tenDangNhap ?? r.username ?? r["tendangnhap"] ?? "",
+      r.tenDangNhap ??
+        r.ten_dang_nhap ??
+        r.username ??
+        r["tendangnhap"] ??
+        "",
     ).trim(),
-    fullName: String(r.hoTen ?? r.fullName ?? r["hoten"] ?? "").trim(),
+    fullName: String(
+      r.hoTen ?? r.ho_ten ?? r.fullName ?? r["hoten"] ?? "",
+    ).trim(),
     role,
     active,
     phone:
@@ -143,10 +149,16 @@ const validateTenant = (data: {
   return "";
 };
 
+function khachLienKetTheoNguoi(ds: Tenant[], idNguoi: number) {
+  return ds.find((t) => t.user?.id === idNguoi);
+}
+
 export default function TrangNguoiDung() {
   const [danhSach, setDanhSach] = useState<User[]>([]);
   const [tenDangNhap, setTenDangNhap] = useState("");
   const [matKhau, setMatKhau] = useState("");
+  const [hoTenTaoMoi, setHoTenTaoMoi] = useState("");
+  const [sdtTaoMoi, setSdtTaoMoi] = useState("");
   const [vaiTro, setVaiTro] = useState("STAFF");
   const [idKhachThue, setIdKhachThue] = useState("");
   const [danhSachKhachThue, setDanhSachKhachThue] = useState<Tenant[]>([]);
@@ -214,7 +226,9 @@ export default function TrangNguoiDung() {
       await api.post("/nguoi-dung", {
         tenDangNhap: ten,
         matKhau,
-        hoTen: "",
+        hoTen: vaiTro === "STAFF" ? hoTenTaoMoi.trim() : "",
+        soDienThoai:
+          vaiTro === "STAFF" ? (sdtTaoMoi.trim() || null) : null,
         vaiTro,
         kichHoat: true,
         maKhachThue:
@@ -233,6 +247,8 @@ export default function TrangNguoiDung() {
     }
     setTenDangNhap("");
     setMatKhau("");
+    setHoTenTaoMoi("");
+    setSdtTaoMoi("");
     setVaiTro("STAFF");
     setIdKhachThue("");
     setHienThiTaoMoi(false);
@@ -241,8 +257,13 @@ export default function TrangNguoiDung() {
 
   const batDauSua = (user: User) => {
     setPhanTuDangSua(user);
-    setHoTenSua(user.fullName || "");
-    setSdtSua((user as User & { phone?: string }).phone || "");
+    if (user.role === "STAFF") {
+      setHoTenSua((user.fullName || "").trim());
+      setSdtSua(((user as User & { phone?: string | null }).phone || "").trim());
+    } else {
+      setHoTenSua("");
+      setSdtSua("");
+    }
     setIdKhachThueSua("");
     setMatKhauSua("");
     setLoiSua("");
@@ -250,20 +271,28 @@ export default function TrangNguoiDung() {
   };
 
   useEffect(() => {
-    if (phanTuDangSua && danhSachKhachThue.length > 0) {
-      const lienKet = danhSachKhachThue.find(
-        (t) => t.user?.id === phanTuDangSua.id,
-      );
-      setIdKhachThueSua(lienKet ? String(lienKet.id) : "");
+    if (!phanTuDangSua || phanTuDangSua.role !== "TENANT") {
+      if (phanTuDangSua && phanTuDangSua.role !== "TENANT") {
+        setIdKhachThueSua("");
+      }
+      return;
     }
-  }, [phanTuDangSua?.id, danhSachKhachThue]);
+    if (danhSachKhachThue.length === 0) return;
+    const lienKet = khachLienKetTheoNguoi(danhSachKhachThue, phanTuDangSua.id);
+    setIdKhachThueSua(lienKet ? String(lienKet.id) : "");
+  }, [phanTuDangSua, danhSachKhachThue]);
 
   const luuSua = async () => {
     if (!phanTuDangSua) return;
+    const laNhanVien = phanTuDangSua.role === "STAFF";
     try {
       await api.put(`/nguoi-dung/${phanTuDangSua.id}`, {
-        hoTen: hoTenSua.trim(),
-        soDienThoai: sdtSua.trim() || null,
+        hoTen: laNhanVien
+          ? hoTenSua.trim()
+          : (phanTuDangSua.fullName || "").trim(),
+        soDienThoai: laNhanVien
+          ? sdtSua.trim() || null
+          : (phanTuDangSua.phone || "").trim() || null,
         vaiTro: phanTuDangSua.role,
         kichHoat: phanTuDangSua.active,
         matKhau: matKhauSua.trim() || null,
@@ -452,6 +481,8 @@ export default function TrangNguoiDung() {
                 <button
                   className="btn"
                   onClick={() => {
+                    setHoTenTaoMoi("");
+                    setSdtTaoMoi("");
                     setHienThiTaoMoi(true);
                     taiKhachThue();
                   }}
@@ -534,8 +565,14 @@ export default function TrangNguoiDung() {
                             <IconLink /> Gắn người dùng
                           </button>
                           <button
-                            className="btn btn-secondary"
+                            type="button"
+                            className={`btn ${u.active ? "btn-lock" : "btn-unlock"}`}
                             onClick={() => toggleLock(u)}
+                            title={
+                              u.active
+                                ? "Khóa tài khoản"
+                                : "Mở khóa tài khoản"
+                            }
                           >
                             {u.active ? (
                               <>
@@ -589,8 +626,13 @@ export default function TrangNguoiDung() {
                   <select
                     value={vaiTro}
                     onChange={(e) => {
-                      setVaiTro(e.target.value);
-                      if (e.target.value !== "TENANT") setIdKhachThue("");
+                      const v = e.target.value;
+                      setVaiTro(v);
+                      if (v !== "TENANT") setIdKhachThue("");
+                      if (v !== "STAFF") {
+                        setHoTenTaoMoi("");
+                        setSdtTaoMoi("");
+                      }
                     }}
                   >
                     <option value="ADMIN">Quản trị</option>
@@ -598,6 +640,26 @@ export default function TrangNguoiDung() {
                     <option value="TENANT">Khách thuê</option>
                   </select>
                 </div>
+                {vaiTro === "STAFF" && (
+                  <>
+                    <div>
+                      <label className="field-label">Họ tên</label>
+                      <input
+                        placeholder="Họ tên hiển thị (tùy chọn)"
+                        value={hoTenTaoMoi}
+                        onChange={(e) => setHoTenTaoMoi(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="field-label">SĐT</label>
+                      <input
+                        placeholder="Số điện thoại (tùy chọn)"
+                        value={sdtTaoMoi}
+                        onChange={(e) => setSdtTaoMoi(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
                 {vaiTro === "TENANT" && (
                   <div className="form-span-2">
                     <label className="field-label">
@@ -622,7 +684,11 @@ export default function TrangNguoiDung() {
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setHienThiTaoMoi(false)}
+                    onClick={() => {
+                      setHienThiTaoMoi(false);
+                      setHoTenTaoMoi("");
+                      setSdtTaoMoi("");
+                    }}
                   >
                     <IconTimes /> Hủy
                   </button>
@@ -782,22 +848,26 @@ export default function TrangNguoiDung() {
             <div className="modal-card form-card">
               <h3>Chỉnh sửa người dùng</h3>
               <div className="form-grid">
-                <div>
-                  <label className="field-label">Họ tên</label>
-                  <input
-                    placeholder="Họ tên"
-                    value={hoTenSua}
-                    onChange={(e) => setHoTenSua(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">SĐT</label>
-                  <input
-                    placeholder="SĐT"
-                    value={sdtSua}
-                    onChange={(e) => setSdtSua(e.target.value)}
-                  />
-                </div>
+                {phanTuDangSua.role === "STAFF" && (
+                  <>
+                    <div>
+                      <label className="field-label">Họ tên</label>
+                      <input
+                        placeholder="Họ tên"
+                        value={hoTenSua}
+                        onChange={(e) => setHoTenSua(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="field-label">SĐT</label>
+                      <input
+                        placeholder="SĐT"
+                        value={sdtSua}
+                        onChange={(e) => setSdtSua(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <label className="field-label">Chức vụ</label>
                   <div className="readonly-field">
@@ -818,6 +888,10 @@ export default function TrangNguoiDung() {
                     <label className="field-label">
                       Gắn với khách thuê (người được thuê)
                     </label>
+                    <p className="card-subtitle" style={{ marginBottom: 8 }}>
+                      Họ tên và SĐT hiển thị lấy từ hồ sơ khách thuê đã gắn, không
+                      chỉnh tại đây.
+                    </p>
                     <ChonKhachThueCombobox
                       danhSach={danhSachKhachThue}
                       value={idKhachThueSua}

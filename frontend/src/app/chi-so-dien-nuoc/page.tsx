@@ -7,6 +7,7 @@ import BangDonGian from "@/components/BangDonGian";
 import { IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
+import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 
 type Area = { id: number; name: string };
 type Room = { id: number; code: string; area?: Area };
@@ -19,10 +20,60 @@ type MeterReading = {
   newElectric: number;
   oldWater: number;
   newWater: number;
-  /** Tiền điện/nước (VNĐ) — tổng chỉ số = tienDien + tienNuoc, không lưu trong CSDL */
   tienDien?: number;
   tienNuoc?: number;
 };
+
+type RawJson = Record<string, unknown>;
+
+/** Spring: KhuVuc — ten; Phong — maPhong, khuVuc; ChiSoDienNuoc — phong, thang, nam, dienCu… */
+function chuanHoaKhuTuApi(raw: RawJson): Area {
+  const r = raw;
+  return {
+    id: Number(r.id),
+    name: String(r.ten ?? r.name ?? "").trim(),
+  };
+}
+
+function chuanHoaPhongTuApi(raw: RawJson): Room {
+  const r = raw;
+  const kv = r.khuVuc ?? r.area;
+  const kvObj =
+    kv && typeof kv === "object" ? (kv as RawJson) : undefined;
+  return {
+    id: Number(r.id),
+    code: String(r.maPhong ?? r.ma_phong ?? r.code ?? "").trim(),
+    area: kvObj
+      ? {
+          id: Number(kvObj.id),
+          name: String(kvObj.ten ?? kvObj.name ?? "").trim(),
+        }
+      : undefined,
+  };
+}
+
+function chuanHoaChiSoTuApi(raw: RawJson): MeterReading {
+  const r = raw;
+  const phongRaw = r.phong ?? r.room;
+  const phongObj =
+    phongRaw && typeof phongRaw === "object"
+      ? chuanHoaPhongTuApi(phongRaw as RawJson)
+      : undefined;
+  return {
+    id: Number(r.id),
+    room: phongObj,
+    month: Number(r.thang ?? r.month ?? 0),
+    year: Number(r.nam ?? r.year ?? 0),
+    oldElectric: Number(r.dienCu ?? r.oldElectric ?? 0),
+    newElectric: Number(r.dienMoi ?? r.newElectric ?? 0),
+    oldWater: Number(r.nuocCu ?? r.oldWater ?? 0),
+    newWater: Number(r.nuocMoi ?? r.newWater ?? 0),
+    tienDien:
+      r.tienDien != null ? Number(r.tienDien) : undefined,
+    tienNuoc:
+      r.tienNuoc != null ? Number(r.tienNuoc) : undefined,
+  };
+}
 
 const dinhDangTien = (n?: number | null) => {
   if (n == null || isNaN(n)) return "—";
@@ -72,9 +123,12 @@ export default function TrangChiSoDienNuoc() {
       api.get("/phong"),
       api.get("/khu-vuc"),
     ]);
-    setDanhSachChiSo(resChiSo.data);
-    setDanhSachPhong(resPhong.data);
-    setDanhSachKhu(resKhu.data);
+    const mangChiSo = Array.isArray(resChiSo.data) ? resChiSo.data : [];
+    const mangPhong = Array.isArray(resPhong.data) ? resPhong.data : [];
+    const mangKhu = Array.isArray(resKhu.data) ? resKhu.data : [];
+    setDanhSachChiSo(mangChiSo.map((x) => chuanHoaChiSoTuApi(x as RawJson)));
+    setDanhSachPhong(mangPhong.map((x) => chuanHoaPhongTuApi(x as RawJson)));
+    setDanhSachKhu(mangKhu.map((x) => chuanHoaKhuTuApi(x as RawJson)));
   };
 
   useEffect(() => {
@@ -104,6 +158,11 @@ export default function TrangChiSoDienNuoc() {
     if (!idKhuLoc) return danhSachPhong;
     return danhSachPhong.filter((r) => String(r.area?.id) === idKhuLoc);
   }, [danhSachPhong, idKhuLoc]);
+
+  const danhSachKhuCombo = useMemo(
+    () => danhSachKhu.map((a) => ({ id: a.id, ten: a.name })),
+    [danhSachKhu],
+  );
 
   useEffect(() => {
     if (!phongDangChon) return;
@@ -182,22 +241,15 @@ export default function TrangChiSoDienNuoc() {
               <p className="card-subtitle">Chọn khu để xem danh sách phòng</p>
             </div>
           </div>
-          <div className="area-selector">
-            <button
-              className={`area-pill ${idKhu === "" ? "active" : ""}`}
-              onClick={() => setIdKhu("")}
-            >
-              Tất cả
-            </button>
-            {danhSachKhu.map((a) => (
-              <button
-                key={a.id}
-                className={`area-pill ${String(a.id) === idKhu ? "active" : ""}`}
-                onClick={() => setIdKhu(String(a.id))}
-              >
-                {a.name}
-              </button>
-            ))}
+          <div className="meter-area-picker">
+            <label className="field-label">Khu vực</label>
+            <ChonKhuCombobox
+              danhSachKhu={danhSachKhuCombo}
+              value={idKhu}
+              onChange={setIdKhu}
+              placeholderChuaChon="Tất cả khu"
+              placeholderTim="Tìm theo tên khu…"
+            />
           </div>
           <div className="room-list">
             {phongTheoKhu.map((r) => (
@@ -243,7 +295,7 @@ export default function TrangChiSoDienNuoc() {
                         {r.oldWater}-{r.newWater}
                       </div>
                       <div className="history-total">
-                        Tổng: {dinhDangTien(r.totalCost)}
+                        Tổng: {dinhDangTien(tongTienDienNuoc(r))}
                       </div>
                     </div>
                   ))}
