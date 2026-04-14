@@ -14,6 +14,7 @@ import {
 import api from "@/lib/api";
 import { getRole, getToken } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 type Tenant = {
   id: number;
@@ -93,6 +94,90 @@ const validateTenant = (data: {
   return "";
 };
 
+type LoaiAnhKhachThue = "portrait" | "idCard";
+
+type TrangThaiXemAnh = {
+  tenant: Tenant;
+  kind: LoaiAnhKhachThue;
+};
+
+function KhoiZoomMotAnh({
+  imageUrl,
+  title,
+}: {
+  imageUrl: string;
+  title: string;
+}) {
+  const [scalePct, setScalePct] = useState(100);
+
+  return (
+    <div className="tenant-rzp-block">
+      <TransformWrapper
+        key={imageUrl}
+        initialScale={1}
+        minScale={0.35}
+        maxScale={5}
+        centerOnInit
+        limitToBounds
+        wheel={{ step: 0.12 }}
+        pinch={{ step: 0.08 }}
+        doubleClick={{ mode: "zoomIn", step: 0.7 }}
+        panning={{ velocityDisabled: false }}
+        onTransform={(_ref, state) => {
+          setScalePct(Math.round(state.scale * 100));
+        }}
+      >
+        {(api) => (
+          <>
+            <div className="tenant-zoom-toolbar">
+              <button
+                type="button"
+                className="btn btn-sm tenant-zoom-btn tenant-zoom-out"
+                aria-label="Thu nhỏ"
+                onClick={() => api.zoomOut(0.15)}
+              >
+                −
+              </button>
+              <span className="tenant-zoom-value">{scalePct}%</span>
+              <button
+                type="button"
+                className="btn btn-sm tenant-zoom-btn tenant-zoom-in"
+                aria-label="Phóng to"
+                onClick={() => api.zoomIn(0.15)}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm tenant-zoom-btn tenant-zoom-reset"
+                onClick={() => api.resetTransform(200)}
+              >
+                Gốc
+              </button>
+            </div>
+            <div className="tenant-rzp-viewport">
+              <TransformComponent
+                wrapperClass="tenant-rzp-wrapper"
+                contentClass="tenant-rzp-content"
+              >
+                <img
+                  src={imageUrl}
+                  alt={title}
+                  className="tenant-rzp-img"
+                  draggable={false}
+                />
+              </TransformComponent>
+            </div>
+            <p className="tenant-zoom-hint">
+              Lăn chuột để zoom và kéo ảnh để di chuyển
+            </p>
+          </>
+        )}
+      </TransformWrapper>
+    </div>
+  );
+}
+
 export default function TrangKhachThue() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -135,7 +220,10 @@ export default function TrangKhachThue() {
   const [editPortraitPreview, setEditPortraitPreview] = useState<string | null>(
     null,
   );
-  const [editIdCardPreview, setEditIdCardPreview] = useState<string | null>(null);
+  const [editIdCardPreview, setEditIdCardPreview] = useState<string | null>(
+    null,
+  );
+  const [anhPreview, setAnhPreview] = useState<TrangThaiXemAnh | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
@@ -567,6 +655,40 @@ export default function TrangKhachThue() {
               { header: "Họ tên", render: (t) => t.fullName },
               { header: "SĐT", render: (t) => t.phone },
               { header: "CCCD", render: (t) => t.idNumber },
+              {
+                header: "Chân dung",
+                render: (t) =>
+                  t.portraitImagePath ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm table-link-xem"
+                      onClick={() =>
+                        setAnhPreview({ tenant: t, kind: "portrait" })
+                      }
+                    >
+                      Xem
+                    </button>
+                  ) : (
+                    <span style={{ color: "#94a3b8" }}>—</span>
+                  ),
+              },
+              {
+                header: "Ảnh CCCD",
+                render: (t) =>
+                  t.idCardImagePath ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm table-link-xem"
+                      onClick={() =>
+                        setAnhPreview({ tenant: t, kind: "idCard" })
+                      }
+                    >
+                      Xem
+                    </button>
+                  ) : (
+                    <span style={{ color: "#94a3b8" }}>—</span>
+                  ),
+              },
               { header: "Tài khoản", render: (t) => t.user?.username },
               ...(isAdmin
                 ? [
@@ -591,6 +713,56 @@ export default function TrangKhachThue() {
             ]}
           />
         </div>
+
+        {anhPreview && (
+          <div
+            className="modal-backdrop"
+            role="presentation"
+            onClick={() => setAnhPreview(null)}
+          >
+            <div
+              className="modal-card form-card tenant-view-modal tenant-view-modal-single"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tenant-view-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="card-header tenant-view-header-only">
+                <h3 id="tenant-view-title">
+                  {anhPreview.kind === "portrait"
+                    ? "Ảnh chân dung"
+                    : "Ảnh CCCD/CMND"}
+                </h3>
+              </div>
+              {anhPreview.kind === "portrait" ? (
+                anhPreview.tenant.portraitImagePath ? (
+                  <KhoiZoomMotAnh
+                    imageUrl={anhPreview.tenant.portraitImagePath}
+                    title="Ảnh chân dung"
+                  />
+                ) : (
+                  <p className="tenant-view-empty">Chưa có ảnh</p>
+                )
+              ) : anhPreview.tenant.idCardImagePath ? (
+                <KhoiZoomMotAnh
+                  imageUrl={anhPreview.tenant.idCardImagePath}
+                  title="Ảnh CCCD/CMND"
+                />
+              ) : (
+                <p className="tenant-view-empty">Chưa có ảnh</p>
+              )}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setAnhPreview(null)}
+                >
+                  <IconTimes /> Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showCreate && isAdmin && (
           <div className="modal-backdrop">

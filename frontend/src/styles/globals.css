@@ -1760,6 +1760,128 @@ textarea:disabled:focus {
   object-fit: cover;
 }
 
+/* Popup xem một ảnh khách thuê — react-zoom-pan-pinch */
+.tenant-view-modal {
+  max-width: 720px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+}
+
+.tenant-view-modal-single {
+  max-width: 640px;
+}
+
+.tenant-view-header-only {
+  margin-bottom: 8px;
+  padding-bottom: 0;
+}
+
+.tenant-view-header-only h3 {
+  margin: 0;
+}
+
+.tenant-rzp-block {
+  min-width: 0;
+}
+
+.tenant-zoom-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.tenant-zoom-toolbar .tenant-zoom-btn {
+  font-weight: 600;
+  min-width: 2.25rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+.tenant-zoom-toolbar .tenant-zoom-btn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+
+/* Thu nhỏ — cam */
+.tenant-zoom-toolbar .tenant-zoom-btn.tenant-zoom-out {
+  background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
+}
+
+/* Phóng to — xanh brand */
+.tenant-zoom-toolbar .tenant-zoom-btn.tenant-zoom-in {
+  background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
+}
+
+/* Gốc — teal */
+.tenant-zoom-toolbar .tenant-zoom-btn.tenant-zoom-reset {
+  margin-left: auto;
+  min-width: 4rem;
+  padding-left: 16px;
+  padding-right: 16px;
+  background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
+}
+
+.tenant-zoom-value {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 3.25rem;
+  text-align: center;
+  color: #1e293b;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid var(--blue-200);
+}
+
+.tenant-rzp-viewport {
+  height: min(440px, 58vh);
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.tenant-rzp-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.tenant-rzp-content {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.tenant-rzp-img {
+  max-width: min(100%, 920px);
+  max-height: min(440px, 58vh);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+}
+
+.tenant-zoom-hint {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.tenant-view-empty {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.table-wrap .table-link-xem {
+  padding: 6px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
