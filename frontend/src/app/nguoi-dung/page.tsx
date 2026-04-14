@@ -278,35 +278,35 @@ export default function TrangNguoiDung() {
     e.preventDefault();
     if (!nguoiDungLienKet) return;
     const msg = validateTenant({
-      fullName: newTenantFullName,
-      phone: newTenantPhone,
-      idNumber: newTenantIdNumber,
-      address: newTenantAddress,
-      email: newTenantEmail,
+      fullName: hoTenKhachMoi,
+      phone: sdtKhachMoi,
+      idNumber: cccdKhachMoi,
+      address: diaChiKhachMoi,
+      email: emailKhachMoi,
     });
     if (msg) {
-      setNewTenantError(msg);
+      setLoiKhachMoi(msg);
       notify(msg, "error");
       return;
     }
-    setNewTenantError("");
+    setLoiKhachMoi("");
     try {
       await api.post("/khach-thue", {
-        fullName: newTenantFullName.trim(),
-        phone: newTenantPhone.trim() || null,
-        idNumber: newTenantIdNumber.trim() || null,
-        address: newTenantAddress.trim() || null,
-        email: newTenantEmail.trim() || null,
+        fullName: hoTenKhachMoi.trim(),
+        phone: sdtKhachMoi.trim() || null,
+        idNumber: cccdKhachMoi.trim() || null,
+        address: diaChiKhachMoi.trim() || null,
+        email: emailKhachMoi.trim() || null,
         userId: nguoiDungLienKet.id,
       });
       notify("Tạo khách thuê và gắn tài khoản thành công", "success");
       setNguoiDungLienKet(null);
       setCheDoLienKet("existing");
-      setNewTenantFullName("");
-      setNewTenantPhone("");
-      setNewTenantIdNumber("");
-      setNewTenantAddress("");
-      setNewTenantEmail("");
+      setHoTenKhachMoi("");
+      setSdtKhachMoi("");
+      setCccdKhachMoi("");
+      setDiaChiKhachMoi("");
+      setEmailKhachMoi("");
       tai();
       taiKhachThue();
     } catch (err: any) {
@@ -314,7 +314,7 @@ export default function TrangNguoiDung() {
         err?.response?.status === 403
           ? "Bạn không có quyền thao tác"
           : "Tạo khách thuê thất bại";
-      setNewTenantError(text);
+      setLoiKhachMoi(text);
       notify(text, "error");
     }
   };
@@ -352,7 +352,7 @@ export default function TrangNguoiDung() {
   };
 
   const filtered = danhSach.filter((u) => {
-    const q = query.trim().toLowerCase();
+    const q = tuKhoa.trim().toLowerCase();
     const matchesQuery = !q
       ? true
       : u.username?.toLowerCase().includes(q) ||
@@ -371,7 +371,7 @@ export default function TrangNguoiDung() {
           <div className="grid grid-3">
             <input
               placeholder="Tìm kiếm theo tài khoản, họ tên, chức vụ..."
-              value={query}
+              value={tuKhoa}
               onChange={(e) => setTuKhoa(e.target.value)}
             />
             <select
@@ -657,45 +657,45 @@ export default function TrangNguoiDung() {
                     <label className="field-label">Họ tên</label>
                     <input
                       placeholder="Họ tên"
-                      value={newTenantFullName}
-                      onChange={(e) => setNewTenantFullName(e.target.value)}
+                      value={hoTenKhachMoi}
+                      onChange={(e) => setHoTenKhachMoi(e.target.value)}
                     />
                   </div>
                   <div>
                     <label className="field-label">SĐT</label>
                     <input
                       placeholder="SĐT 9–11 số"
-                      value={newTenantPhone}
-                      onChange={(e) => setNewTenantPhone(e.target.value)}
+                      value={sdtKhachMoi}
+                      onChange={(e) => setSdtKhachMoi(e.target.value)}
                     />
                   </div>
                   <div>
                     <label className="field-label">CCCD/CMND</label>
                     <input
                       placeholder="CCCD/CMND"
-                      value={newTenantIdNumber}
-                      onChange={(e) => setNewTenantIdNumber(e.target.value)}
+                      value={cccdKhachMoi}
+                      onChange={(e) => setCccdKhachMoi(e.target.value)}
                     />
                   </div>
-                  <div>
+                  <div className="form-span-2">
                     <label className="field-label">Địa chỉ</label>
                     <input
-                      placeholder="Địa chỉ"
-                      value={newTenantAddress}
-                      onChange={(e) => setNewTenantAddress(e.target.value)}
+                      placeholder="Địa chỉ thường trú / tạm trú"
+                      value={diaChiKhachMoi}
+                      onChange={(e) => setDiaChiKhachMoi(e.target.value)}
                     />
                   </div>
                   <div className="form-span-2">
                     <label className="field-label">Email</label>
                     <input
                       placeholder="Email (không bắt buộc)"
-                      value={newTenantEmail}
-                      onChange={(e) => setNewTenantEmail(e.target.value)}
+                      value={emailKhachMoi}
+                      onChange={(e) => setEmailKhachMoi(e.target.value)}
                     />
                   </div>
-                  {newTenantError && (
+                  {loiKhachMoi && (
                     <div className="form-error form-span-2">
-                      {newTenantError}
+                      {loiKhachMoi}
                     </div>
                   )}
                   <div
@@ -708,7 +708,7 @@ export default function TrangNguoiDung() {
                       onClick={() => {
                         setNguoiDungLienKet(null);
                         setCheDoLienKet("existing");
-                        setNewTenantError("");
+                        setLoiKhachMoi("");
                       }}
                     >
                       <IconTimes /> Hủy
@@ -786,7 +786,7 @@ export default function TrangNguoiDung() {
                 <button className="btn btn-secondary" onClick={cancelEdit}>
                   <IconTimes /> Hủy
                 </button>
-                <button className="btn" onClick={saveEdit}>
+                <button className="btn" onClick={luuSua}>
                   <IconCheck /> Lưu
                 </button>
               </div>

@@ -1922,7 +1922,7 @@ textarea:disabled:focus {
 }
 
 .contract-create-modal {
-  max-width: min(900px, 94vw);
+  max-width: min(980px, 96vw);
 }
 
 .contract-create-modal .card-header {
@@ -1969,6 +1969,111 @@ textarea:disabled:focus {
 
 .contract-create-modal .form-section-fields.form-section-full {
   grid-column: 1 / -1;
+}
+
+/* Khu + Phòng: hai cột cân bằng */
+.contract-create-modal .form-section-fields--khu-phong {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Thời hạn: bắt đầu | khoảng thời gian | kết thúc một hàng */
+.contract-create-modal .form-section-fields--thoi-han-ba-cot {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .contract-create-modal .form-section-fields--thoi-han-ba-cot {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-create-modal .form-section-fields--khu-phong {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contract-create-khach-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-bottom: 10px;
+}
+
+.contract-create-khach-toolbar .card-subtitle {
+  margin: 0;
+  flex: 1;
+  min-width: min(100%, 220px);
+  line-height: 1.45;
+}
+
+.contract-create-khach-toolbar .btn {
+  flex-shrink: 0;
+}
+
+.hop-dong-create-khach-bang-wrap {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  overflow: auto;
+  max-height: min(240px, 34vh);
+  background: #fff;
+}
+
+.hop-dong-create-khach-bang-wrap > .hop-dong-khach-preview-empty {
+  padding: 18px 14px;
+}
+
+.hop-dong-create-khach-bang {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.hop-dong-create-khach-bang th,
+.hop-dong-create-khach-bang td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.hop-dong-create-khach-bang th {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  background: var(--bg-secondary, #f8fafc);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+.hop-dong-create-khach-bang tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.hop-dong-create-khach-bang .hop-dong-create-khach-ten {
+  font-weight: 600;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.hop-dong-create-khach-bang .hop-dong-create-khach-so {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: #475569;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hop-dong-create-khach-bang .hop-dong-create-khach-vai-tro {
+  width: 108px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .contract-create-modal .form-actions {
@@ -2708,10 +2813,6 @@ table {
   background: #fff;
 }
 
-.contracts-table-fit.table-wrap .table {
-  min-width: 95%;
-}
-
 .table-wrap.table-nowrap .table {
   min-width: 1000px;
 }
@@ -2719,6 +2820,24 @@ table {
 .table-wrap.table-nowrap .table td,
 .table-wrap.table-nowrap .table th {
   white-space: nowrap;
+}
+
+/* Trang quản lý hợp đồng: bảng nhiều cột — full width, cho phép xuống dòng */
+.container.hop-dong-trang-container {
+  max-width: 95vw;
+  width: 100%;
+}
+
+.table-wrap.table-nowrap.contracts-table-fit .table {
+  min-width: 100%;
+  width: 100%;
+}
+
+.table-wrap.table-nowrap.contracts-table-fit .table td,
+.table-wrap.table-nowrap.contracts-table-fit .table th {
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: top;
 }
 
 .table thead th {

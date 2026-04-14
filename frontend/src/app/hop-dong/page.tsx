@@ -440,7 +440,7 @@ export default function TrangHopDong() {
     });
   };
 
-  /** Hiển thị dạng thẻ: đại diện xếp trên, kèm SĐT/CCCD phụ. */
+  /** Bảng tóm tắt khách đã chọn (họ tên / SĐT / CCCD / đại diện). */
   const danhSachKhachHienThi = useMemo(() => {
     const rows = selectedTenantIds.map((id) => {
       const t = tenants.find((x) => x.id === id);
@@ -448,7 +448,8 @@ export default function TrangHopDong() {
       return {
         id,
         name: t?.fullName?.trim() || `Khách #${id}`,
-        extra: (t?.phone || t?.idNumber || "").trim(),
+        phone: (t?.phone || "").trim() || "—",
+        idNumber: (t?.idNumber || "").trim() || "—",
         laDaiDien,
       };
     });
@@ -544,7 +545,7 @@ export default function TrangHopDong() {
   return (
     <TrangBaoVe>
       <ThanhDieuHuong />
-      <div className="container">
+      <div className="container hop-dong-trang-container">
         <h2>Quản lý hợp đồng</h2>
         <div className="card">
           <div className="grid grid-2">
@@ -738,8 +739,8 @@ export default function TrangHopDong() {
               <form onSubmit={create} className="form-grid">
                 <div className="form-section form-span-2">
                   <h4 className="form-section-title">Khu, phòng &amp; khách</h4>
-                  <div className="form-section-fields">
-                    <div className="form-section-full">
+                  <div className="form-section-fields form-section-fields--khu-phong">
+                    <div>
                       <label className="field-label">
                         Khu <span className="required">*</span>
                       </label>
@@ -794,61 +795,11 @@ export default function TrangHopDong() {
                         Khách thuê (có thể nhiều người){" "}
                         <span className="required">*</span>
                       </label>
-                      <p className="card-subtitle" style={{ marginBottom: 8 }}>
-                        Mở cửa sổ chọn danh sách người ở cùng phòng và người{" "}
-                        <strong>đại diện</strong> ký hợp đồng.
-                      </p>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 10,
-                        }}
-                      >
-                        <div className="hop-dong-khach-preview">
-                          {selectedTenantIds.length === 0 ? (
-                            <div className="hop-dong-khach-preview-empty">
-                              <span className="text-muted">
-                                Chưa chọn khách — bấm nút bên dưới để thêm
-                              </span>
-                            </div>
-                          ) : (
-                            <ul
-                              className="hop-dong-khach-chip-list"
-                              aria-label="Khách đã chọn"
-                            >
-                              {danhSachKhachHienThi.map((row) => (
-                                <li
-                                  key={row.id}
-                                  className={
-                                    row.laDaiDien
-                                      ? "hop-dong-khach-chip hop-dong-khach-chip--dai-dien"
-                                      : "hop-dong-khach-chip"
-                                  }
-                                >
-                                  <div className="hop-dong-khach-chip-body">
-                                    <span className="hop-dong-khach-chip-name">
-                                      {row.name}
-                                    </span>
-                                    {row.extra ? (
-                                      <span className="hop-dong-khach-chip-meta">
-                                        {row.extra}
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                  {row.laDaiDien ? (
-                                    <span
-                                      className="hop-dong-khach-chip-badge"
-                                      title="Người ký và chịu trách nhiệm chính"
-                                    >
-                                      Đại diện
-                                    </span>
-                                  ) : null}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
+                      <div className="contract-create-khach-toolbar">
+                        <p className="card-subtitle">
+                          Chọn trong cửa sổ: nhiều người cùng phòng, một người{" "}
+                          <strong>đại diện</strong> ký hợp đồng.
+                        </p>
                         <button
                           type="button"
                           className="btn btn-secondary"
@@ -859,6 +810,72 @@ export default function TrangHopDong() {
                         >
                           Chọn khách thuê…
                         </button>
+                      </div>
+                      <div className="hop-dong-create-khach-bang-wrap">
+                        {selectedTenantIds.length === 0 ? (
+                          <div className="hop-dong-khach-preview-empty">
+                            <span className="text-muted">
+                              Chưa chọn — bấm nút Chọn khách thuê… phía trên
+                            </span>
+                          </div>
+                        ) : (
+                          <table className="hop-dong-create-khach-bang">
+                            <thead>
+                              <tr>
+                                <th scope="col">Họ tên</th>
+                                <th scope="col">SĐT</th>
+                                <th scope="col">CCCD</th>
+                                <th
+                                  scope="col"
+                                  className="hop-dong-create-khach-vai-tro"
+                                >
+                                  Vai trò
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {danhSachKhachHienThi.map((row) => (
+                                <tr key={row.id}>
+                                  <td className="hop-dong-create-khach-ten">
+                                    {row.name}
+                                  </td>
+                                  <td
+                                    className="hop-dong-create-khach-so"
+                                    title={
+                                      row.phone !== "—"
+                                        ? row.phone
+                                        : undefined
+                                    }
+                                  >
+                                    {row.phone}
+                                  </td>
+                                  <td
+                                    className="hop-dong-create-khach-so"
+                                    title={
+                                      row.idNumber !== "—"
+                                        ? row.idNumber
+                                        : undefined
+                                    }
+                                  >
+                                    {row.idNumber}
+                                  </td>
+                                  <td className="hop-dong-create-khach-vai-tro">
+                                    {row.laDaiDien ? (
+                                      <span
+                                        className="hop-dong-khach-chip-badge"
+                                        title="Người ký và chịu trách nhiệm chính"
+                                      >
+                                        Đại diện
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted">—</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
                       </div>
                       {availableTenantsForNewContract.length === 0 && (
                         <p className="card-subtitle" style={{ marginTop: 4 }}>
@@ -871,7 +888,7 @@ export default function TrangHopDong() {
 
                 <div className="form-section form-span-2">
                   <h4 className="form-section-title">Thời hạn hợp đồng</h4>
-                  <div className="form-section-fields">
+                  <div className="form-section-fields form-section-fields--thoi-han-ba-cot">
                     <div>
                       <label className="field-label">
                         Ngày bắt đầu <span className="required">*</span>
@@ -902,7 +919,7 @@ export default function TrangHopDong() {
                         <option value="24">2 năm</option>
                       </select>
                     </div>
-                    <div className="form-section-full">
+                    <div>
                       <label className="field-label">
                         Ngày kết thúc <span className="required">*</span>
                       </label>
@@ -984,7 +1001,7 @@ export default function TrangHopDong() {
             >
               <div
                 className="modal-card"
-                style={{ maxWidth: "min(900px, 94vw)", width: "100%" }}
+                style={{ maxWidth: "min(980px, 96vw)", width: "100%" }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="chon-khach-title"
