@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,8 +26,8 @@ public class FileKhachThueService {
             "image/jpeg", "image/png", "image/gif", "image/webp"
     };
 
-    /** Lưu file ảnh vào resources/static/tenant-files/tenants và trả về URL tương đối để FE truy cập. */
-    public String luuAnh(MultipartFile file) throws IOException {
+    /** Lưu file ảnh vào thư mục upload/tenants và trả về URL tương đối để FE truy cập. Lỗi ghi đĩa bọc {@link UncheckedIOException}. */
+    public String luuAnh(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return null;
         }
@@ -38,11 +40,17 @@ public class FileKhachThueService {
         }
         Path thuMucGoc = Paths.get(uploadDir).toAbsolutePath().normalize();
         Path thuMucKhach = thuMucGoc.resolve(TENANTS_SUBDIR);
-        Files.createDirectories(thuMucKhach);
         String duoi = layDuoiFile(loaiNoiDung);
         String tenFile = UUID.randomUUID().toString() + duoi;
         Path dich = thuMucKhach.resolve(tenFile);
-        Files.copy(file.getInputStream(), dich, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            Files.createDirectories(thuMucKhach);
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, dich, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Không ghi được file ảnh", e);
+        }
         return "/tenant-files/" + TENANTS_SUBDIR + "/" + tenFile;
     }
 

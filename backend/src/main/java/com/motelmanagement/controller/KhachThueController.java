@@ -1,5 +1,6 @@
 package com.motelmanagement.controller;
 
+import java.io.UncheckedIOException;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -26,8 +27,10 @@ import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.FileKhachThueService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /** API quản lý khách thuê (CRUD, gắn tài khoản). */
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/khach-thue")
@@ -80,14 +83,14 @@ public class KhachThueController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<?> taoVoiFile(
-            @RequestParam String fullName,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String idNumber,
-            @RequestParam(required = false) String address,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) MultipartFile portrait,
-            @RequestParam(required = false) MultipartFile idCard) {
+            @RequestParam("fullName") String fullName,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "idNumber", required = false) String idNumber,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "portrait", required = false) MultipartFile portrait,
+            @RequestParam(value = "idCard", required = false) MultipartFile idCard) {
         try {
             KhachThue khachThue = new KhachThue();
             khachThue.setHoTen(fullName != null ? fullName.trim() : "");
@@ -107,7 +110,11 @@ public class KhachThueController {
             return ResponseEntity.ok(khachThueRepository.save(khachThue));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UncheckedIOException e) {
+            log.error("taoVoiFile: ghi file anh that bai", e);
+            return ResponseEntity.internalServerError().body("Không ghi được file ảnh");
         } catch (Exception e) {
+            log.error("taoVoiFile: luu khach thue hoac file that bai", e);
             return ResponseEntity.internalServerError().body("Lưu ảnh thất bại");
         }
     }
@@ -132,6 +139,62 @@ public class KhachThueController {
                     return ResponseEntity.ok(khachThueRepository.save(hienTai));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<?> capNhatVoiFile(
+            @PathVariable("id") Long ma,
+            @RequestParam("fullName") String fullName,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "idNumber", required = false) String idNumber,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "userId", required = false) String userIdStr,
+            @RequestParam(value = "portrait", required = false) MultipartFile portrait,
+            @RequestParam(value = "idCard", required = false) MultipartFile idCard) {
+        NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
+        if (nguoiDung == null || nguoiDung.getVaiTro() != VaiTro.ADMIN) {
+            return ResponseEntity.status(403).build();
+        }
+        try {
+            return khachThueRepository.findById(ma)
+                    .map(hienTai -> {
+                        hienTai.setHoTen(fullName != null ? fullName.trim() : "");
+                        hienTai.setSoDienThoai(phone != null && !phone.isBlank() ? phone.trim() : null);
+                        hienTai.setSoGiayTo(idNumber != null && !idNumber.isBlank() ? idNumber.trim() : null);
+                        hienTai.setDiaChi(address != null && !address.isBlank() ? address.trim() : null);
+                        hienTai.setEmail(email != null && !email.isBlank() ? email.trim() : null);
+                        if (userIdStr != null) {
+                            if (userIdStr.isBlank()) {
+                                hienTai.setNguoiDung(null);
+                            } else {
+                                try {
+                                    Long uid = Long.parseLong(userIdStr.trim());
+                                    hienTai.setNguoiDung(nguoiDungRepository.findById(uid).orElse(null));
+                                } catch (NumberFormatException ignored) {
+                                    hienTai.setNguoiDung(null);
+                                }
+                            }
+                        }
+                        if (portrait != null && !portrait.isEmpty()) {
+                            hienTai.setAnhChanDung(fileKhachThueService.luuAnh(portrait));
+                        }
+                        if (idCard != null && !idCard.isEmpty()) {
+                            hienTai.setAnhGiayTo(fileKhachThueService.luuAnh(idCard));
+                        }
+                        return ResponseEntity.ok(khachThueRepository.save(hienTai));
+                    })
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (UncheckedIOException e) {
+            log.error("capNhatVoiFile: ghi file anh that bai", e);
+            return ResponseEntity.internalServerError().body("Không ghi được file ảnh");
+        } catch (Exception e) {
+            log.error("capNhatVoiFile: cap nhat khach thue hoac file that bai", e);
+            return ResponseEntity.internalServerError().body("Lưu ảnh thất bại");
+        }
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.motelmanagement.domain;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
@@ -27,15 +28,19 @@ public class KhachThue {
     private Long id;
 
     @Column(name = "ho_ten", nullable = false, length = 100)
+    @JsonAlias("fullName")
     private String hoTen;
 
     @Column(name = "so_dien_thoai", length = 20)
+    @JsonAlias("phone")
     private String soDienThoai;
 
     @Column(name = "so_giay_to", length = 50)
+    @JsonAlias("idNumber")
     private String soGiayTo;
 
     @Column(name = "dia_chi", length = 200)
+    @JsonAlias("address")
     private String diaChi;
 
     @Column(name = "email", length = 100)
@@ -51,5 +56,6 @@ public class KhachThue {
 
     @OneToOne
     @JoinColumn(name = "nguoi_dung_id")
+    @JsonAlias("user")
     private NguoiDung nguoiDung;
 }

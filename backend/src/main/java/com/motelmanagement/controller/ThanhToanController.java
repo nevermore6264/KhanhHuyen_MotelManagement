@@ -41,7 +41,8 @@ public class ThanhToanController {
 
     @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('TENANT')")
-    public List<ThanhToan> layThanhToanGanDayCuaToi(@RequestParam(defaultValue = "10") int gioiHan) {
+    public List<ThanhToan> layThanhToanGanDayCuaToi(
+            @RequestParam(value = "gioiHan", defaultValue = "10") int gioiHan) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) return List.of();
         KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());

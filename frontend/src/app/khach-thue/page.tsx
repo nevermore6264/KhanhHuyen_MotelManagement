@@ -130,6 +130,12 @@ export default function TrangKhachThue() {
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
   const [portraitPreview, setPortraitPreview] = useState<string | null>(null);
   const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
+  const [editPortraitFile, setEditPortraitFile] = useState<File | null>(null);
+  const [editIdCardFile, setEditIdCardFile] = useState<File | null>(null);
+  const [editPortraitPreview, setEditPortraitPreview] = useState<string | null>(
+    null,
+  );
+  const [editIdCardPreview, setEditIdCardPreview] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
@@ -216,9 +222,9 @@ export default function TrangKhachThue() {
         if (userId) formData.append("userId", userId);
         if (portraitFile) formData.append("portrait", portraitFile);
         if (idCardFile) formData.append("idCard", idCardFile);
-        await api.post("/khach-thue", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        // Khong set Content-Type: multipart/form-data thu cong — thieu boundary
+        // thi Spring khong doc duoc part; de axios/browser tu gan boundary.
+        await api.post("/khach-thue", formData);
       } else {
         await api.post("/khach-thue", {
           fullName: fullName.trim(),
@@ -283,6 +289,12 @@ export default function TrangKhachThue() {
   };
 
   const startEdit = (tenant: Tenant) => {
+    if (editPortraitPreview) URL.revokeObjectURL(editPortraitPreview);
+    if (editIdCardPreview) URL.revokeObjectURL(editIdCardPreview);
+    setEditPortraitFile(null);
+    setEditIdCardFile(null);
+    setEditPortraitPreview(null);
+    setEditIdCardPreview(null);
     setEditing(tenant);
     setEditFullName(tenant.fullName || "");
     setEditPhone(tenant.phone || "");
@@ -308,14 +320,28 @@ export default function TrangKhachThue() {
     }
     setEditError("");
     try {
-      await api.put(`/khach-thue/${editing.id}`, {
-        fullName: editFullName.trim(),
-        phone: editPhone.trim() || null,
-        idNumber: editIdNumber.trim() || null,
-        address: editAddress.trim() || null,
-        email: editEmail.trim() || null,
-        user: editUserId ? { id: Number(editUserId) } : null,
-      });
+      const hasEditFiles = !!(editPortraitFile || editIdCardFile);
+      if (hasEditFiles) {
+        const formData = new FormData();
+        formData.append("fullName", editFullName.trim());
+        formData.append("phone", editPhone.trim() || "");
+        formData.append("idNumber", editIdNumber.trim() || "");
+        formData.append("address", editAddress.trim() || "");
+        formData.append("email", editEmail.trim() || "");
+        formData.append("userId", editUserId || "");
+        if (editPortraitFile) formData.append("portrait", editPortraitFile);
+        if (editIdCardFile) formData.append("idCard", editIdCardFile);
+        await api.put(`/khach-thue/${editing.id}`, formData);
+      } else {
+        await api.put(`/khach-thue/${editing.id}`, {
+          fullName: editFullName.trim(),
+          phone: editPhone.trim() || null,
+          idNumber: editIdNumber.trim() || null,
+          address: editAddress.trim() || null,
+          email: editEmail.trim() || null,
+          user: editUserId ? { id: Number(editUserId) } : null,
+        });
+      }
       notify("Cập nhật khách thuê thành công", "success");
     } catch (err: any) {
       const message =
@@ -326,6 +352,12 @@ export default function TrangKhachThue() {
       notify(message, "error");
       return;
     }
+    if (editPortraitPreview) URL.revokeObjectURL(editPortraitPreview);
+    if (editIdCardPreview) URL.revokeObjectURL(editIdCardPreview);
+    setEditPortraitFile(null);
+    setEditIdCardFile(null);
+    setEditPortraitPreview(null);
+    setEditIdCardPreview(null);
     setEditing(null);
     setEditFullName("");
     setEditPhone("");
@@ -338,6 +370,12 @@ export default function TrangKhachThue() {
   };
 
   const cancelEdit = () => {
+    if (editPortraitPreview) URL.revokeObjectURL(editPortraitPreview);
+    if (editIdCardPreview) URL.revokeObjectURL(editIdCardPreview);
+    setEditPortraitFile(null);
+    setEditIdCardFile(null);
+    setEditPortraitPreview(null);
+    setEditIdCardPreview(null);
     setEditing(null);
     setEditFullName("");
     setEditPhone("");
@@ -347,6 +385,31 @@ export default function TrangKhachThue() {
     setEditUserId("");
     setEditUserQuery("");
     setEditError("");
+  };
+
+  const onEditPortraitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (editPortraitPreview) URL.revokeObjectURL(editPortraitPreview);
+      setEditPortraitFile(file);
+      setEditPortraitPreview(URL.createObjectURL(file));
+    } else {
+      if (editPortraitPreview) URL.revokeObjectURL(editPortraitPreview);
+      setEditPortraitFile(null);
+      setEditPortraitPreview(null);
+    }
+  };
+  const onEditIdCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (editIdCardPreview) URL.revokeObjectURL(editIdCardPreview);
+      setEditIdCardFile(file);
+      setEditIdCardPreview(URL.createObjectURL(file));
+    } else {
+      if (editIdCardPreview) URL.revokeObjectURL(editIdCardPreview);
+      setEditIdCardFile(null);
+      setEditIdCardPreview(null);
+    }
   };
 
   const askRemove = (tenant: Tenant) => {
@@ -777,6 +840,60 @@ export default function TrangKhachThue() {
                     value={editAddress}
                     onChange={(e) => setEditAddress(e.target.value)}
                   />
+                </div>
+                <div>
+                  <label className="field-label">Ảnh chân dung</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={onEditPortraitChange}
+                    className="file-input"
+                  />
+                  <div className="upload-preview">
+                    {(editPortraitPreview || editing.portraitImagePath) && (
+                      <img
+                        key={
+                          editPortraitPreview ??
+                          editing.portraitImagePath ??
+                          "portrait"
+                        }
+                        src={
+                          editPortraitPreview ?? editing.portraitImagePath ?? ""
+                        }
+                        alt="Chân dung"
+                      />
+                    )}
+                    {!editPortraitPreview && !editing.portraitImagePath && (
+                      <span style={{ opacity: 0.75, fontSize: "0.9rem" }}>
+                        Chưa có ảnh — chọn file để thêm
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="field-label">Ảnh CCCD/CMND</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={onEditIdCardChange}
+                    className="file-input"
+                  />
+                  <div className="upload-preview">
+                    {(editIdCardPreview || editing.idCardImagePath) && (
+                      <img
+                        key={
+                          editIdCardPreview ?? editing.idCardImagePath ?? "id"
+                        }
+                        src={editIdCardPreview ?? editing.idCardImagePath ?? ""}
+                        alt="CCCD/CMND"
+                      />
+                    )}
+                    {!editIdCardPreview && !editing.idCardImagePath && (
+                      <span style={{ opacity: 0.75, fontSize: "0.9rem" }}>
+                        Chưa có ảnh — chọn file để thêm
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">Gán tài khoản</label>

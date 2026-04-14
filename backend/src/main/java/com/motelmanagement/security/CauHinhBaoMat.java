@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,15 @@ public class CauHinhBaoMat {
 
     public CauHinhBaoMat(BoLocJwt boLocJwt) {
         this.boLocJwt = boLocJwt;
+    }
+
+    /**
+     * File ảnh phục vụ qua /tenant-files/ — trình duyệt không gửi header JWT khi tải ảnh.
+     * {@code web.ignoring()} bỏ qua toàn bộ SecurityFilterChain (tránh 403 dù đã permitAll).
+     */
+    @Bean
+    public WebSecurityCustomizer boQuaFileKhachThueTinh() {
+        return (web) -> web.ignoring().requestMatchers("/tenant-files/**");
     }
 
     @Bean
