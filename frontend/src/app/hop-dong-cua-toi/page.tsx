@@ -6,7 +6,11 @@ import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import { IconEye, IconDownload, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
-import { buildContractDocx } from "@/lib/contractDocx";
+import {
+  chuanHoaDanhSachHopDongTuApi,
+  chuanHoaHopDongTuApi,
+} from "@/lib/chuanHoaHopDongTuApi";
+import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import { useToast } from "@/components/NhaCungCapToast";
 
@@ -22,12 +26,30 @@ type Contract = {
   id: number;
   room?: Room;
   tenant?: Tenant;
+  coThue?: (Tenant & { laDaiDien?: boolean })[];
   startDate?: string;
   endDate?: string;
   status?: string;
   deposit?: number;
   rent?: number;
 };
+
+function hopDongChoDocx(c: Contract): ContractForDocx {
+  return {
+    id: c.id,
+    room: c.room,
+    tenant: c.tenant,
+    coTenants: c.coThue?.map((m) => ({
+      fullName: m.fullName,
+      idNumber: m.idNumber,
+      laDaiDien: m.laDaiDien,
+    })),
+    startDate: c.startDate,
+    endDate: c.endDate,
+    deposit: c.deposit,
+    rent: c.rent,
+  };
+}
 
 const contractStatusLabel = (value?: string) => {
   switch (value) {
@@ -72,13 +94,15 @@ export default function TrangHopDongCuaToi() {
   const { notify } = useToast();
 
   useEffect(() => {
-    api.get("/hop-dong/cua-toi").then((res) => setItems(res.data || []));
+    api
+      .get("/hop-dong/cua-toi")
+      .then((res) => setItems(chuanHoaDanhSachHopDongTuApi(res.data || [])));
   }, []);
 
   const fetchContractForDoc = async (id: number): Promise<Contract | null> => {
     try {
       const res = await api.get(`/hop-dong/cua-toi/${id}`);
-      return res.data;
+      return chuanHoaHopDongTuApi(res.data as Record<string, unknown>);
     } catch {
       return null;
     }
@@ -101,7 +125,7 @@ export default function TrangHopDongCuaToi() {
     const el = previewContainerRef.current;
     setPreviewLoading(true);
     el.innerHTML = "";
-    buildContractDocx(previewContract)
+    buildContractDocx(hopDongChoDocx(previewContract))
       .then((blob) => renderAsync(blob, el))
       .then(() => setPreviewLoading(false))
       .catch(() => setPreviewLoading(false));
@@ -116,7 +140,7 @@ export default function TrangHopDongCuaToi() {
         notify("Không thể tải chi tiết hợp đồng.", "error");
         return;
       }
-      const blob = await buildContractDocx(full);
+      const blob = await buildContractDocx(hopDongChoDocx(full));
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

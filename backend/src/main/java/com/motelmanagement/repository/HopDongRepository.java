@@ -28,7 +28,7 @@ public interface HopDongRepository extends JpaRepository<HopDong, Long> {
     boolean khachCoTrongHopDong(@Param("hid") Long hid, @Param("kid") Long kid);
 
     @Query(
-            "SELECT COUNT(h) FROM HopDong h LEFT JOIN h.thanhVien tv "
+            "SELECT COUNT(DISTINCT h.id) FROM HopDong h LEFT JOIN h.thanhVien tv "
                     + "WHERE h.trangThai = :tt AND (h.khachThue.id = :tid OR tv.khachThue.id = :tid)")
     long demHopDongActiveCoKhach(@Param("tid") Long tid, @Param("tt") TrangThaiHopDong tt);
 }

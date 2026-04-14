@@ -95,23 +95,23 @@ export function chuanHoaHopDongTuApi(raw: Record<string, unknown>): HopDongChuan
     raw.khachThue as Record<string, unknown> | undefined,
   );
   const tvList = (raw.thanhVien as Record<string, unknown>[] | undefined) ?? [];
-  let coThue: ThanhVienHopDong[] = tvList
-    .map((tv) => {
-      const k = chuanHoaKhachThueTuApi(
-        tv.khachThue as Record<string, unknown> | undefined,
-      );
-      if (!k) return null;
-      return { ...k, laDaiDien: Boolean(tv.laDaiDien) };
-    })
-    .filter((x): x is ThanhVienHopDong => x != null);
-  if (coThue.length === 0 && tenant) {
-    coThue = [{ ...tenant, laDaiDien: true }];
+  const coThue: ThanhVienHopDong[] = [];
+  for (const tv of tvList) {
+    const k = chuanHoaKhachThueTuApi(
+      tv.khachThue as Record<string, unknown> | undefined,
+    );
+    if (!k) continue;
+    coThue.push({ ...k, laDaiDien: Boolean(tv.laDaiDien) });
+  }
+  let coThueHienThi = coThue;
+  if (coThueHienThi.length === 0 && tenant) {
+    coThueHienThi = [{ ...tenant, laDaiDien: true }];
   }
   return {
     id: Number(raw.id),
     room,
     tenant,
-    coThue,
+    coThue: coThueHienThi,
     startDate: formatNgayApi(raw.ngayBatDau ?? raw.startDate),
     endDate: formatNgayApi(raw.ngayKetThuc ?? raw.endDate),
     status: String(raw.trangThai ?? raw.status ?? ""),

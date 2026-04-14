@@ -19,6 +19,7 @@ import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import { IconReceipt, IconFile, IconHome, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { chuanHoaDanhSachHopDongTuApi } from "@/lib/chuanHoaHopDongTuApi";
 
 ChartJS.register(
   CategoryScale,
@@ -177,7 +178,9 @@ export default function TrangTongQuan() {
     if (isTenant) {
       api
         .get("/hop-dong/cua-toi")
-        .then((res) => setMyContracts(res.data || []))
+        .then((res) =>
+          setMyContracts(chuanHoaDanhSachHopDongTuApi(res.data || [])),
+        )
         .catch(() => setMyContracts([]));
       api
         .get("/thanh-toan/cua-toi?gioiHan=10")

@@ -223,8 +223,19 @@ export default function TrangHopDong() {
       setError("Vui lòng chọn khu");
       return;
     }
-    if (!roomId || !tenantId) {
-      setError("Vui lòng chọn phòng và khách thuê");
+    if (!roomId) {
+      setError("Vui lòng chọn phòng");
+      return;
+    }
+    if (selectedTenantIds.length === 0) {
+      setError("Vui lòng chọn ít nhất một khách thuê");
+      return;
+    }
+    if (
+      daiDienTenantId == null ||
+      !selectedTenantIds.includes(daiDienTenantId)
+    ) {
+      setError("Vui lòng chọn người đại diện trong danh sách khách đã chọn");
       return;
     }
     const idKhu = Number(khuId);
@@ -264,8 +275,9 @@ export default function TrangHopDong() {
     setError("");
     try {
       await api.post("/hop-dong", {
-        room: roomId ? { id: Number(roomId) } : null,
-        tenant: tenantId ? { id: Number(tenantId) } : null,
+        phongId: Number(roomId),
+        khachThueIds: selectedTenantIds,
+        daiDienKhachThueId: daiDienTenantId,
         startDate,
         endDate,
         deposit: depositValue,
@@ -283,7 +295,8 @@ export default function TrangHopDong() {
     }
     setKhuId("");
     setRoomId("");
-    setTenantId("");
+    setSelectedTenantIds([]);
+    setDaiDienTenantId(null);
     setStartDate("");
     setDurationMonths("");
     setEndDate("");
@@ -297,7 +310,8 @@ export default function TrangHopDong() {
     setError("");
     setKhuId("");
     setRoomId("");
-    setTenantId("");
+    setSelectedTenantIds([]);
+    setDaiDienTenantId(null);
     setStartDate("");
     setDurationMonths("");
     setEndDate("");
@@ -311,7 +325,8 @@ export default function TrangHopDong() {
     setError("");
     setKhuId("");
     setRoomId("");
-    setTenantId("");
+    setSelectedTenantIds([]);
+    setDaiDienTenantId(null);
     setStartDate("");
     setDurationMonths("");
     setEndDate("");
@@ -326,23 +341,44 @@ export default function TrangHopDong() {
   const filtered = contracts.filter((c) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
+    const coTenantsHay = (c.coThue ?? [])
+      .map((m) => m.fullName?.toLowerCase() ?? "")
+      .join(" ");
     return (
       c.room?.code?.toLowerCase().includes(q) ||
       c.tenant?.fullName?.toLowerCase().includes(q) ||
+      coTenantsHay.includes(q) ||
       c.status?.toLowerCase().includes(q)
     );
   });
 
   /** Khách thuê đang có hợp đồng ACTIVE thì không cho chọn khi tạo hợp đồng mới */
-  const tenantIdsWithActiveContract = new Set(
-    contracts
-      .filter((c) => c.status === "ACTIVE")
-      .map((c) => c.tenant?.id)
-      .filter((id): id is number => id != null),
-  );
+  const tenantIdsWithActiveContract = new Set<number>();
+  for (const c of contracts) {
+    if (c.status !== "ACTIVE") continue;
+    if (c.tenant?.id != null) tenantIdsWithActiveContract.add(c.tenant.id);
+    for (const m of c.coThue ?? []) {
+      if (m.id != null) tenantIdsWithActiveContract.add(m.id);
+    }
+  }
   const availableTenantsForNewContract = tenants.filter(
     (t) => !tenantIdsWithActiveContract.has(t.id),
   );
+
+  const toggleTenantInContract = (id: number) => {
+    setSelectedTenantIds((prev) => {
+      const has = prev.includes(id);
+      const next = has ? prev.filter((x) => x !== id) : [...prev, id];
+      setDaiDienTenantId((dd) => {
+        if (!has) {
+          return dd == null ? id : dd;
+        }
+        if (dd !== id) return dd;
+        return next.length ? next[0]! : null;
+      });
+      return next;
+    });
+  };
 
   const openExtend = (contract: Contract) => {
     setExtendId(contract.id);
@@ -408,7 +444,7 @@ export default function TrangHopDong() {
     const el = previewContainerRef.current;
     setPreviewLoading(true);
     el.innerHTML = "";
-    buildContractDocx(previewContract)
+    buildContractDocx(hopDongChoDocx(previewContract))
       .then((blob) => renderAsync(blob, el))
       .then(() => setPreviewLoading(false))
       .catch(() => setPreviewLoading(false));
@@ -416,7 +452,7 @@ export default function TrangHopDong() {
 
   const downloadContractDoc = async (contract: Contract) => {
     try {
-      const blob = await buildContractDocx(contract);
+      const blob = await buildContractDocx(hopDongChoDocx(contract));
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -463,8 +499,23 @@ export default function TrangHopDong() {
             columns={[
               { header: "ID", render: (c) => c.id },
               { header: "Phòng", render: (c) => c.room?.code },
-              { header: "Khách", render: (c) => c.tenant?.fullName },
-              { header: "CCCD", render: (c) => c.tenant?.idNumber ?? "—" },
+              {
+                header: "Khách",
+                render: (c) => {
+                  const parts = (c.coThue ?? []).map((m) =>
+                    m.laDaiDien
+                      ? `${m.fullName} (đại diện)`
+                      : m.fullName || `—`,
+                  );
+                  return parts.length
+                    ? parts.join(", ")
+                    : c.tenant?.fullName ?? "—";
+                },
+              },
+              {
+                header: "CCCD (đại diện)",
+                render: (c) => c.tenant?.idNumber ?? "—",
+              },
               {
                 header: "Bắt đầu",
                 render: (c) => formatDateDMY(c.startDate),
@@ -660,21 +711,75 @@ export default function TrangHopDong() {
                         </p>
                       )}
                     </div>
-                    <div>
+                    <div className="form-section-full">
                       <label className="field-label">
-                        Khách thuê <span className="required">*</span>
+                        Khách thuê (có thể nhiều người){" "}
+                        <span className="required">*</span>
                       </label>
-                      <select
-                        value={tenantId}
-                        onChange={(e) => setTenantId(e.target.value)}
+                      <p className="card-subtitle" style={{ marginBottom: 8 }}>
+                        Chọn tất cả người ở cùng phòng; đánh dấu một người là{" "}
+                        <strong>đại diện</strong> ký hợp đồng và chịu trách
+                        nhiệm chính.
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                          maxHeight: 220,
+                          overflowY: "auto",
+                          padding: 8,
+                          border: "1px solid var(--border-color)",
+                          borderRadius: 8,
+                          background: "var(--bg-secondary)",
+                        }}
                       >
-                        <option value="">Chọn khách thuê</option>
-                        {availableTenantsForNewContract.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {tenantOptionLabel(t)}
-                          </option>
-                        ))}
-                      </select>
+                        {availableTenantsForNewContract.map((t) => {
+                          const checked = selectedTenantIds.includes(t.id);
+                          return (
+                            <label
+                              key={t.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                                flexWrap: "wrap",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleTenantInContract(t.id)}
+                              />
+                              <span style={{ flex: 1, minWidth: 0 }}>
+                                {tenantOptionLabel(t)}
+                              </span>
+                              {checked && (
+                                <label
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="daiDienHopDong"
+                                    checked={daiDienTenantId === t.id}
+                                    onChange={() =>
+                                      setDaiDienTenantId(t.id)
+                                    }
+                                  />
+                                  Đại diện
+                                </label>
+                              )}
+                            </label>
+                          );
+                        })}
+                      </div>
                       {availableTenantsForNewContract.length === 0 && (
                         <p className="card-subtitle" style={{ marginTop: 4 }}>
                           Tất cả khách thuê đều đang có hợp đồng hiệu lực.
