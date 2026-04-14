@@ -19,55 +19,43 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
-import { buildContractDocx } from "@/lib/contractDocx";
+import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import ChonKhuCombobox, { type MucKhu } from "@/components/ChonKhuCombobox";
+import {
+  chuanHoaDanhSachHopDongTuApi,
+  chuanHoaKhachThueTuApi,
+  chuanHoaPhongTuApiHopDong,
+  type HopDongChuan,
+  type RoomHopDong,
+  type TenantHopDong,
+} from "@/lib/chuanHoaHopDongTuApi";
 
-type Room = {
-  id: number;
-  code: string;
-  currentPrice?: number;
-  status?: string;
-  khuVucId?: number;
-};
+type Room = RoomHopDong;
+type Tenant = TenantHopDong;
+type Contract = HopDongChuan;
 
 type RawPhong = Record<string, unknown>;
 
-const chuanHoaPhongTuApi = (r: RawPhong): Room => {
-  const khu = r.khuVuc as { id?: number } | undefined;
-  const gia = r.giaHienTai ?? r.currentPrice;
-  const giaSo =
-    typeof gia === "number"
-      ? gia
-      : gia != null
-        ? Number(gia)
-        : undefined;
+const chuanHoaPhongTuApi = (r: RawPhong): Room =>
+  chuanHoaPhongTuApiHopDong(r);
+
+function hopDongChoDocx(c: Contract): ContractForDocx {
   return {
-    id: Number(r.id),
-    code: String(r.code ?? r.maPhong ?? ""),
-    currentPrice: Number.isFinite(giaSo) ? giaSo : undefined,
-    status: String(r.status ?? r.trangThai ?? ""),
-    khuVucId: khu?.id != null ? Number(khu.id) : undefined,
+    id: c.id,
+    room: c.room,
+    tenant: c.tenant,
+    coTenants: c.coThue?.map((m) => ({
+      fullName: m.fullName,
+      idNumber: m.idNumber,
+      laDaiDien: m.laDaiDien,
+    })),
+    startDate: c.startDate,
+    endDate: c.endDate,
+    deposit: c.deposit,
+    rent: c.rent,
   };
-};
-type Tenant = {
-  id: number;
-  fullName: string;
-  phone?: string;
-  idNumber?: string;
-  address?: string;
-  email?: string;
-};
-type Contract = {
-  id: number;
-  room?: Room;
-  tenant?: Tenant;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-  deposit?: number;
-  rent?: number;
-};
+}
 
 const contractStatusLabel = (value?: string) => {
   switch (value) {
@@ -150,7 +138,10 @@ export default function TrangHopDong() {
   const [khuId, setKhuId] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [roomId, setRoomId] = useState("");
-  const [tenantId, setTenantId] = useState("");
+  /** Khách thuê tham gia hợp đồng (một phòng có thể nhiều người). */
+  const [selectedTenantIds, setSelectedTenantIds] = useState<number[]>([]);
+  /** Người đại diện / chịu trách nhiệm chính — phải nằm trong selectedTenantIds. */
+  const [daiDienTenantId, setDaiDienTenantId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState("");
   const [durationMonths, setDurationMonths] = useState<"" | "6" | "12" | "24">(
     "",
@@ -180,7 +171,7 @@ export default function TrangHopDong() {
     try {
       if (isTenant) {
         const res = await api.get("/hop-dong/cua-toi");
-        setContracts(res.data);
+        setContracts(chuanHoaDanhSachHopDongTuApi(res.data));
         setRooms([]);
         setDanhSachKhu([]);
         setTenants([]);
@@ -192,7 +183,7 @@ export default function TrangHopDong() {
         api.get("/khu-vuc"),
         api.get("/khach-thue"),
       ]);
-      setContracts(cRes.data);
+      setContracts(chuanHoaDanhSachHopDongTuApi(cRes.data));
       setRooms(((rRes.data as RawPhong[]) || []).map(chuanHoaPhongTuApi));
       setDanhSachKhu(
         ((kRes.data as { id?: number; ten?: string }[]) || []).map((k) => ({
@@ -200,7 +191,11 @@ export default function TrangHopDong() {
           ten: String(k.ten ?? ""),
         })),
       );
-      setTenants(tRes.data);
+      setTenants(
+        ((tRes.data as Record<string, unknown>[]) || [])
+          .map((row) => chuanHoaKhachThueTuApi(row))
+          .filter((x): x is Tenant => x != null),
+      );
     } catch (err: any) {
       const message =
         err?.response?.status === 403
@@ -325,10 +320,7 @@ export default function TrangHopDong() {
   };
 
   const phongTrongTheoKhu = rooms.filter(
-    (r) =>
-      r.status === "AVAILABLE" &&
-      khuId &&
-      r.khuVucId === Number(khuId),
+    (r) => r.status === "AVAILABLE" && khuId && r.khuVucId === Number(khuId),
   );
 
   const filtered = contracts.filter((c) => {
@@ -611,10 +603,7 @@ export default function TrangHopDong() {
               <div className="card-header">
                 <div>
                   <h3>Tạo hợp đồng</h3>
-                  <p className="card-subtitle">
-                    Chọn khu → phòng trống trong khu → khách thuê, rồi điền thời
-                    hạn và tài chính
-                  </p>
+                  <p className="card-subtitle">Điền thông tin hợp đồng</p>
                 </div>
               </div>
               <form onSubmit={create} className="form-grid">

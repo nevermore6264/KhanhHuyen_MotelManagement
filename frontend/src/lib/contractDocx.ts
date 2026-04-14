@@ -21,6 +21,12 @@ export type ContractForDocx = {
     idNumber?: string;
     address?: string;
   };
+  /** Các thành viên cùng thuê (để ghi trong Word). */
+  coTenants?: {
+    fullName?: string;
+    idNumber?: string;
+    laDaiDien?: boolean;
+  }[];
   startDate?: string;
   endDate?: string;
   deposit?: number;
@@ -50,6 +56,8 @@ export async function buildContractDocx(
     formatDateDMY(contract.startDate) ||
     formatDateDMY(new Date().toISOString().slice(0, 10));
   const tenant = contract.tenant;
+  const coTenants = contract.coTenants ?? [];
+  const dongThueKhongDaiDien = coTenants.filter((c) => !c.laDaiDien);
   const roomCode = contract.room?.code || "—";
   const tienThue = formatMoney(contract.rent);
   const tienCoc = formatMoney(contract.deposit);
@@ -178,6 +186,33 @@ export async function buildContractDocx(
               }),
             ],
           }),
+          ...(coTenants.length > 1
+            ? [
+                new Paragraph({
+                  indent: { left: 720 },
+                  children: [
+                    new TextRun({
+                      text: `Người đại diện Bên B ký kết hợp đồng: ${tenant?.fullName ?? "—"}`,
+                      italics: true,
+                      size: 22,
+                    }),
+                  ],
+                }),
+              ]
+            : []),
+          ...(dongThueKhongDaiDien.length > 0
+            ? [
+                new Paragraph({
+                  indent: { left: 720 },
+                  children: [
+                    new TextRun({
+                      text: `Đồng thuê cùng phòng: ${dongThueKhongDaiDien.map((e) => e.fullName ?? "—").join(", ")}`,
+                      size: 22,
+                    }),
+                  ],
+                }),
+              ]
+            : []),
           new Paragraph({ text: "" }),
           new Paragraph({
             children: [
