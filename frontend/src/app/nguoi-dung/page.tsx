@@ -15,6 +15,7 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import ChonKhachThueCombobox from "@/components/ChonKhachThueCombobox";
 
 type User = {
   id: number;
@@ -602,19 +603,14 @@ export default function TrangNguoiDung() {
                     <label className="field-label">
                       Gắn với khách thuê (người được thuê)
                     </label>
-                    <select
+                    <ChonKhachThueCombobox
+                      danhSach={danhSachKhachThue}
                       value={idKhachThue}
-                      onChange={(e) => setIdKhachThue(e.target.value)}
-                    >
-                      <option value="">— Không gắn / Tạo mới —</option>
-                      {danhSachKhachThue
-                        .filter((t) => !t.user)
-                        .map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.fullName} (ID: {t.id})
-                          </option>
-                        ))}
-                    </select>
+                      onChange={setIdKhachThue}
+                      chiChuaCoTaiKhoan
+                      placeholderChuaChon="— Không gắn / Tạo mới —"
+                      placeholderTim="Tìm theo tên hoặc số điện thoại…"
+                    />
                     <p className="card-subtitle" style={{ marginTop: 4 }}>
                       Chọn khách thuê có sẵn trong hệ thống để tài khoản đăng
                       nhập được gắn với hồ sơ đó.
@@ -676,20 +672,14 @@ export default function TrangNguoiDung() {
                   <div className="form-grid">
                     <div className="form-span-2">
                       <label className="field-label">Khách thuê</label>
-                      <select
+                      <ChonKhachThueCombobox
+                        danhSach={danhSachKhachThue}
                         value={idKhachThueLienKet}
-                        onChange={(e) => setIdKhachThueLienKet(e.target.value)}
-                      >
-                        <option value="">— Không gắn —</option>
-                        {danhSachKhachThue.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.fullName} (ID: {t.id})
-                            {t.user?.id === nguoiDungLienKet.id
-                              ? " ✓ đang gắn"
-                              : ""}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={setIdKhachThueLienKet}
+                        idNguoiDungGan={nguoiDungLienKet.id}
+                        placeholderChuaChon="— Không gắn —"
+                        placeholderTim="Tìm theo tên hoặc số điện thoại…"
+                      />
                     </div>
                     {loiLienKet && (
                       <div className="form-error form-span-2">{loiLienKet}</div>
@@ -828,20 +818,14 @@ export default function TrangNguoiDung() {
                     <label className="field-label">
                       Gắn với khách thuê (người được thuê)
                     </label>
-                    <select
+                    <ChonKhachThueCombobox
+                      danhSach={danhSachKhachThue}
                       value={idKhachThueSua}
-                      onChange={(e) => setIdKhachThueSua(e.target.value)}
-                    >
-                      <option value="">— Không gắn —</option>
-                      {danhSachKhachThue.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.fullName} (ID: {t.id})
-                          {t.user?.id === phanTuDangSua?.id
-                            ? " ✓ đang gắn"
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setIdKhachThueSua}
+                      idNguoiDungGan={phanTuDangSua.id}
+                      placeholderChuaChon="— Không gắn —"
+                      placeholderTim="Tìm theo tên hoặc số điện thoại…"
+                    />
                   </div>
                 )}
                 {loiSua && <div className="form-error">{loiSua}</div>}
