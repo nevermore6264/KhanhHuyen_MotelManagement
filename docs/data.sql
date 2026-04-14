@@ -60,3 +60,15 @@ INSERT INTO phong (dien_tich, gia_hien_tai, ma_phong, tang, trang_thai, khu_vuc_
 (25.0, 3700000, 'J101', '1', 'AVAILABLE', 10),
 (26.0, 3800000, 'J102', '1', 'AVAILABLE', 10),
 (28.0, 4000000, 'J201', '2', 'AVAILABLE', 10);
+
+INSERT INTO khach_thue (ho_ten, so_dien_thoai, so_giay_to, email, dia_chi) VALUES
+('Nguyễn Văn An', '0912345678', '079123456789', 'an.nguyen01@gmail.com', 'Hải Châu, Đà Nẵng'),
+('Trần Thị Bích', '0987654321', '079987654321', 'bich.tran02@gmail.com', 'Thanh Khê, Đà Nẵng'),
+('Lê Minh Hoàng', '0901122334', '079456789123', 'hoang.le03@gmail.com', 'Ngũ Hành Sơn, Đà Nẵng'),
+('Phạm Thu Trang', '0933445566', '079321654987', 'trang.pham04@gmail.com', 'Liên Chiểu, Đà Nẵng'),
+('Hoàng Gia Huy', '0977889900', '079654123789', 'huy.hoang05@gmail.com', 'Sơn Trà, Đà Nẵng'),
+('Đỗ Thị Lan', '0922334455', '079789456123', 'lan.do06@gmail.com', 'Cẩm Lệ, Đà Nẵng'),
+('Vũ Quang Hưng', '0966554433', '079147258369', 'hung.vu07@gmail.com', 'Điện Bàn, Quảng Nam'),
+('Bùi Thị Mai', '0944221133', '079258369147', 'mai.bui08@gmail.com', 'Hội An, Quảng Nam'),
+('Đặng Quốc Bảo', '0399887766', '079369258147', 'bao.dang09@gmail.com', 'Tam Kỳ, Quảng Nam'),
+('Nguyễn Thảo Vy', '0355778899', '079951357246', 'vy.nguyen10@gmail.com', 'Duy Xuyên, Quảng Nam');
