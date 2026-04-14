@@ -251,7 +251,7 @@ export default function TrangNguoiDung() {
       );
       setIdKhachThueLienKet(linked ? String(linked.id) : "");
     }
-  }, [nguoiDungLienKet?.id, tenants]);
+  }, [nguoiDungLienKet?.id, danhSachKhachThue]);
 
   const saveLinkTenant = async () => {
     if (!nguoiDungLienKet) return;
@@ -500,7 +500,7 @@ export default function TrangNguoiDung() {
                   <p className="card-subtitle">Thiết lập thông tin đăng nhập</p>
                 </div>
               </div>
-              <form onSubmit={create} className="form-grid">
+              <form onSubmit={tao} className="form-grid">
                 <div>
                   <label className="field-label">Tài khoản</label>
                   <input
@@ -515,14 +515,14 @@ export default function TrangNguoiDung() {
                   <input
                     placeholder="Nhập mật khẩu"
                     type="password"
-                    value={password}
+                    value={matKhau}
                     onChange={(e) => setMatKhau(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">Chức vụ (Role)</label>
                   <select
-                    value={role}
+                    value={vaiTro}
                     onChange={(e) => {
                       setVaiTro(e.target.value);
                       if (e.target.value !== "TENANT") setIdKhachThue("");
@@ -533,7 +533,7 @@ export default function TrangNguoiDung() {
                     <option value="TENANT">Khách thuê</option>
                   </select>
                 </div>
-                {role === "TENANT" && (
+                {vaiTro === "TENANT" && (
                   <div className="form-span-2">
                     <label className="field-label">
                       Gắn với khách thuê (người được thuê)
@@ -543,7 +543,7 @@ export default function TrangNguoiDung() {
                       onChange={(e) => setIdKhachThue(e.target.value)}
                     >
                       <option value="">— Không gắn / Tạo mới —</option>
-                      {tenants
+                      {danhSachKhachThue
                         .filter((t) => !t.user)
                         .map((t) => (
                           <option key={t.id} value={t.id}>
@@ -557,7 +557,7 @@ export default function TrangNguoiDung() {
                     </p>
                   </div>
                 )}
-                {error && <div className="form-error">{error}</div>}
+                {loi && <div className="form-error">{loi}</div>}
                 <div className="form-actions">
                   <button
                     className="btn btn-secondary"

@@ -21,12 +21,34 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 import { buildContractDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
+import ChonKhuCombobox, { type MucKhu } from "@/components/ChonKhuCombobox";
 
 type Room = {
   id: number;
   code: string;
   currentPrice?: number;
   status?: string;
+  khuVucId?: number;
+};
+
+type RawPhong = Record<string, unknown>;
+
+const chuanHoaPhongTuApi = (r: RawPhong): Room => {
+  const khu = r.khuVuc as { id?: number } | undefined;
+  const gia = r.giaHienTai ?? r.currentPrice;
+  const giaSo =
+    typeof gia === "number"
+      ? gia
+      : gia != null
+        ? Number(gia)
+        : undefined;
+  return {
+    id: Number(r.id),
+    code: String(r.code ?? r.maPhong ?? ""),
+    currentPrice: Number.isFinite(giaSo) ? giaSo : undefined,
+    status: String(r.status ?? r.trangThai ?? ""),
+    khuVucId: khu?.id != null ? Number(khu.id) : undefined,
+  };
 };
 type Tenant = {
   id: number;
@@ -124,6 +146,8 @@ const addMonthsToDate = (startYMD: string, months: number): string => {
 export default function TrangHopDong() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [danhSachKhu, setDanhSachKhu] = useState<MucKhu[]>([]);
+  const [khuId, setKhuId] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [roomId, setRoomId] = useState("");
   const [tenantId, setTenantId] = useState("");
@@ -158,16 +182,24 @@ export default function TrangHopDong() {
         const res = await api.get("/hop-dong/cua-toi");
         setContracts(res.data);
         setRooms([]);
+        setDanhSachKhu([]);
         setTenants([]);
         return;
       }
-      const [cRes, rRes, tRes] = await Promise.all([
+      const [cRes, rRes, kRes, tRes] = await Promise.all([
         api.get("/hop-dong"),
         api.get("/phong"),
+        api.get("/khu-vuc"),
         api.get("/khach-thue"),
       ]);
       setContracts(cRes.data);
-      setRooms(rRes.data);
+      setRooms(((rRes.data as RawPhong[]) || []).map(chuanHoaPhongTuApi));
+      setDanhSachKhu(
+        ((kRes.data as { id?: number; ten?: string }[]) || []).map((k) => ({
+          id: Number(k.id),
+          ten: String(k.ten ?? ""),
+        })),
+      );
       setTenants(tRes.data);
     } catch (err: any) {
       const message =
@@ -192,8 +224,22 @@ export default function TrangHopDong() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!khuId.trim()) {
+      setError("Vui lòng chọn khu");
+      return;
+    }
     if (!roomId || !tenantId) {
       setError("Vui lòng chọn phòng và khách thuê");
+      return;
+    }
+    const idKhu = Number(khuId);
+    const phongDaChon = rooms.find((r) => Number(roomId) === r.id);
+    if (
+      phongDaChon &&
+      phongDaChon.khuVucId != null &&
+      phongDaChon.khuVucId !== idKhu
+    ) {
+      setError("Phòng đã chọn không thuộc khu đã chọn");
       return;
     }
     if (!startDate) {
@@ -240,6 +286,7 @@ export default function TrangHopDong() {
       notify(message, "error");
       return;
     }
+    setKhuId("");
     setRoomId("");
     setTenantId("");
     setStartDate("");
@@ -250,6 +297,39 @@ export default function TrangHopDong() {
     setShowCreate(false);
     load();
   };
+
+  const moModalTaoHopDong = () => {
+    setError("");
+    setKhuId("");
+    setRoomId("");
+    setTenantId("");
+    setStartDate("");
+    setDurationMonths("");
+    setEndDate("");
+    setDeposit("");
+    setRent("");
+    setShowCreate(true);
+  };
+
+  const dongModalTaoHopDong = () => {
+    setShowCreate(false);
+    setError("");
+    setKhuId("");
+    setRoomId("");
+    setTenantId("");
+    setStartDate("");
+    setDurationMonths("");
+    setEndDate("");
+    setDeposit("");
+    setRent("");
+  };
+
+  const phongTrongTheoKhu = rooms.filter(
+    (r) =>
+      r.status === "AVAILABLE" &&
+      khuId &&
+      r.khuVucId === Number(khuId),
+  );
 
   const filtered = contracts.filter((c) => {
     const q = query.trim().toLowerCase();
@@ -370,7 +450,7 @@ export default function TrangHopDong() {
             />
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button className="btn" onClick={() => setShowCreate(true)}>
+                <button className="btn" onClick={moModalTaoHopDong}>
                   <IconPlus /> Tạo hợp đồng
                 </button>
               </div>
@@ -532,20 +612,37 @@ export default function TrangHopDong() {
                 <div>
                   <h3>Tạo hợp đồng</h3>
                   <p className="card-subtitle">
-                    Chọn phòng, khách thuê và điền thông tin hợp đồng
+                    Chọn khu → phòng trống trong khu → khách thuê, rồi điền thời
+                    hạn và tài chính
                   </p>
                 </div>
               </div>
               <form onSubmit={create} className="form-grid">
                 <div className="form-section form-span-2">
-                  <h4 className="form-section-title">Phòng &amp; Khách thuê</h4>
+                  <h4 className="form-section-title">Khu, phòng &amp; khách</h4>
                   <div className="form-section-fields">
+                    <div className="form-section-full">
+                      <label className="field-label">
+                        Khu <span className="required">*</span>
+                      </label>
+                      <ChonKhuCombobox
+                        danhSachKhu={danhSachKhu}
+                        value={khuId}
+                        onChange={(id) => {
+                          setKhuId(id);
+                          setRoomId("");
+                          setRent("");
+                        }}
+                        placeholderChuaChon="Chọn khu"
+                      />
+                    </div>
                     <div>
                       <label className="field-label">
                         Phòng <span className="required">*</span>
                       </label>
                       <select
                         value={roomId}
+                        disabled={!khuId}
                         onChange={(e) => {
                           const id = e.target.value;
                           setRoomId(id);
@@ -557,19 +654,20 @@ export default function TrangHopDong() {
                           );
                         }}
                       >
-                        <option value="">Chọn phòng</option>
-                        {rooms
-                          .filter((r) => r.status === "AVAILABLE")
-                          .map((r) => (
-                            <option key={r.id} value={r.id}>
-                              {r.code}
-                            </option>
-                          ))}
+                        <option value="">
+                          {khuId
+                            ? "Chọn phòng"
+                            : "Chọn khu trước để xem phòng trống"}
+                        </option>
+                        {phongTrongTheoKhu.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.code}
+                          </option>
+                        ))}
                       </select>
-                      {rooms.filter((r) => r.status === "AVAILABLE").length ===
-                        0 && (
+                      {khuId && phongTrongTheoKhu.length === 0 && (
                         <p className="card-subtitle" style={{ marginTop: 4 }}>
-                          Không có phòng trống.
+                          Không có phòng trống trong khu này.
                         </p>
                       )}
                     </div>
@@ -666,7 +764,11 @@ export default function TrangHopDong() {
                       <label className="field-label">Giá thuê</label>
                       <div className="input-suffix">
                         <input
-                          placeholder="Chọn phòng để lấy giá"
+                          placeholder={
+                            khuId
+                              ? "Chọn phòng để lấy giá"
+                              : "Chọn khu và phòng để lấy giá"
+                          }
                           value={rent}
                           readOnly
                           style={{
@@ -685,7 +787,7 @@ export default function TrangHopDong() {
                   <button
                     className="btn btn-secondary"
                     type="button"
-                    onClick={() => setShowCreate(false)}
+                    onClick={dongModalTaoHopDong}
                   >
                     <IconTimes /> Hủy
                   </button>
