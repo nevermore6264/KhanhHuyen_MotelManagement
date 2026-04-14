@@ -383,11 +383,19 @@ export default function TrangPhong() {
                       header: "Thao tác",
                       render: (r: Room) => {
                         const locked = isLockedStatus(r.trangThai);
+                        const dangChoThue = r.trangThai === "OCCUPIED";
                         return (
                           <div className="table-actions">
                             <button
-                              className="btn"
+                              type="button"
+                              className={`btn ${dangChoThue ? "btn-disabled" : ""}`}
+                              disabled={dangChoThue}
                               onClick={() => batDauSua(r)}
+                              title={
+                                dangChoThue
+                                  ? "Phòng đang cho thuê, không thể chỉnh sửa"
+                                  : undefined
+                              }
                             >
                               <IconPencil /> Sửa
                             </button>
@@ -498,8 +506,26 @@ export default function TrangPhong() {
         {phanTuDangSua && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
-              <h3>Chỉnh sửa phòng</h3>
+              <div className="card-header">
+                <div>
+                  <h3>Chỉnh sửa phòng</h3>
+                  <p className="card-subtitle">
+                    Chọn khu trước, sau đó chỉnh sửa các thông tin khác.
+                  </p>
+                </div>
+              </div>
               <div className="form-grid">
+                <div className="form-span-2">
+                  <label className="field-label">
+                    Khu <span className="required">*</span>
+                  </label>
+                  <ChonKhuCombobox
+                    danhSachKhu={danhSachKhu}
+                    value={idKhuSua}
+                    onChange={setIdKhuSua}
+                    disabled={khoaSua}
+                  />
+                </div>
                 <div>
                   <label className="field-label">
                     Mã phòng <span className="required">*</span>
@@ -534,17 +560,6 @@ export default function TrangPhong() {
                   </select>
                 </div>
                 <div>
-                  <label className="field-label">
-                    Khu <span className="required">*</span>
-                  </label>
-                  <ChonKhuCombobox
-                    danhSachKhu={danhSachKhu}
-                    value={idKhuSua}
-                    onChange={setIdKhuSua}
-                    disabled={khoaSua}
-                  />
-                </div>
-                <div className="form-span-2">
                   <label className="field-label">
                     Giá phòng <span className="required">*</span>
                   </label>

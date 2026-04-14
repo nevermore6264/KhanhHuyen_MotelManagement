@@ -256,6 +256,21 @@ a {
   padding: 8px;
 }
 
+/* Portal: neo theo viewport, tranh bi grid/card cat hoac day layout */
+.combobox-khu-panel-portal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.combobox-khu-panel-portal .combobox-khu-list {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .combobox-khu-search {
   width: 100%;
   padding: 8px 10px;
