@@ -4,7 +4,7 @@
  * Trang quản lý hợp đồng: danh sách hợp đồng, tìm kiếm, tạo/sửa/gia hạn/kết thúc,
  * xem/tải Word, phân quyền Admin/Staff/Tenant.
  */
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
@@ -142,6 +142,10 @@ export default function TrangHopDong() {
   const [selectedTenantIds, setSelectedTenantIds] = useState<number[]>([]);
   /** Người đại diện / chịu trách nhiệm chính — phải nằm trong selectedTenantIds. */
   const [daiDienTenantId, setDaiDienTenantId] = useState<number | null>(null);
+  /** Popup chọn nhiều khách + đại diện (bản nháp cho đến khi Xác nhận). */
+  const [showChonKhachModal, setShowChonKhachModal] = useState(false);
+  const [draftKhachIds, setDraftKhachIds] = useState<number[]>([]);
+  const [draftDaiDienId, setDraftDaiDienId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState("");
   const [durationMonths, setDurationMonths] = useState<"" | "6" | "12" | "24">(
     "",
@@ -307,6 +311,7 @@ export default function TrangHopDong() {
   };
 
   const moModalTaoHopDong = () => {
+    setShowChonKhachModal(false);
     setError("");
     setKhuId("");
     setRoomId("");
@@ -321,6 +326,7 @@ export default function TrangHopDong() {
   };
 
   const dongModalTaoHopDong = () => {
+    setShowChonKhachModal(false);
     setShowCreate(false);
     setError("");
     setKhuId("");
@@ -365,11 +371,35 @@ export default function TrangHopDong() {
     (t) => !tenantIdsWithActiveContract.has(t.id),
   );
 
-  const toggleTenantInContract = (id: number) => {
-    setSelectedTenantIds((prev) => {
+  const moChonKhachThuePopup = () => {
+    setDraftKhachIds([...selectedTenantIds]);
+    setDraftDaiDienId(daiDienTenantId);
+    setShowChonKhachModal(true);
+  };
+
+  const dongChonKhachKhongLuu = () => {
+    setShowChonKhachModal(false);
+  };
+
+  const xacNhanChonKhachThue = () => {
+    if (draftKhachIds.length === 0) {
+      notify("Chọn ít nhất một khách thuê.", "error");
+      return;
+    }
+    let dai = draftDaiDienId;
+    if (dai == null || !draftKhachIds.includes(dai)) {
+      dai = draftKhachIds[0]!;
+    }
+    setSelectedTenantIds([...draftKhachIds]);
+    setDaiDienTenantId(dai);
+    setShowChonKhachModal(false);
+  };
+
+  const toggleDraftKhach = (id: number) => {
+    setDraftKhachIds((prev) => {
       const has = prev.includes(id);
       const next = has ? prev.filter((x) => x !== id) : [...prev, id];
-      setDaiDienTenantId((dd) => {
+      setDraftDaiDienId((dd) => {
         if (!has) {
           return dd == null ? id : dd;
         }
@@ -379,6 +409,23 @@ export default function TrangHopDong() {
       return next;
     });
   };
+
+  /** Hiển thị dạng thẻ: đại diện xếp trên, kèm SĐT/CCCD phụ. */
+  const danhSachKhachHienThi = useMemo(() => {
+    const rows = selectedTenantIds.map((id) => {
+      const t = tenants.find((x) => x.id === id);
+      const laDaiDien = daiDienTenantId === id;
+      return {
+        id,
+        name: t?.fullName?.trim() || `Khách #${id}`,
+        extra: (t?.phone || t?.idNumber || "").trim(),
+        laDaiDien,
+      };
+    });
+    return [...rows].sort(
+      (a, b) => Number(b.laDaiDien) - Number(a.laDaiDien),
+    );
+  }, [selectedTenantIds, daiDienTenantId, tenants]);
 
   const openExtend = (contract: Contract) => {
     setExtendId(contract.id);
@@ -649,6 +696,7 @@ export default function TrangHopDong() {
         )}
 
         {showCreate && isAdmin && (
+          <Fragment>
           <div className="modal-backdrop">
             <div className="modal-card form-card contract-create-modal">
               <div className="card-header">
@@ -717,68 +765,70 @@ export default function TrangHopDong() {
                         <span className="required">*</span>
                       </label>
                       <p className="card-subtitle" style={{ marginBottom: 8 }}>
-                        Chọn tất cả người ở cùng phòng; đánh dấu một người là{" "}
-                        <strong>đại diện</strong> ký hợp đồng và chịu trách
-                        nhiệm chính.
+                        Mở cửa sổ chọn danh sách người ở cùng phòng và người{" "}
+                        <strong>đại diện</strong> ký hợp đồng.
                       </p>
                       <div
                         style={{
                           display: "flex",
                           flexDirection: "column",
-                          gap: 8,
-                          maxHeight: 220,
-                          overflowY: "auto",
-                          padding: 8,
-                          border: "1px solid var(--border-color)",
-                          borderRadius: 8,
-                          background: "var(--bg-secondary)",
+                          gap: 10,
                         }}
                       >
-                        {availableTenantsForNewContract.map((t) => {
-                          const checked = selectedTenantIds.includes(t.id);
-                          return (
-                            <label
-                              key={t.id}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                                flexWrap: "wrap",
-                                cursor: "pointer",
-                              }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleTenantInContract(t.id)}
-                              />
-                              <span style={{ flex: 1, minWidth: 0 }}>
-                                {tenantOptionLabel(t)}
+                        <div className="hop-dong-khach-preview">
+                          {selectedTenantIds.length === 0 ? (
+                            <div className="hop-dong-khach-preview-empty">
+                              <span className="text-muted">
+                                Chưa chọn khách — bấm nút bên dưới để thêm
                               </span>
-                              {checked && (
-                                <label
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    cursor: "pointer",
-                                    whiteSpace: "nowrap",
-                                  }}
+                            </div>
+                          ) : (
+                            <ul
+                              className="hop-dong-khach-chip-list"
+                              aria-label="Khách đã chọn"
+                            >
+                              {danhSachKhachHienThi.map((row) => (
+                                <li
+                                  key={row.id}
+                                  className={
+                                    row.laDaiDien
+                                      ? "hop-dong-khach-chip hop-dong-khach-chip--dai-dien"
+                                      : "hop-dong-khach-chip"
+                                  }
                                 >
-                                  <input
-                                    type="radio"
-                                    name="daiDienHopDong"
-                                    checked={daiDienTenantId === t.id}
-                                    onChange={() =>
-                                      setDaiDienTenantId(t.id)
-                                    }
-                                  />
-                                  Đại diện
-                                </label>
-                              )}
-                            </label>
-                          );
-                        })}
+                                  <div className="hop-dong-khach-chip-body">
+                                    <span className="hop-dong-khach-chip-name">
+                                      {row.name}
+                                    </span>
+                                    {row.extra ? (
+                                      <span className="hop-dong-khach-chip-meta">
+                                        {row.extra}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  {row.laDaiDien ? (
+                                    <span
+                                      className="hop-dong-khach-chip-badge"
+                                      title="Người ký và chịu trách nhiệm chính"
+                                    >
+                                      Đại diện
+                                    </span>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={moChonKhachThuePopup}
+                          disabled={
+                            availableTenantsForNewContract.length === 0
+                          }
+                        >
+                          Chọn khách thuê…
+                        </button>
                       </div>
                       {availableTenantsForNewContract.length === 0 && (
                         <p className="card-subtitle" style={{ marginTop: 4 }}>
@@ -892,6 +942,127 @@ export default function TrangHopDong() {
               </form>
             </div>
           </div>
+
+          {showChonKhachModal && (
+            <div
+              className="modal-backdrop"
+              style={{ zIndex: 1100 }}
+              role="presentation"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) dongChonKhachKhongLuu();
+              }}
+            >
+              <div
+                className="modal-card"
+                style={{ maxWidth: 520, width: "100%" }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="chon-khach-title"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 id="chon-khach-title" style={{ marginTop: 0 }}>
+                  Chọn khách thuê
+                </h3>
+                <p className="card-subtitle" style={{ marginBottom: 12 }}>
+                  Đánh dấu người tham gia hợp đồng, chọn một người là{" "}
+                  <strong>đại diện</strong> ký và chịu trách nhiệm chính.
+                </p>
+                <div
+                  style={{
+                    maxHeight: "min(52vh, 360px)",
+                    overflowY: "auto",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: 10,
+                    background: "var(--bg-secondary)",
+                  }}
+                >
+                  {availableTenantsForNewContract.map((t) => {
+                    const checked = draftKhachIds.includes(t.id);
+                    const cbId = `chon-khach-cb-${t.id}`;
+                    const rdId = `chon-khach-dd-${t.id}`;
+                    return (
+                      <div
+                        key={t.id}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "auto 1fr auto",
+                          gap: "10px 12px",
+                          alignItems: "center",
+                          padding: "12px 14px",
+                          borderBottom: "1px solid var(--border-color)",
+                        }}
+                      >
+                        <input
+                          id={cbId}
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleDraftKhach(t.id)}
+                        />
+                        <label
+                          htmlFor={cbId}
+                          style={{
+                            cursor: "pointer",
+                            margin: 0,
+                            minWidth: 0,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {tenantOptionLabel(t)}
+                        </label>
+                        {checked ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            <input
+                              id={rdId}
+                              type="radio"
+                              name="draftDaiDienHopDong"
+                              checked={draftDaiDienId === t.id}
+                              onChange={() => setDraftDaiDienId(t.id)}
+                            />
+                            <label
+                              htmlFor={rdId}
+                              style={{
+                                margin: 0,
+                                cursor: "pointer",
+                                fontSize: 13,
+                              }}
+                            >
+                              Đại diện
+                            </label>
+                          </div>
+                        ) : (
+                          <span aria-hidden />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="modal-actions" style={{ marginTop: 16 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={dongChonKhachKhongLuu}
+                  >
+                    <IconTimes /> Hủy
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={xacNhanChonKhachThue}
+                  >
+                    <IconCheck /> Xác nhận
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          </Fragment>
         )}
 
         {extendId != null && (

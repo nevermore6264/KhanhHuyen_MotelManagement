@@ -1982,6 +1982,87 @@ textarea:disabled:focus {
   font-weight: 600;
 }
 
+/* Tóm tắt khách đã chọn — modal tạo hợp đồng */
+.hop-dong-khach-preview {
+  padding: 12px 14px;
+  min-height: 52px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff 0%, var(--bg-secondary, #f8fafc) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.hop-dong-khach-preview-empty {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.hop-dong-khach-chip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hop-dong-khach-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+}
+
+.hop-dong-khach-chip--dai-dien {
+  border-color: rgba(79, 124, 255, 0.42);
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+  box-shadow: 0 2px 12px rgba(79, 124, 255, 0.14);
+}
+
+.hop-dong-khach-chip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.hop-dong-khach-chip-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.hop-dong-khach-chip-meta {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.hop-dong-khach-chip-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  white-space: nowrap;
+}
+
 .link-tenant-modal {
   max-width: 540px;
   max-height: calc(100vh - 100px);
