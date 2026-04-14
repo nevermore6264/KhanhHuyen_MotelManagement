@@ -17,6 +17,7 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 
 type Area = { id: number; ten: string };
 type Room = {
@@ -332,18 +333,15 @@ export default function TrangPhong() {
               <option value="OCCUPIED">Đang thuê</option>
               <option value="MAINTENANCE">Bảo trì</option>
             </select>
-            <select
-              value={locIdKhu}
-              onChange={(e) => doiLocKhu(e.target.value)}
-              aria-label="Lọc theo khu"
-            >
-              <option value="">Tất cả khu</option>
-              {danhSachKhu.map((a) => (
-                <option key={a.id} value={String(a.id)}>
-                  {a.ten}
-                </option>
-              ))}
-            </select>
+            <div aria-label="Lọc theo khu">
+              <ChonKhuCombobox
+                danhSachKhu={danhSachKhu}
+                value={locIdKhu}
+                onChange={doiLocKhu}
+                placeholderChuaChon="Tất cả khu"
+                placeholderTim="Tìm khu để lọc…"
+              />
+            </div>
             {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={moHopThoaiThemPhong}>
@@ -428,17 +426,11 @@ export default function TrangPhong() {
                   <label className="field-label">
                     Khu <span className="required">*</span>
                   </label>
-                  <select
+                  <ChonKhuCombobox
+                    danhSachKhu={danhSachKhu}
                     value={idKhu}
-                    onChange={(e) => setIdKhu(e.target.value)}
-                  >
-                    <option value="">Chọn khu</option>
-                    {danhSachKhu.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.ten}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setIdKhu}
+                  />
                 </div>
                 <div>
                   <label className="field-label">
@@ -545,18 +537,12 @@ export default function TrangPhong() {
                   <label className="field-label">
                     Khu <span className="required">*</span>
                   </label>
-                  <select
+                  <ChonKhuCombobox
+                    danhSachKhu={danhSachKhu}
                     value={idKhuSua}
-                    onChange={(e) => setIdKhuSua(e.target.value)}
+                    onChange={setIdKhuSua}
                     disabled={khoaSua}
-                  >
-                    <option value="">Chọn khu</option>
-                    {danhSachKhu.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.ten}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">

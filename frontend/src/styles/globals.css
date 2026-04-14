@@ -187,6 +187,131 @@ a {
   grid-column: 1 / -1;
 }
 
+/* Chọn khu: tìm kiếm + danh sách cuộn (thay native select dài) */
+.combobox-khu {
+  position: relative;
+  width: 100%;
+}
+
+.combobox-khu-disabled {
+  opacity: 0.85;
+}
+
+.combobox-khu-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--blue-300);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.combobox-khu-trigger:hover:not(:disabled) {
+  border-color: var(--blue-400);
+  background: #f7faff;
+}
+
+.combobox-khu-trigger:focus {
+  outline: none;
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.2);
+}
+
+.combobox-khu-trigger:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+.combobox-khu-placeholder {
+  color: #94a3b8;
+}
+
+.combobox-khu-chevron {
+  flex-shrink: 0;
+  color: var(--blue-500);
+  font-size: 12px;
+}
+
+.combobox-khu-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 1100;
+  background: #fff;
+  border: 1px solid var(--blue-300);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  padding: 8px;
+}
+
+.combobox-khu-search {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--blue-200);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.combobox-khu-search:focus {
+  outline: none;
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 2px rgba(79, 124, 255, 0.15);
+}
+
+.combobox-khu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.combobox-khu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  color: #1e293b;
+}
+
+.combobox-khu-item:hover {
+  background: #eff6ff;
+}
+
+.combobox-khu-item-active {
+  background: #dbeafe;
+  font-weight: 600;
+}
+
+.combobox-khu-item-muted {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.combobox-khu-empty {
+  padding: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
 .field-label {
   display: block;
   font-size: 12px;
