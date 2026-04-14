@@ -6,7 +6,8 @@
     "dev": "next dev -p 4002",
     "build": "next build",
     "start": "next start -p 4002",
-    "lint": "next lint"
+    "lint": "next lint",
+    "tao-anh-mau-khach-thue": "node scripts/tao-anh-mau-khach-thue.mjs"
   },
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
@@ -27,6 +28,7 @@
     "@types/node": "^20.12.8",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
+    "sharp": "^0.34.5",
     "typescript": "^5.4.5"
   }
 }
