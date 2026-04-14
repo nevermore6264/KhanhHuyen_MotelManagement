@@ -211,11 +211,12 @@ export default function TrangNguoiDung() {
     setLoi("");
     try {
       await api.post("/nguoi-dung", {
-        username: ten,
-        password: matKhau,
-        role: vaiTro,
-        active: true,
-        idKhachThue:
+        tenDangNhap: ten,
+        matKhau,
+        hoTen: "",
+        vaiTro,
+        kichHoat: true,
+        maKhachThue:
           vaiTro === "TENANT" && idKhachThue ? Number(idKhachThue) : null,
       });
       notify("Tạo tài khoản thành công", "success");
@@ -260,14 +261,14 @@ export default function TrangNguoiDung() {
     if (!phanTuDangSua) return;
     try {
       await api.put(`/nguoi-dung/${phanTuDangSua.id}`, {
-        fullName: hoTenSua.trim(),
-        phone: sdtSua.trim(),
-        role: phanTuDangSua.role,
-        active: phanTuDangSua.active,
-        password: matKhauSua.trim() || null,
+        hoTen: hoTenSua.trim(),
+        soDienThoai: sdtSua.trim() || null,
+        vaiTro: phanTuDangSua.role,
+        kichHoat: phanTuDangSua.active,
+        matKhau: matKhauSua.trim() || null,
       });
       await api.put(`/nguoi-dung/${phanTuDangSua.id}/khach-thue`, {
-        idKhachThue: idKhachThueSua ? Number(idKhachThueSua) : null,
+        tenantId: idKhachThueSua ? Number(idKhachThueSua) : null,
       });
       notify("Cập nhật người dùng thành công", "success");
     } catch (err: unknown) {
@@ -320,7 +321,7 @@ export default function TrangNguoiDung() {
     setLoiLienKet("");
     try {
       await api.put(`/nguoi-dung/${nguoiDungLienKet.id}/khach-thue`, {
-        idKhachThue: idKhachThueLienKet ? Number(idKhachThueLienKet) : null,
+        tenantId: idKhachThueLienKet ? Number(idKhachThueLienKet) : null,
       });
       notify("Gắn khách thuê thành công", "success");
       setNguoiDungLienKet(null);
@@ -583,7 +584,7 @@ export default function TrangNguoiDung() {
                   />
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Chức vụ (Role)</label>
+                  <label className="field-label">Chức vụ</label>
                   <select
                     value={vaiTro}
                     onChange={(e) => {
