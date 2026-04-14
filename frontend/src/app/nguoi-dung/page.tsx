@@ -22,6 +22,8 @@ type User = {
   fullName: string;
   role: string;
   active: boolean;
+  /** SĐT trên tài khoản (nếu API có). */
+  phone?: string | null;
 };
 type Tenant = {
   id: number;
@@ -30,6 +32,64 @@ type Tenant = {
   idNumber?: string;
   user?: { id: number };
 };
+
+type RawJson = Record<string, unknown>;
+
+/** Spring trả camelCase tiếng Việt: tenDangNhap, hoTen, vaiTro, kichHoat… */
+function chuanHoaNguoiDungTuApi(raw: RawJson): User {
+  const r = raw as RawJson;
+  const vaiTroRaw = r.vaiTro ?? r.role;
+  let role = "";
+  if (typeof vaiTroRaw === "string") role = vaiTroRaw;
+  else if (vaiTroRaw && typeof vaiTroRaw === "object" && "name" in vaiTroRaw)
+    role = String((vaiTroRaw as { name?: string }).name ?? "");
+  else if (vaiTroRaw != null) role = String(vaiTroRaw);
+
+  const kich = r.kichHoat ?? r.active;
+  const active =
+    kich === false ||
+    kich === "false" ||
+    kich === 0 ||
+    kich === "0"
+      ? false
+      : true;
+
+  const sdt = r.soDienThoai ?? r.phone;
+  return {
+    id: Number(r.id),
+    username: String(
+      r.tenDangNhap ?? r.username ?? r["tendangnhap"] ?? "",
+    ).trim(),
+    fullName: String(r.hoTen ?? r.fullName ?? r["hoten"] ?? "").trim(),
+    role,
+    active,
+    phone:
+      sdt != null && String(sdt).trim() !== "" ? String(sdt).trim() : null,
+  };
+}
+
+function chuanHoaKhachThueTuApi(raw: RawJson): Tenant {
+  const nd = raw.nguoiDung as { id?: number } | undefined;
+  const userObj = raw.user as { id?: number } | undefined;
+  const userId = nd?.id ?? userObj?.id;
+  return {
+    id: Number(raw.id),
+    fullName: String(raw.hoTen ?? raw.fullName ?? "").trim(),
+    phone:
+      raw.soDienThoai != null
+        ? String(raw.soDienThoai)
+        : raw.phone != null
+          ? String(raw.phone)
+          : undefined,
+    idNumber:
+      raw.soGiayTo != null
+        ? String(raw.soGiayTo)
+        : raw.idNumber != null
+          ? String(raw.idNumber)
+          : undefined,
+    user: userId != null ? { id: Number(userId) } : undefined,
+  };
+}
 
 const roleLabel = (value?: string) => {
   switch (value) {
@@ -118,13 +178,15 @@ export default function TrangNguoiDung() {
 
   const tai = async () => {
     const phanHoi = await api.get("/nguoi-dung");
-    setDanhSach(phanHoi.data);
+    const mang = Array.isArray(phanHoi.data) ? phanHoi.data : [];
+    setDanhSach(mang.map((x) => chuanHoaNguoiDungTuApi(x as RawJson)));
   };
 
   const taiKhachThue = async () => {
     try {
       const phanHoi = await api.get("/khach-thue");
-      setDanhSachKhachThue(phanHoi.data || []);
+      const mang = Array.isArray(phanHoi.data) ? phanHoi.data : [];
+      setDanhSachKhachThue(mang.map((x) => chuanHoaKhachThueTuApi(x as RawJson)));
     } catch {
       setDanhSachKhachThue([]);
     }
@@ -424,7 +486,8 @@ export default function TrangNguoiDung() {
                   const linked = danhSachKhachThue.find(
                     (t) => t.user?.id === u.id,
                   );
-                  return linked?.phone ?? "—";
+                  const sdtNguoi = u.phone?.trim();
+                  return linked?.phone?.trim() || sdtNguoi || "—";
                 },
               },
               {
