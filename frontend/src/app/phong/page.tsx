@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
@@ -89,22 +89,29 @@ export default function TrangPhong() {
   const [idXacNhanXoa, setIdXacNhanXoa] = useState<number | null>(null);
   const [tenXacNhanXoa, setTenXacNhanXoa] = useState("");
   const [locTrangThai, setLocTrangThai] = useState("");
-  const [idKhuTuUrl, setIdKhuTuUrl] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
   const vaiTro = mounted ? getRole() : null;
   const laQuanTri = vaiTro === "ADMIN";
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { notify } = useToast();
 
-  useEffect(() => {
-    const areaIdParam = searchParams.get("areaId");
-    if (areaIdParam) {
-      const id = Number(areaIdParam);
-      setIdKhuTuUrl(Number.isNaN(id) ? null : id);
+  const areaIdTuUrl = searchParams.get("areaId");
+  const locIdKhu =
+    areaIdTuUrl && !Number.isNaN(Number(areaIdTuUrl)) ? areaIdTuUrl : "";
+
+  const doiLocKhu = (value: string) => {
+    if (value === "") {
+      router.replace("/phong");
     } else {
-      setIdKhuTuUrl(null);
+      router.replace(`/phong?areaId=${encodeURIComponent(value)}`);
     }
-  }, [searchParams]);
+  };
+
+  const moHopThoaiThemPhong = () => {
+    setIdKhu(locIdKhu || "");
+    setHienThiTaoMoi(true);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -221,7 +228,7 @@ export default function TrangPhong() {
   };
 
   const yeuCauXoa = (phong: Room) => {
-    if (isLockedStatus(phong.status)) {
+    if (isLockedStatus(phong.trangThai)) {
       notify("Phòng đang cho thuê/bảo trì, không thể xóa", "error");
       return;
     }
@@ -232,7 +239,7 @@ export default function TrangPhong() {
   const xacNhanXoa = async () => {
     if (idXacNhanXoa == null) return;
     const phong = danhSachPhong.find((r) => r.id === idXacNhanXoa);
-    if (isLockedStatus(phong?.status)) {
+    if (isLockedStatus(phong?.trangThai)) {
       notify("Phòng đang cho thuê/bảo trì, không thể xóa", "error");
       setIdXacNhanXoa(null);
       setTenXacNhanXoa("");
@@ -274,14 +281,16 @@ export default function TrangPhong() {
     const khopTrangThai = locTrangThai
       ? phong.trangThai === locTrangThai
       : true;
-    const khopKhu = idKhuTuUrl == null ? true : phong.khuVuc?.id === idKhuTuUrl;
+    const khopKhu =
+      locIdKhu === "" ? true : phong.khuVuc?.id === Number(locIdKhu);
     return khopTuKhoa && khopTrangThai && khopKhu;
   });
 
+  const idKhuLocSo = locIdKhu ? Number(locIdKhu) : null;
   const tenKhuLoc =
-    idKhuTuUrl != null
-      ? (danhSachKhu.find((a) => a.id === idKhuTuUrl)?.ten ??
-        `Khu #${idKhuTuUrl}`)
+    idKhuLocSo != null && !Number.isNaN(idKhuLocSo)
+      ? (danhSachKhu.find((a) => a.id === idKhuLocSo)?.ten ??
+        `Khu #${idKhuLocSo}`)
       : null;
 
   const khoaSua = phanTuDangSua
@@ -308,7 +317,7 @@ export default function TrangPhong() {
           </div>
         )}
         <div className="card">
-          <div className="grid grid-3">
+          <div className="grid grid-4">
             <input
               placeholder="Tìm kiếm theo mã, tầng, khu, trạng thái..."
               value={tuKhoa}
@@ -323,9 +332,21 @@ export default function TrangPhong() {
               <option value="OCCUPIED">Đang thuê</option>
               <option value="MAINTENANCE">Bảo trì</option>
             </select>
+            <select
+              value={locIdKhu}
+              onChange={(e) => doiLocKhu(e.target.value)}
+              aria-label="Lọc theo khu"
+            >
+              <option value="">Tất cả khu</option>
+              {danhSachKhu.map((a) => (
+                <option key={a.id} value={String(a.id)}>
+                  {a.ten}
+                </option>
+              ))}
+            </select>
             {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button className="btn" onClick={() => setHienThiTaoMoi(true)}>
+                <button className="btn" onClick={moHopThoaiThemPhong}>
                   <IconPlus /> Thêm phòng mới
                 </button>
               </div>
@@ -403,6 +424,22 @@ export default function TrangPhong() {
                 </div>
               </div>
               <form onSubmit={tao} className="form-grid">
+                <div className="form-span-2">
+                  <label className="field-label">
+                    Khu <span className="required">*</span>
+                  </label>
+                  <select
+                    value={idKhu}
+                    onChange={(e) => setIdKhu(e.target.value)}
+                  >
+                    <option value="">Chọn khu</option>
+                    {danhSachKhu.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.ten}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="field-label">
                     Mã phòng <span className="required">*</span>
@@ -428,6 +465,7 @@ export default function TrangPhong() {
                   <select
                     value={trangThaiPhong}
                     onChange={(e) => setTrangThaiPhong(e.target.value)}
+                    disabled
                   >
                     <option value="AVAILABLE">Trống</option>
                     <option value="OCCUPIED">Đang thuê</option>
@@ -435,22 +473,6 @@ export default function TrangPhong() {
                   </select>
                 </div>
                 <div>
-                  <label className="field-label">
-                    Khu <span className="required">*</span>
-                  </label>
-                  <select
-                    value={idKhu}
-                    onChange={(e) => setIdKhu(e.target.value)}
-                  >
-                    <option value="">Chọn khu</option>
-                    {danhSachKhu.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.ten}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-span-2">
                   <label className="field-label">
                     Giá phòng <span className="required">*</span>
                   </label>

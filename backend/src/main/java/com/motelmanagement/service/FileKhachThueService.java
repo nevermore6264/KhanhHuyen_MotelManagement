@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 /** Dịch vụ lưu/đọc file ảnh khách thuê (chân dung, CCCD). */
@@ -23,10 +24,7 @@ public class FileKhachThueService {
             "image/jpeg", "image/png", "image/gif", "image/webp"
     };
 
-    /**
-     * Lưu file ảnh vào thư mục uploads/tenants/, trả về đường dẫn tương đối (vd: tenants/uuid.jpg).
-     * Trả về null nếu file null hoặc rỗng.
-     */
+    /** Lưu file ảnh vào resources/static/tenant-files/tenants và trả về URL tương đối để FE truy cập. */
     public String luuAnh(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             return null;
@@ -44,8 +42,8 @@ public class FileKhachThueService {
         String duoi = layDuoiFile(loaiNoiDung);
         String tenFile = UUID.randomUUID().toString() + duoi;
         Path dich = thuMucKhach.resolve(tenFile);
-        Files.copy(file.getInputStream(), dich);
-        return TENANTS_SUBDIR + "/" + tenFile;
+        Files.copy(file.getInputStream(), dich, StandardCopyOption.REPLACE_EXISTING);
+        return "/tenant-files/" + TENANTS_SUBDIR + "/" + tenFile;
     }
 
     private static boolean laAnhChoPhep(String loaiNoiDung) {
@@ -57,11 +55,15 @@ public class FileKhachThueService {
 
     private static String layDuoiFile(String loaiNoiDung) {
         if (loaiNoiDung == null) return ".jpg";
-        return switch (loaiNoiDung) {
-            case "image/png" -> ".png";
-            case "image/gif" -> ".gif";
-            case "image/webp" -> ".webp";
-            default -> ".jpg";
-        };
+        switch (loaiNoiDung) {
+            case "image/png":
+                return ".png";
+            case "image/gif":
+                return ".gif";
+            case "image/webp":
+                return ".webp";
+            default:
+                return ".jpg";
+        }
     }
 }

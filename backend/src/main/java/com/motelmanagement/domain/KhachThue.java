@@ -41,11 +41,11 @@ public class KhachThue {
     @Column(name = "email", length = 100)
     private String email;
 
-    /** Đường dẫn file ảnh chân dung (lưu trong uploads/tenants/). */
+    /** Đường dẫn ảnh chân dung (lưu trong resources/static/tenant-files/tenants). */
     @Column(name = "anh_chan_dung", length = 255)
     private String anhChanDung;
 
-    /** Đường dẫn file ảnh CCCD/CMND (lưu trong uploads/tenants/). */
+    /** Đường dẫn ảnh CCCD/CMND (lưu trong resources/static/tenant-files/tenants). */
     @Column(name = "anh_giay_to", length = 255)
     private String anhGiayTo;
 

@@ -27,6 +27,49 @@ type Tenant = {
   user?: { id: number; username: string };
 };
 type User = { id: number; username: string; role: string };
+type TenantApi = Record<string, unknown>;
+
+const API_ORIGIN = "http://localhost:8080";
+
+const toAbsoluteFileUrl = (filePath?: string | null) => {
+  if (!filePath) return undefined;
+  const path = filePath.trim();
+  if (!path) return undefined;
+  if (/^https?:\/\//i.test(path)) return path;
+  if (path.startsWith("/")) return `${API_ORIGIN}${path}`;
+  return `${API_ORIGIN}/${path}`;
+};
+
+const normalizeTenant = (item: TenantApi): Tenant => ({
+  id: Number(item.id),
+  fullName: String(item.fullName ?? item.hoTen ?? ""),
+  phone: (item.phone as string) ?? (item.soDienThoai as string) ?? undefined,
+  idNumber: (item.idNumber as string) ?? (item.soGiayTo as string) ?? undefined,
+  address: (item.address as string) ?? (item.diaChi as string) ?? undefined,
+  email: (item.email as string) ?? undefined,
+  portraitImagePath: toAbsoluteFileUrl(
+    (item.portraitImagePath as string) ?? (item.anhChanDung as string),
+  ),
+  idCardImagePath: toAbsoluteFileUrl(
+    (item.idCardImagePath as string) ?? (item.anhGiayTo as string),
+  ),
+  user:
+    ((item.user as { id?: number; username?: string }) ??
+      (item.nguoiDung as { id?: number; tenDangNhap?: string })) &&
+    (item.user || item.nguoiDung)
+      ? {
+          id: Number(
+            (item.user as { id?: number })?.id ??
+              (item.nguoiDung as { id?: number })?.id,
+          ),
+          username: String(
+            (item.user as { username?: string })?.username ??
+              (item.nguoiDung as { tenDangNhap?: string })?.tenDangNhap ??
+              "",
+          ),
+        }
+      : undefined,
+});
 
 const validateTenant = (data: {
   fullName: string;
@@ -104,7 +147,7 @@ export default function TrangKhachThue() {
         const res = await api.get("/khach-thue/cua-toi", {
           headers: authHeader,
         });
-        setTenants(res.data ? [res.data] : []);
+        setTenants(res.data ? [normalizeTenant(res.data as TenantApi)] : []);
         setUsers([]);
         return;
       }
@@ -112,7 +155,7 @@ export default function TrangKhachThue() {
         api.get("/khach-thue", { headers: authHeader }),
         api.get("/nguoi-dung", { headers: authHeader }),
       ]);
-      setTenants(tRes.data);
+      setTenants(((tRes.data as TenantApi[]) || []).map(normalizeTenant));
       setUsers(uRes.data.filter((u: User) => u.role === "TENANT"));
     } catch (err: any) {
       if (err?.response?.status === 403) {
@@ -121,7 +164,7 @@ export default function TrangKhachThue() {
             headers: authHeader,
           });
           if (res.data) {
-            setTenants([res.data]);
+            setTenants([normalizeTenant(res.data as TenantApi)]);
             setUsers([]);
             notify("Bạn chỉ có thể xem thông tin của chính mình.", "info");
             return;
