@@ -984,7 +984,7 @@ export default function TrangHopDong() {
             >
               <div
                 className="modal-card"
-                style={{ maxWidth: 520, width: "100%" }}
+                style={{ maxWidth: "min(900px, 94vw)", width: "100%" }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="chon-khach-title"
@@ -1015,15 +1015,7 @@ export default function TrangHopDong() {
                     khách
                   </span>
                 </div>
-                <div
-                  style={{
-                    maxHeight: "min(52vh, 360px)",
-                    overflowY: "auto",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: 10,
-                    background: "var(--bg-secondary)",
-                  }}
-                >
+                <div className="hop-dong-chon-khach-list-scroll">
                   {khachTrongModalSauLoc.length === 0 ? (
                     <div className="empty-state" style={{ padding: "20px 16px" }}>
                       {availableTenantsForNewContract.length === 0
@@ -1031,41 +1023,72 @@ export default function TrangHopDong() {
                         : "Không khách nào khớp bộ lọc — thử từ khóa khác."}
                     </div>
                   ) : (
-                    khachTrongModalSauLoc.map((t) => {
-                    const checked = draftKhachIds.includes(t.id);
-                    const cbId = `chon-khach-cb-${t.id}`;
-                    const rdId = `chon-khach-dd-${t.id}`;
-                    return (
-                      <div key={t.id} className="hop-dong-chon-khach-row">
-                        <input
-                          id={cbId}
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleDraftKhach(t.id)}
-                        />
-                        <label
-                          htmlFor={cbId}
-                          className="hop-dong-chon-khach-label"
-                        >
-                          {tenantOptionLabel(t)}
-                        </label>
-                        <div className="hop-dong-chon-khach-dai-dien-cell">
-                          {checked ? (
-                            <>
-                              <input
-                                id={rdId}
-                                type="radio"
-                                name="draftDaiDienHopDong"
-                                checked={draftDaiDienId === t.id}
-                                onChange={() => setDraftDaiDienId(t.id)}
-                              />
-                              <label htmlFor={rdId}>Đại diện</label>
-                            </>
-                          ) : null}
-                        </div>
+                    <>
+                      <div className="hop-dong-chon-khach-head">
+                        <span />
+                        <span>Họ tên</span>
+                        <span>SĐT</span>
+                        <span>CCCD</span>
+                        <span>Đại diện</span>
                       </div>
-                    );
-                  })
+                      {khachTrongModalSauLoc.map((t) => {
+                        const checked = draftKhachIds.includes(t.id);
+                        const cbId = `chon-khach-cb-${t.id}`;
+                        const rdId = `chon-khach-dd-${t.id}`;
+                        const sdt = t.phone?.trim() || "—";
+                        const cccd = t.idNumber?.trim() || "—";
+                        return (
+                          <div key={t.id} className="hop-dong-chon-khach-row">
+                            <input
+                              id={cbId}
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleDraftKhach(t.id)}
+                            />
+                            <label
+                              htmlFor={cbId}
+                              className="hop-dong-chon-khach-name"
+                            >
+                              {t.fullName?.trim() || `Khách #${t.id}`}
+                            </label>
+                            <p
+                              className="hop-dong-chon-khach-col-text"
+                              title={
+                                t.phone?.trim()
+                                  ? t.phone.trim()
+                                  : undefined
+                              }
+                            >
+                              {sdt}
+                            </p>
+                            <p
+                              className="hop-dong-chon-khach-col-text"
+                              title={
+                                t.idNumber?.trim()
+                                  ? t.idNumber.trim()
+                                  : undefined
+                              }
+                            >
+                              {cccd}
+                            </p>
+                            <div className="hop-dong-chon-khach-dai-dien-cell">
+                              {checked ? (
+                                <>
+                                  <input
+                                    id={rdId}
+                                    type="radio"
+                                    name="draftDaiDienHopDong"
+                                    checked={draftDaiDienId === t.id}
+                                    onChange={() => setDraftDaiDienId(t.id)}
+                                  />
+                                  <label htmlFor={rdId}>Đại diện</label>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
                 </div>
                 <div className="modal-actions" style={{ marginTop: 16 }}>

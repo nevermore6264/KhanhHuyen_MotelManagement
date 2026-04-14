@@ -1922,7 +1922,7 @@ textarea:disabled:focus {
 }
 
 .contract-create-modal {
-  max-width: 600px;
+  max-width: min(900px, 94vw);
 }
 
 .contract-create-modal .card-header {
@@ -2095,10 +2095,43 @@ textarea:disabled:focus {
   white-space: nowrap;
 }
 
-/* Modal chọn khách — cột radio cố định để thẳng hàng giữa các hàng */
+/* Modal chọn khách — checkbox | họ tên | SĐT | CCCD | đại diện */
+.hop-dong-chon-khach-head {
+  display: grid;
+  grid-template-columns:
+    auto minmax(0, 1fr) minmax(108px, 140px) minmax(108px, 168px) 124px;
+  gap: 10px 12px;
+  align-items: center;
+  padding: 8px 14px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  border-bottom: 2px solid #e2e8f0;
+  background: var(--bg-secondary, #f8fafc);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.hop-dong-chon-khach-head span:nth-child(5) {
+  justify-self: end;
+  padding-right: 2px;
+}
+
+.hop-dong-chon-khach-list-scroll {
+  max-height: min(52vh, 360px);
+  overflow-y: auto;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  background: var(--bg-secondary, #f8fafc);
+}
+
 .hop-dong-chon-khach-row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 124px;
+  grid-template-columns:
+    auto minmax(0, 1fr) minmax(108px, 140px) minmax(108px, 168px) 124px;
   gap: 10px 12px;
   align-items: center;
   padding: 12px 14px;
@@ -2109,13 +2142,26 @@ textarea:disabled:focus {
   border-bottom: none;
 }
 
-.hop-dong-chon-khach-label {
+.hop-dong-chon-khach-name {
   cursor: pointer;
   margin: 0;
   min-width: 0;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
   line-height: 1.35;
+  color: #0f172a;
   word-break: break-word;
+}
+
+.hop-dong-chon-khach-col-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hop-dong-chon-khach-dai-dien-cell {
