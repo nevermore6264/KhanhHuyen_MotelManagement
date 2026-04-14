@@ -146,6 +146,9 @@ export default function TrangHopDong() {
   const [showChonKhachModal, setShowChonKhachModal] = useState(false);
   const [draftKhachIds, setDraftKhachIds] = useState<number[]>([]);
   const [draftDaiDienId, setDraftDaiDienId] = useState<number | null>(null);
+  /** Lọc danh sách trong modal chọn khách (danh sách có thể rất dài). */
+  const [chonKhachLoc, setChonKhachLoc] = useState("");
+  const chonKhachInputRef = useRef<HTMLInputElement>(null);
   const [startDate, setStartDate] = useState("");
   const [durationMonths, setDurationMonths] = useState<"" | "6" | "12" | "24">(
     "",
@@ -170,6 +173,15 @@ export default function TrangHopDong() {
   useEffect(() => {
     setRole(getRole());
   }, []);
+
+  useEffect(() => {
+    if (!showChonKhachModal) return;
+    setChonKhachLoc("");
+    const id = requestAnimationFrame(() =>
+      chonKhachInputRef.current?.focus(),
+    );
+    return () => cancelAnimationFrame(id);
+  }, [showChonKhachModal]);
 
   const load = async () => {
     try {
@@ -370,6 +382,24 @@ export default function TrangHopDong() {
   const availableTenantsForNewContract = tenants.filter(
     (t) => !tenantIdsWithActiveContract.has(t.id),
   );
+
+  const khachTrongModalSauLoc = useMemo(() => {
+    const q = chonKhachLoc.trim().toLowerCase();
+    if (!q) return availableTenantsForNewContract;
+    return availableTenantsForNewContract.filter((t) => {
+      const haystack = [
+        t.fullName,
+        t.phone,
+        t.idNumber,
+        t.email,
+        String(t.id),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [availableTenantsForNewContract, chonKhachLoc]);
 
   const moChonKhachThuePopup = () => {
     setDraftKhachIds([...selectedTenantIds]);
@@ -963,10 +993,28 @@ export default function TrangHopDong() {
                 <h3 id="chon-khach-title" style={{ marginTop: 0 }}>
                   Chọn khách thuê
                 </h3>
-                <p className="card-subtitle" style={{ marginBottom: 12 }}>
+                <p className="card-subtitle" style={{ marginBottom: 10 }}>
                   Đánh dấu người tham gia hợp đồng, chọn một người là{" "}
                   <strong>đại diện</strong> ký và chịu trách nhiệm chính.
                 </p>
+                <div className="hop-dong-chon-khach-toolbar">
+                  <input
+                    ref={chonKhachInputRef}
+                    type="search"
+                    enterKeyHint="search"
+                    placeholder="Lọc theo tên, SĐT, CCCD, email hoặc mã…"
+                    value={chonKhachLoc}
+                    onChange={(e) => setChonKhachLoc(e.target.value)}
+                    autoComplete="off"
+                    aria-label="Lọc danh sách khách thuê"
+                  />
+                  <span className="hop-dong-chon-khach-toolbar-meta">
+                    {chonKhachLoc.trim()
+                      ? `${khachTrongModalSauLoc.length}/${availableTenantsForNewContract.length}`
+                      : `${availableTenantsForNewContract.length}`}{" "}
+                    khách
+                  </span>
+                </div>
                 <div
                   style={{
                     maxHeight: "min(52vh, 360px)",
@@ -976,22 +1024,19 @@ export default function TrangHopDong() {
                     background: "var(--bg-secondary)",
                   }}
                 >
-                  {availableTenantsForNewContract.map((t) => {
+                  {khachTrongModalSauLoc.length === 0 ? (
+                    <div className="empty-state" style={{ padding: "20px 16px" }}>
+                      {availableTenantsForNewContract.length === 0
+                        ? "Không có khách thuê khả dụng (đều đang có hợp đồng hiệu lực)."
+                        : "Không khách nào khớp bộ lọc — thử từ khóa khác."}
+                    </div>
+                  ) : (
+                    khachTrongModalSauLoc.map((t) => {
                     const checked = draftKhachIds.includes(t.id);
                     const cbId = `chon-khach-cb-${t.id}`;
                     const rdId = `chon-khach-dd-${t.id}`;
                     return (
-                      <div
-                        key={t.id}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "auto 1fr auto",
-                          gap: "10px 12px",
-                          alignItems: "center",
-                          padding: "12px 14px",
-                          borderBottom: "1px solid var(--border-color)",
-                        }}
-                      >
+                      <div key={t.id} className="hop-dong-chon-khach-row">
                         <input
                           id={cbId}
                           type="checkbox"
@@ -1000,48 +1045,28 @@ export default function TrangHopDong() {
                         />
                         <label
                           htmlFor={cbId}
-                          style={{
-                            cursor: "pointer",
-                            margin: 0,
-                            minWidth: 0,
-                            fontWeight: 500,
-                          }}
+                          className="hop-dong-chon-khach-label"
                         >
                           {tenantOptionLabel(t)}
                         </label>
-                        {checked ? (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            <input
-                              id={rdId}
-                              type="radio"
-                              name="draftDaiDienHopDong"
-                              checked={draftDaiDienId === t.id}
-                              onChange={() => setDraftDaiDienId(t.id)}
-                            />
-                            <label
-                              htmlFor={rdId}
-                              style={{
-                                margin: 0,
-                                cursor: "pointer",
-                                fontSize: 13,
-                              }}
-                            >
-                              Đại diện
-                            </label>
-                          </div>
-                        ) : (
-                          <span aria-hidden />
-                        )}
+                        <div className="hop-dong-chon-khach-dai-dien-cell">
+                          {checked ? (
+                            <>
+                              <input
+                                id={rdId}
+                                type="radio"
+                                name="draftDaiDienHopDong"
+                                checked={draftDaiDienId === t.id}
+                                onChange={() => setDraftDaiDienId(t.id)}
+                              />
+                              <label htmlFor={rdId}>Đại diện</label>
+                            </>
+                          ) : null}
+                        </div>
                       </div>
                     );
-                  })}
+                  })
+                  )}
                 </div>
                 <div className="modal-actions" style={{ marginTop: 16 }}>
                   <button
