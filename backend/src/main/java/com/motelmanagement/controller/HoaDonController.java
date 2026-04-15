@@ -1,5 +1,6 @@
 package com.motelmanagement.controller;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,11 +16,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.motelmanagement.domain.HoaDon;
+import com.motelmanagement.domain.HopDong;
+import com.motelmanagement.domain.HopDongThanhVien;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
+import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.dto.HoaDonResponseDto;
+import com.motelmanagement.dto.KhachThueTomTatDto;
 import com.motelmanagement.dto.RemindRequest;
 import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhacNoHoaDonService;
@@ -33,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/hoa-don")
 public class HoaDonController {
     private final HoaDonRepository hoaDonRepository;
+    private final HopDongRepository hopDongRepository;
     private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final NhacNoHoaDonService nhacNoHoaDonService;
@@ -40,13 +48,15 @@ public class HoaDonController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public List<HoaDon> layDanhSach() {
-        return hoaDonRepository.findAllWithTenantAndRoom();
+    public List<HoaDonResponseDto> layDanhSach() {
+        return hoaDonRepository.findAllWithTenantAndRoom().stream()
+                .map(this::xuongDto)
+                .toList();
     }
 
     @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('TENANT')")
-    public List<HoaDon> layHoaDonCuaToi() {
+    public List<HoaDonResponseDto> layHoaDonCuaToi() {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) {
             return List.of();
@@ -55,7 +65,42 @@ public class HoaDonController {
         if (khachThue == null) {
             return List.of();
         }
-        return hoaDonRepository.findByKhachThue(khachThue);
+        return hoaDonRepository.findByKhachThue(khachThue).stream()
+                .map(this::xuongDto)
+                .toList();
+    }
+
+    private HoaDonResponseDto xuongDto(HoaDon h) {
+        Long maPhong = h.getPhong() != null ? h.getPhong().getId() : null;
+        List<KhachThueTomTatDto> ds = layDanhSachKhachTheoPhong(maPhong, h.getKhachThue());
+        return HoaDonResponseDto.tu(h, ds);
+    }
+
+    /**
+     * Khách hiển thị trên hóa đơn: đại diện + thành viên hợp đồng ACTIVE của phòng;
+     * nếu không có hợp đồng / không có thành viên thì dùng khách ghi trên hóa đơn.
+     */
+    private List<KhachThueTomTatDto> layDanhSachKhachTheoPhong(Long maPhong, KhachThue fallback) {
+        if (maPhong == null) {
+            return fallback != null ? List.of(KhachThueTomTatDto.tu(fallback)) : List.of();
+        }
+        return hopDongRepository.findByPhong_IdAndTrangThai(maPhong, TrangThaiHopDong.ACTIVE)
+                .map(hd -> {
+                    LinkedHashMap<Long, KhachThue> gom = new LinkedHashMap<>();
+                    if (hd.getKhachThue() != null) {
+                        gom.put(hd.getKhachThue().getId(), hd.getKhachThue());
+                    }
+                    if (hd.getThanhVien() != null) {
+                        for (HopDongThanhVien tv : hd.getThanhVien()) {
+                            if (tv.getKhachThue() != null) {
+                                gom.putIfAbsent(tv.getKhachThue().getId(), tv.getKhachThue());
+                            }
+                        }
+                    }
+                    return gom.values().stream().map(KhachThueTomTatDto::tu).toList();
+                })
+                .filter(list -> !list.isEmpty())
+                .orElseGet(() -> fallback != null ? List.of(KhachThueTomTatDto.tu(fallback)) : List.of());
     }
 
     @PostMapping

@@ -2591,6 +2591,17 @@ table .btn {
   padding: 12px 0;
 }
 
+.meter-btn-sua {
+  padding: 6px 12px !important;
+  height: auto !important;
+  min-height: 0;
+  font-size: 13px;
+}
+
+.meter-sua-modal {
+  max-width: 480px;
+}
+
 .meter-panel {
   margin-top: 16px;
 }
@@ -2615,10 +2626,35 @@ table .btn {
 }
 
 .history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
   background: #fff;
   border: 1px solid var(--blue-200);
   border-radius: 10px;
   padding: 10px 12px;
+}
+
+.history-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.history-row-edit {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--blue-300);
+  background: #fff;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.history-row-edit:hover {
+  background: #eff6ff;
 }
 
 .history-title {

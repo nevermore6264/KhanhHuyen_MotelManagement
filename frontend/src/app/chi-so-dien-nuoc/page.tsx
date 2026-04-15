@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
-import { IconCheck, IconChevronDown, IconChevronUp } from "@/components/Icons";
+import {
+  IconCheck,
+  IconChevronDown,
+  IconChevronUp,
+  IconPencil,
+  IconTimes,
+} from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
@@ -108,6 +114,9 @@ const laThangChoPhep = (thang: number, nam: number): boolean => {
   return nam === namHienTai && thang === thangHienTai - 1;
 };
 
+const coTheSuaChiSo = (r: MeterReading) =>
+  laThangChoPhep(r.month, r.year);
+
 export default function TrangChiSoDienNuoc() {
   const [danhSachChiSo, setDanhSachChiSo] = useState<MeterReading[]>([]);
   const [danhSachPhong, setDanhSachPhong] = useState<Room[]>([]);
@@ -126,6 +135,12 @@ export default function TrangChiSoDienNuoc() {
   const [idPhongLoc, setIdPhongLoc] = useState("");
   /** true = hiện đầy đủ khu + lưới phòng; false = thu gọn tiết kiệm chỗ */
   const [moChonKhuPhong, setMoChonKhuPhong] = useState(true);
+  const [chiSoSua, setChiSoSua] = useState<MeterReading | null>(null);
+  const [suaDienCu, setSuaDienCu] = useState("");
+  const [suaDienMoi, setSuaDienMoi] = useState("");
+  const [suaNuocCu, setSuaNuocCu] = useState("");
+  const [suaNuocMoi, setSuaNuocMoi] = useState("");
+  const [loiSuaChiSo, setLoiSuaChiSo] = useState("");
   const { notify } = useToast();
 
   const tai = async () => {
@@ -279,6 +294,48 @@ export default function TrangChiSoDienNuoc() {
     }
   };
 
+  const moModalSuaChiSo = (r: MeterReading) => {
+    setChiSoSua(r);
+    setSuaDienCu(String(r.oldElectric));
+    setSuaDienMoi(String(r.newElectric));
+    setSuaNuocCu(String(r.oldWater));
+    setSuaNuocMoi(String(r.newWater));
+    setLoiSuaChiSo("");
+  };
+
+  const dongModalSuaChiSo = () => {
+    setChiSoSua(null);
+    setLoiSuaChiSo("");
+  };
+
+  const luuSuaChiSo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chiSoSua) return;
+    setLoiSuaChiSo("");
+    try {
+      await api.put(`/chi-so-dien-nuoc/${chiSoSua.id}`, {
+        dienCu: Number(suaDienCu || 0),
+        dienMoi: Number(suaDienMoi || 0),
+        nuocCu: Number(suaNuocCu || 0),
+        nuocMoi: Number(suaNuocMoi || 0),
+      });
+      notify("Đã cập nhật chỉ số", "success");
+      dongModalSuaChiSo();
+      tai();
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      const st = ax?.response?.status;
+      const msg =
+        st === 403
+          ? "Bạn không có quyền thao tác"
+          : st === 400
+            ? "Chỉ sửa được chỉ số tháng hiện tại hoặc tháng trước."
+            : "Cập nhật thất bại";
+      setLoiSuaChiSo(msg);
+      notify(msg, "error");
+    }
+  };
+
   return (
     <TrangBaoVe>
       <ThanhDieuHuong />
@@ -368,16 +425,27 @@ export default function TrangChiSoDienNuoc() {
                   )}
                   {lichSuPhong.map((r) => (
                     <div key={r.id} className="history-row">
-                      <div className="history-title">
-                        {r.month}/{r.year}
+                      <div className="history-row-main">
+                        <div className="history-title">
+                          {r.month}/{r.year}
+                        </div>
+                        <div className="history-meta">
+                          Điện: {r.oldElectric}-{r.newElectric} • Nước:{" "}
+                          {r.oldWater}-{r.newWater}
+                        </div>
+                        <div className="history-total">
+                          Tổng: {dinhDangTien(tongTienDienNuoc(r))}
+                        </div>
                       </div>
-                      <div className="history-meta">
-                        Điện: {r.oldElectric}-{r.newElectric} • Nước:{" "}
-                        {r.oldWater}-{r.newWater}
-                      </div>
-                      <div className="history-total">
-                        Tổng: {dinhDangTien(tongTienDienNuoc(r))}
-                      </div>
+                      {coTheSuaChiSo(r) && (
+                        <button
+                          type="button"
+                          className="history-row-edit"
+                          onClick={() => moModalSuaChiSo(r)}
+                        >
+                          Sửa
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -501,12 +569,88 @@ export default function TrangChiSoDienNuoc() {
                 render: (r: MeterReading) => `${r.oldWater} → ${r.newWater}`,
               },
               {
-                header: "Tổng tiền (ĐN)",
-                render: (r: MeterReading) => dinhDangTien(tongTienDienNuoc(r)),
+                header: "Thao tác",
+                render: (r: MeterReading) =>
+                  coTheSuaChiSo(r) ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm meter-btn-sua"
+                      onClick={() => moModalSuaChiSo(r)}
+                    >
+                      <IconPencil /> Sửa
+                    </button>
+                  ) : (
+                    <span style={{ color: "#94a3b8" }}>—</span>
+                  ),
               },
             ]}
           />
         </div>
+
+        {chiSoSua && (
+          <div className="modal-backdrop">
+            <div className="modal-card form-card meter-sua-modal">
+              <div className="card-header">
+                <div>
+                  <h3>Sửa chỉ số</h3>
+                  <p className="card-subtitle">
+                    {tenKhuVaPhong(chiSoSua.room)} — Tháng {chiSoSua.month}/
+                    {chiSoSua.year}
+                  </p>
+                </div>
+              </div>
+              <form onSubmit={luuSuaChiSo} className="form-grid">
+                <div>
+                  <label className="field-label">Số điện cũ</label>
+                  <input
+                    value={suaDienCu}
+                    onChange={(e) => setSuaDienCu(e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Số điện mới</label>
+                  <input
+                    value={suaDienMoi}
+                    onChange={(e) => setSuaDienMoi(e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Số nước cũ</label>
+                  <input
+                    value={suaNuocCu}
+                    onChange={(e) => setSuaNuocCu(e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Số nước mới</label>
+                  <input
+                    value={suaNuocMoi}
+                    onChange={(e) => setSuaNuocMoi(e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+                {loiSuaChiSo && (
+                  <div className="form-error form-span-2">{loiSuaChiSo}</div>
+                )}
+                <div className="form-actions form-span-2">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={dongModalSuaChiSo}
+                  >
+                    <IconTimes /> Hủy
+                  </button>
+                  <button className="btn" type="submit">
+                    <IconCheck /> Lưu thay đổi
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </TrangBaoVe>
   );

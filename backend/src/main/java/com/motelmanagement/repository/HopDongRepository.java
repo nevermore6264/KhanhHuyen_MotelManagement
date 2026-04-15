@@ -1,7 +1,9 @@
 package com.motelmanagement.repository;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +13,9 @@ import com.motelmanagement.domain.TrangThaiHopDong;
 
 /** Repository hợp đồng. */
 public interface HopDongRepository extends JpaRepository<HopDong, Long> {
+    @EntityGraph(attributePaths = {"khachThue", "thanhVien", "thanhVien.khachThue"})
+    Optional<HopDong> findByPhong_IdAndTrangThai(Long phongId, TrangThaiHopDong trangThai);
+
     List<HopDong> findByTrangThai(TrangThaiHopDong trangThai);
 
     List<HopDong> findByKhachThue_Id(Long tenantId);
