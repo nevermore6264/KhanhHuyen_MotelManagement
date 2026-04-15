@@ -13,14 +13,14 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "app.sms")
 public class ThuocTinhSms {
     private boolean enabled = false;
-    /** Ví dụ: https://api.speedsms.vn/index.php/sms/send */
+    /** Ví dụ eSMS: https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json */
     private String apiUrl = "";
-    /** SpeedSMS access token. */
+    /** eSMS ApiKey. */
     private String apiKey = "";
-    /** Password Basic auth (SpeedSMS thường dùng "x"). */
-    private String basicPassword = "x";
-    /** sms_type theo SpeedSMS (2 = CSKH). */
+    /** eSMS SecretKey. */
+    private String basicPassword = "";
+    /** eSMS SmsType (2=CSKH, 4=Brandname Notify...). */
     private int smsType = 2;
-    /** Sender nếu dùng brandname (không bắt buộc với sms_type=2). */
+    /** Brandname (nếu tài khoản có). */
     private String sender = "";
 }

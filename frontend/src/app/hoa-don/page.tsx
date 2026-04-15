@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
-import {
-  IconTimes,
-  IconCheck,
-  IconEye,
-  IconRefresh,
-  IconSend,
-} from "@/components/Icons";
+import { IconTimes, IconEye, IconRefresh } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
@@ -38,11 +32,8 @@ type Invoice = {
   total?: number;
   status?: string;
   lastReminderEmailAt?: string | null;
-  lastReminderSmsAt?: string | null;
   reminderEmailCount?: number;
-  reminderSmsCount?: number;
   lastReminderEmailMessage?: string | null;
-  lastReminderSmsMessage?: string | null;
 };
 
 type RawJson = Record<string, unknown>;
@@ -146,28 +137,14 @@ function chuanHoaHoaDonTuApi(raw: RawJson): Invoice {
         return String(raw.lastReminderEmailAt);
       return null;
     })(),
-    lastReminderSmsAt: (() => {
-      const iso = ngayRaChuoiIso(raw.nhacNoSmsLanCuoi);
-      if (iso) return iso;
-      if (raw.lastReminderSmsAt != null)
-        return String(raw.lastReminderSmsAt);
-      return null;
-    })(),
     reminderEmailCount: Number(
       raw.soLanNhacNoEmail ?? raw.reminderEmailCount ?? 0,
     ),
-    reminderSmsCount: Number(raw.soLanNhacNoSms ?? raw.reminderSmsCount ?? 0),
     lastReminderEmailMessage:
       raw.noiDungEmailCuoi != null
         ? String(raw.noiDungEmailCuoi)
         : raw.lastReminderEmailMessage != null
           ? String(raw.lastReminderEmailMessage)
-          : null,
-    lastReminderSmsMessage:
-      raw.noiDungSmsCuoi != null
-        ? String(raw.noiDungSmsCuoi)
-        : raw.lastReminderSmsMessage != null
-          ? String(raw.lastReminderSmsMessage)
           : null,
   };
 }
@@ -251,13 +228,13 @@ export default function TrangHoaDon() {
     setMounted(true);
   }, []);
 
-  const sendReminder = async (invoiceId: number, channel: "email" | "sms") => {
+  const sendReminder = async (invoiceId: number) => {
     setRemindingId(invoiceId);
     try {
       const res = await api.post<{ message?: string }>(
         `/hoa-don/${invoiceId}/nhac-no`,
         {
-          channel,
+          channel: "email",
         },
       );
       notify(res.data?.message || "Đã gửi nhắc nợ thành công.", "success");
@@ -515,13 +492,8 @@ export default function TrangHoaDon() {
                   const emailAt = i.lastReminderEmailAt
                     ? formatReminderDate(i.lastReminderEmailAt)
                     : "";
-                  const smsAt = i.lastReminderSmsAt
-                    ? formatReminderDate(i.lastReminderSmsAt)
-                    : "";
                   const emailCount = i.reminderEmailCount ?? 0;
-                  const smsCount = i.reminderSmsCount ?? 0;
-                  const hasAny =
-                    emailAt || smsAt || emailCount > 0 || smsCount > 0;
+                  const hasAny = emailAt || emailCount > 0;
                   if (!hasAny) return "—";
                   return (
                     <span
@@ -535,11 +507,6 @@ export default function TrangHoaDon() {
                       {emailAt && (
                         <span style={{ whiteSpace: "nowrap" }}>
                           Email: lần {emailCount || 1} ({emailAt})
-                        </span>
-                      )}
-                      {smsAt && (
-                        <span style={{ whiteSpace: "nowrap" }}>
-                          SMS: lần {smsCount || 1} ({smsAt})
                         </span>
                       )}
                       <button
@@ -565,9 +532,6 @@ export default function TrangHoaDon() {
                         const hasEmail = ds.some(
                           (t) => t.email && String(t.email).trim(),
                         );
-                        const hasPhone = ds.some(
-                          (t) => t.phone && String(t.phone).trim(),
-                        );
                         const loading = remindingId === i.id;
                         return (
                           <span
@@ -588,24 +552,9 @@ export default function TrangHoaDon() {
                                     ? "Khách thuê chưa có email"
                                     : "Gửi nhắc nợ qua email"
                               }
-                              onClick={() => sendReminder(i.id, "email")}
+                              onClick={() => sendReminder(i.id)}
                             >
                               {loading ? "..." : "Email"}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-secondary"
-                              disabled={!unpaid || !hasPhone || loading}
-                              title={
-                                !unpaid
-                                  ? "Chỉ nhắc hóa đơn chưa thanh toán"
-                                  : !hasPhone
-                                    ? "Khách thuê chưa có SĐT"
-                                    : "Gửi nhắc nợ qua SMS"
-                              }
-                              onClick={() => sendReminder(i.id, "sms")}
-                            >
-                              {loading ? "..." : "SMS"}
                             </button>
                           </span>
                         );
@@ -740,35 +689,11 @@ export default function TrangHoaDon() {
                     </div>
                   </div>
                 )}
-                {viewReminderInvoice.lastReminderSmsAt && (
-                  <div>
-                    <div className="field-label" style={{ marginBottom: 6 }}>
-                      SMS — lần thứ {viewReminderInvoice.reminderSmsCount ?? 1}{" "}
-                      (gửi{" "}
-                      {formatReminderDate(
-                        viewReminderInvoice.lastReminderSmsAt,
-                      )}
-                      )
-                    </div>
-                    <div
-                      className="readonly-field"
-                      style={{
-                        whiteSpace: "pre-wrap",
-                        maxHeight: 120,
-                        overflowY: "auto",
-                      }}
-                    >
-                      {viewReminderInvoice.lastReminderSmsMessage?.trim() ||
-                        "Không lưu nội dung."}
-                    </div>
-                  </div>
+                {!viewReminderInvoice.lastReminderEmailAt && (
+                  <p className="card-subtitle">
+                    Chưa có lịch sử nhắc nợ (dữ liệu cũ).
+                  </p>
                 )}
-                {!viewReminderInvoice.lastReminderEmailAt &&
-                  !viewReminderInvoice.lastReminderSmsAt && (
-                    <p className="card-subtitle">
-                      Chưa có lịch sử nhắc nợ (dữ liệu cũ).
-                    </p>
-                  )}
               </div>
               <div className="modal-actions" style={{ marginTop: 16 }}>
                 <button
