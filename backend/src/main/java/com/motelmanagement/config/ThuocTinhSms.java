@@ -13,10 +13,14 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "app.sms")
 public class ThuocTinhSms {
     private boolean enabled = false;
-    /** Ví dụ Infobip: https://{base}.api.infobip.com/sms/3/messages */
+    /** Ví dụ SpeedSMS: https://api.speedsms.vn/index.php/sms/send */
     private String apiUrl = "";
-    /** Infobip: API key (header Authorization: App ...), không gồm tiền tố "App ". */
+    /** SpeedSMS access token (dùng cho HTTP Basic auth username). */
     private String apiKey = "";
-    /** Mã / tên gửi đã đăng ký trên Infobip (trường sender). */
+    /** Mật khẩu Basic auth; SpeedSMS khuyến nghị dùng "x". */
+    private String basicPassword = "x";
+    /** Loại tin nhắn SpeedSMS (2=CSKH, 3=brandname...). */
+    private int smsType = 2;
+    /** Tên brandname (bắt buộc nếu smsType yêu cầu). */
     private String sender = "";
 }

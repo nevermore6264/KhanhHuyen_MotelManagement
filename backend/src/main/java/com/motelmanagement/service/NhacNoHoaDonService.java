@@ -236,6 +236,10 @@ public class NhacNoHoaDonService {
             String smsText = buildReminderSmsText(hoaDon);
             boolean daGui = smsService.gui(sdtNhan.trim(), smsText);
             if (!daGui && smsService.isConfigured()) {
+                String lyDo = smsService.layLoiGanNhat();
+                if (lyDo != null && !lyDo.isBlank()) {
+                    return Optional.of("Gửi SMS thất bại. " + lyDo);
+                }
                 return Optional.of("Gửi SMS thất bại. Kiểm tra cấu hình gateway.");
             }
 
