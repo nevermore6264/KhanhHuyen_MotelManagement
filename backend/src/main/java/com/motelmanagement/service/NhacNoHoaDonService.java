@@ -2,6 +2,8 @@ package com.motelmanagement.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +13,13 @@ import org.springframework.stereotype.Service;
 
 import com.motelmanagement.config.ThuocTinhMail;
 import com.motelmanagement.domain.HoaDon;
+import com.motelmanagement.domain.HopDong;
+import com.motelmanagement.domain.HopDongThanhVien;
+import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.repository.HoaDonRepository;
+import com.motelmanagement.repository.HopDongRepository;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -26,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NhacNoHoaDonService {
 
     private final HoaDonRepository hoaDonRepository;
+    private final HopDongRepository hopDongRepository;
     private final ThuocTinhMail thuocTinhMail;
     private final SmsService smsService;
 
@@ -37,11 +45,13 @@ public class NhacNoHoaDonService {
         return String.format("%,d", amount.longValue()) + " VNĐ";
     }
 
-    private static String buildReminderBody(HoaDon hoaDon) {
+    private static String buildReminderBody(HoaDon hoaDon, KhachThue nguoiNhan) {
         String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : "—";
         String ky = hoaDon.getThang() + "/" + hoaDon.getNam();
         String tong = formatMoney(hoaDon.getTongTien());
-        String ten = hoaDon.getKhachThue() != null ? hoaDon.getKhachThue().getHoTen() : "Khách";
+        String ten = nguoiNhan != null && nguoiNhan.getHoTen() != null && !nguoiNhan.getHoTen().isBlank()
+                ? nguoiNhan.getHoTen()
+                : "Quý khách";
         return String.format(
                 "Kính gửi %s,\n\nNhắc nợ hóa đơn tiền trọ:\n- Phòng: %s\n- Kỳ: %s\n- Tổng cộng: %s\n\nVui lòng thanh toán sớm.\nTrân trọng.",
                 ten, phong, ky, tong
@@ -55,6 +65,57 @@ public class NhacNoHoaDonService {
         return String.format("Nhac no: Phong %s, ky %s, tong %s. Vui long thanh toan.", phong, ky, tong);
     }
 
+    /** Gắn khách đại diện từ hợp đồng ACTIVE nếu hóa đơn chưa có (chỉ bộ nhớ; lưu khi cập nhật nhắc nợ). */
+    private void ganKhachDaiDienTuHopDongNeuThieu(HoaDon hoaDon) {
+        if (hoaDon.getKhachThue() != null || hoaDon.getPhong() == null) {
+            return;
+        }
+        hopDongRepository
+                .findByPhong_IdAndTrangThai(hoaDon.getPhong().getId(), TrangThaiHopDong.ACTIVE)
+                .map(HopDong::getKhachThue)
+                .ifPresent(hoaDon::setKhachThue);
+    }
+
+    /**
+     * Thứ tự: khách trên hóa đơn (nếu có) → đại diện HĐ → các thành viên. Chọn người đầu tiên có email hoặc SĐT.
+     */
+    private Map<Long, KhachThue> gomKhachTheoPhong(HoaDon hoaDon) {
+        LinkedHashMap<Long, KhachThue> gom = new LinkedHashMap<>();
+        if (hoaDon.getKhachThue() != null) {
+            gom.put(hoaDon.getKhachThue().getId(), hoaDon.getKhachThue());
+        }
+        if (hoaDon.getPhong() == null) {
+            return gom;
+        }
+        hopDongRepository
+                .findByPhong_IdAndTrangThai(hoaDon.getPhong().getId(), TrangThaiHopDong.ACTIVE)
+                .ifPresent(hd -> {
+                    if (hd.getKhachThue() != null) {
+                        gom.putIfAbsent(hd.getKhachThue().getId(), hd.getKhachThue());
+                    }
+                    if (hd.getThanhVien() != null) {
+                        for (HopDongThanhVien tv : hd.getThanhVien()) {
+                            if (tv.getKhachThue() != null) {
+                                gom.putIfAbsent(tv.getKhachThue().getId(), tv.getKhachThue());
+                            }
+                        }
+                    }
+                });
+        return gom;
+    }
+
+    private static Optional<KhachThue> chonKhachCoEmail(Map<Long, KhachThue> gom) {
+        return gom.values().stream()
+                .filter(k -> k.getEmail() != null && !k.getEmail().isBlank())
+                .findFirst();
+    }
+
+    private static Optional<KhachThue> chonKhachCoSoDienThoai(Map<Long, KhachThue> gom) {
+        return gom.values().stream()
+                .filter(k -> k.getSoDienThoai() != null && !k.getSoDienThoai().isBlank())
+                .findFirst();
+    }
+
     /**
      * Gửi nhắc nợ qua email (JavaMailSender) hoặc SMS (gateway HTTP).
      * Nếu chưa cấu hình mail/SMS thì vẫn ghi log và cập nhật lastReminder*At.
@@ -63,28 +124,33 @@ public class NhacNoHoaDonService {
         if (!"email".equalsIgnoreCase(kenh) && !"sms".equalsIgnoreCase(kenh)) {
             return Optional.of("Kênh không hợp lệ. Chọn email hoặc sms.");
         }
-        HoaDon hoaDon = hoaDonRepository.findById(maHoaDon).orElse(null);
+        HoaDon hoaDon = hoaDonRepository.timTheoIdCoPhong(maHoaDon).orElse(null);
         if (hoaDon == null) {
             return Optional.of("Không tìm thấy hóa đơn.");
-        }
-        if (hoaDon.getKhachThue() == null) {
-            return Optional.of("Hóa đơn chưa gắn khách thuê.");
         }
         if (hoaDon.getTrangThai() == TrangThaiHoaDon.PAID) {
             return Optional.of("Hóa đơn đã thanh toán, không cần nhắc.");
         }
 
-        String emailNhan = hoaDon.getKhachThue().getEmail();
-        String sdtNhan = hoaDon.getKhachThue().getSoDienThoai();
+        ganKhachDaiDienTuHopDongNeuThieu(hoaDon);
+        Map<Long, KhachThue> gomKhach = gomKhachTheoPhong(hoaDon);
+        if (gomKhach.isEmpty()) {
+            return Optional.of("Hóa đơn chưa gắn khách thuê và phòng không có hợp đồng đang hiệu lực.");
+        }
+
         if ("email".equalsIgnoreCase(kenh)) {
-            if (emailNhan == null || emailNhan.isBlank()) {
-                return Optional.of("Khách thuê chưa có email.");
+            Optional<KhachThue> nguoiGui = chonKhachCoEmail(gomKhach);
+            if (nguoiGui.isEmpty()) {
+                return Optional.of(
+                        "Không có khách nào (trên hóa đơn hoặc trong hợp đồng) có email để gửi nhắc nợ.");
             }
+            KhachThue nguoiNhan = nguoiGui.get();
+            String emailNhan = nguoiNhan.getEmail();
             String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : null;
             log.info("Reminder EMAIL: invoiceId={}, to={}, room={}, period={}/{}",
                     maHoaDon, emailNhan, maPhong, hoaDon.getThang(), hoaDon.getNam());
 
-            String noiDung = buildReminderBody(hoaDon);
+            String noiDung = buildReminderBody(hoaDon, nguoiNhan);
             if (javaMailSender != null) {
                 try {
                     MimeMessage message = javaMailSender.createMimeMessage();
@@ -108,9 +174,13 @@ public class NhacNoHoaDonService {
             hoaDonRepository.save(hoaDon);
             return Optional.empty();
         } else {
-            if (sdtNhan == null || sdtNhan.isBlank()) {
-                return Optional.of("Khách thuê chưa có số điện thoại.");
+            Optional<KhachThue> nguoiGui = chonKhachCoSoDienThoai(gomKhach);
+            if (nguoiGui.isEmpty()) {
+                return Optional.of(
+                        "Không có khách nào (trên hóa đơn hoặc trong hợp đồng) có số điện thoại để gửi SMS.");
             }
+            KhachThue nguoiNhan = nguoiGui.get();
+            String sdtNhan = nguoiNhan.getSoDienThoai();
             String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : null;
             log.info("Reminder SMS: invoiceId={}, to={}, room={}, period={}/{}",
                     maHoaDon, sdtNhan, maPhong, hoaDon.getThang(), hoaDon.getNam());

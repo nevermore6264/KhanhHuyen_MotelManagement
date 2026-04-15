@@ -93,6 +93,20 @@ public class TinhTienService {
     }
 
     /**
+     * Nếu đã có chỉ số điện nước cùng phòng/kỳ, cập nhật tiền điện/nước và tổng trên hóa đơn (tránh hiển thị 0
+     * khi chỉ số nhập sau lúc sinh hóa đơn).
+     */
+    public HoaDon dongBoHoaDonTheoChiSoNeuCo(HoaDon hoaDon) {
+        if (hoaDon.getId() == null || hoaDon.getPhong() == null) {
+            return hoaDon;
+        }
+        return chiSoDienNuocRepository
+                .findByPhongAndThangAndNam(hoaDon.getPhong(), hoaDon.getThang(), hoaDon.getNam())
+                .map(this::taoHoacCapNhatHoaDonTuChiSo)
+                .orElse(hoaDon);
+    }
+
+    /**
      * Job tự động: sinh hóa đơn cho tất cả phòng có hợp đồng ACTIVE trong tháng/năm chỉ định.
      * Nếu đã có hóa đơn (room, month, year) thì bỏ qua. Tiền phòng lấy từ Phong.currentPrice,
      * tiền điện/nước lấy từ ChiSoDienNuoc nếu có, không có thì 0.

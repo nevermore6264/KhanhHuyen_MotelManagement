@@ -50,6 +50,10 @@ type RawJson = Record<string, unknown>;
 function soTienTuApi(v: unknown): number | undefined {
   if (v == null) return undefined;
   if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const n = Number(v.replace(/\s/g, ""));
+    return Number.isFinite(n) ? n : undefined;
+  }
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
 }

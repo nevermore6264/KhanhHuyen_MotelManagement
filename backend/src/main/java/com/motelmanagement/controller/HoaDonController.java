@@ -71,9 +71,10 @@ public class HoaDonController {
     }
 
     private HoaDonResponseDto xuongDto(HoaDon h) {
-        Long maPhong = h.getPhong() != null ? h.getPhong().getId() : null;
-        List<KhachThueTomTatDto> ds = layDanhSachKhachTheoPhong(maPhong, h.getKhachThue());
-        return HoaDonResponseDto.tu(h, ds);
+        HoaDon hienTai = tinhTienService.dongBoHoaDonTheoChiSoNeuCo(h);
+        Long maPhong = hienTai.getPhong() != null ? hienTai.getPhong().getId() : null;
+        List<KhachThueTomTatDto> ds = layDanhSachKhachTheoPhong(maPhong, hienTai.getKhachThue());
+        return HoaDonResponseDto.tu(hienTai, ds);
     }
 
     /**
