@@ -20,6 +20,7 @@ import com.motelmanagement.domain.TrangThaiHoaDon;
 import com.motelmanagement.domain.TrangThaiPhong;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.PhongRepository;
+import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,33 +31,41 @@ import lombok.RequiredArgsConstructor;
 public class BaoCaoController {
     private final HoaDonRepository hoaDonRepository;
     private final PhongRepository phongRepository;
+    private final TinhTienService tinhTienService;
+
+    private List<HoaDon> tinhTienDanhSach(List<HoaDon> ds) {
+        return ds.stream().map(tinhTienService::tinhTienRuntime).toList();
+    }
 
     @GetMapping("/doanh-thu")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public Map<String, Object> doanhThu(@RequestParam("month") int thang, @RequestParam("year") int nam) {
-        Double doanhThu = hoaDonRepository.sumRevenueByThang(thang, nam);
+        BigDecimal doanhThu = tinhTienDanhSach(hoaDonRepository.findByThangAndNam(thang, nam)).stream()
+                .filter(hd -> hd.getTrangThai() == TrangThaiHoaDon.PAID)
+                .map(HoaDon::getTongTien)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         Map<String, Object> ketQua = new HashMap<>();
         ketQua.put("month", thang);
         ketQua.put("year", nam);
-        ketQua.put("revenue", doanhThu == null ? 0 : doanhThu);
+        ketQua.put("revenue", doanhThu);
         return ketQua;
     }
 
     @GetMapping("/doanh-thu-theo-nam")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public Map<String, Object> doanhThuTheoNam(@RequestParam("year") int nam) {
-        List<Object[]> hang = hoaDonRepository.sumRevenueByThangForNam(nam);
+        List<HoaDon> danhSachNam = tinhTienDanhSach(hoaDonRepository.findAll()).stream()
+                .filter(hd -> hd.getNam() == nam && hd.getTrangThai() == TrangThaiHoaDon.PAID)
+                .toList();
         Map<Integer, Double> theoThang = new HashMap<>();
         for (int t = 1; t <= 12; t++) {
             theoThang.put(t, 0.0);
         }
-        for (Object[] row : hang) {
-            Integer thang = ((Number) row[0]).intValue();
-            double tong = 0.0;
-            if (row[1] != null) {
-                tong = row[1] instanceof BigDecimal ? ((BigDecimal) row[1]).doubleValue() : ((Number) row[1]).doubleValue();
-            }
-            theoThang.put(thang, tong);
+        for (HoaDon hd : danhSachNam) {
+            int thang = hd.getThang();
+            double tong = hd.getTongTien() != null ? hd.getTongTien().doubleValue() : 0.0;
+            theoThang.put(thang, theoThang.getOrDefault(thang, 0.0) + tong);
         }
         List<Map<String, Object>> danhSachThang = new ArrayList<>();
         for (int t = 1; t <= 12; t++) {
@@ -93,7 +102,7 @@ public class BaoCaoController {
     @GetMapping("/cong-no")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public Map<String, Object> congNo() {
-        List<HoaDon> chuaThanhToan = hoaDonRepository.findByTrangThai(TrangThaiHoaDon.UNPAID);
+        List<HoaDon> chuaThanhToan = tinhTienDanhSach(hoaDonRepository.findByTrangThai(TrangThaiHoaDon.UNPAID));
         BigDecimal tongNo = chuaThanhToan.stream()
                 .map(HoaDon::getTongTien)
                 .filter(Objects::nonNull)
@@ -107,7 +116,8 @@ public class BaoCaoController {
     @GetMapping("/chi-tiet-cong-no")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public Map<String, Object> chiTietCongNo() {
-        List<HoaDon> chuaThanhToan = hoaDonRepository.findByTrangThaiWithRoomAndTenant(TrangThaiHoaDon.UNPAID);
+        List<HoaDon> chuaThanhToan = tinhTienDanhSach(
+                hoaDonRepository.findByTrangThaiWithRoomAndTenant(TrangThaiHoaDon.UNPAID));
         List<Map<String, Object>> danhSach = chuaThanhToan.stream().map(hoaDon -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", hoaDon.getId());
@@ -153,7 +163,7 @@ public class BaoCaoController {
     public Map<String, Object> tomTatHoaDon(
             @RequestParam("month") int thang,
             @RequestParam("year") int nam) {
-        List<HoaDon> danhSach = hoaDonRepository.findByThangAndNam(thang, nam);
+        List<HoaDon> danhSach = tinhTienDanhSach(hoaDonRepository.findByThangAndNam(thang, nam));
         long soDaThanhToan = danhSach.stream().filter(hd -> hd.getTrangThai() == TrangThaiHoaDon.PAID).count();
         long soChuaThanhToan = danhSach.stream().filter(hd -> hd.getTrangThai() == TrangThaiHoaDon.UNPAID).count();
         long soThanhToanMotPhan = danhSach.stream().filter(hd -> hd.getTrangThai() == TrangThaiHoaDon.PARTIAL).count();
@@ -198,13 +208,17 @@ public class BaoCaoController {
         Map<String, Object> ketQua = new HashMap<>();
         int namHienTai = nam != null ? nam : java.time.Year.now().getValue();
         int thangHienTai = thang != null ? thang : java.time.YearMonth.now().getMonthValue();
-        Double doanhThu = hoaDonRepository.sumRevenueByThang(thangHienTai, namHienTai);
-        ketQua.put("revenueMonth", doanhThu != null ? doanhThu : 0);
+        BigDecimal doanhThu = tinhTienDanhSach(hoaDonRepository.findByThangAndNam(thangHienTai, namHienTai)).stream()
+                .filter(hd -> hd.getTrangThai() == TrangThaiHoaDon.PAID)
+                .map(HoaDon::getTongTien)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        ketQua.put("revenueMonth", doanhThu);
         ketQua.put("month", thangHienTai);
         ketQua.put("year", namHienTai);
         long phongTrong = phongRepository.findByTrangThai(TrangThaiPhong.AVAILABLE).size();
         ketQua.put("vacantRooms", phongTrong);
-        List<HoaDon> chuaThanhToan = hoaDonRepository.findByTrangThai(TrangThaiHoaDon.UNPAID);
+        List<HoaDon> chuaThanhToan = tinhTienDanhSach(hoaDonRepository.findByTrangThai(TrangThaiHoaDon.UNPAID));
         BigDecimal tongNo = chuaThanhToan.stream()
                 .map(HoaDon::getTongTien)
                 .filter(Objects::nonNull)

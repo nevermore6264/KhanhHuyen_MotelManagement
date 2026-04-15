@@ -35,9 +35,4 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Long> {
     @Query("SELECT i FROM HoaDon i WHERE i.trangThai = ?1")
     List<HoaDon> findByTrangThaiWithRoomAndTenant(TrangThaiHoaDon trangThai);
 
-    @Query("select sum(i.tongTien) from HoaDon i where i.trangThai = 'PAID' and i.thang = ?1 and i.nam = ?2")
-    Double sumRevenueByThang(int thang, int nam);
-
-    @Query("select i.thang, sum(i.tongTien) from HoaDon i where i.trangThai = 'PAID' and i.nam = ?1 group by i.thang order by i.thang")
-    List<Object[]> sumRevenueByThangForNam(int nam);
 }

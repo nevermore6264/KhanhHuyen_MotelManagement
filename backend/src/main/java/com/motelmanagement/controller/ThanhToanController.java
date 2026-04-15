@@ -25,6 +25,7 @@ import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.ThanhToanRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.PayOSService;
+import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +39,7 @@ public class ThanhToanController {
     private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final PayOSService payOSService;
+    private final TinhTienService tinhTienService;
 
     @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('TENANT')")
@@ -79,7 +81,9 @@ public class ThanhToanController {
         KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
         if (khachThue == null) return ResponseEntity.status(403).build();
         HoaDon hoaDon = hoaDonRepository.findById(maHoaDon).orElse(null);
-        if (hoaDon == null || !hoaDon.getKhachThue().getId().equals(khachThue.getId())) {
+        hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
+        if (hoaDon == null || hoaDon.getKhachThue() == null
+                || !hoaDon.getKhachThue().getId().equals(khachThue.getId())) {
             return ResponseEntity.status(403).build();
         }
         String linkThanhToan = payOSService.taoLinkThanhToan(hoaDon);
@@ -101,6 +105,7 @@ public class ThanhToanController {
             return ResponseEntity.badRequest().build();
         }
         HoaDon hoaDon = hoaDonRepository.findById(thanhToan.getHoaDon().getId()).orElse(null);
+        hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
         if (hoaDon == null) {
             return ResponseEntity.badRequest().build();
         }

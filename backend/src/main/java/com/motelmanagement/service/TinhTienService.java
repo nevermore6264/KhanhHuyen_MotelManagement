@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import com.motelmanagement.domain.ChiSoDienNuoc;
 import com.motelmanagement.domain.HoaDon;
 import com.motelmanagement.domain.HopDong;
+import com.motelmanagement.domain.BangGiaDichVu;
 import com.motelmanagement.domain.TrangThaiHoaDon;
 import com.motelmanagement.domain.TrangThaiHopDong;
+import com.motelmanagement.repository.BangGiaDichVuRepository;
 import com.motelmanagement.repository.ChiSoDienNuocRepository;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
@@ -29,6 +31,7 @@ public class TinhTienService {
     private final HoaDonRepository hoaDonRepository;
     private final HopDongRepository hopDongRepository;
     private final ChiSoDienNuocRepository chiSoDienNuocRepository;
+    private final BangGiaDichVuRepository bangGiaDichVuRepository;
 
     /**
      * Hóa đơn kỳ (tháng/năm) chỉ áp dụng khi hợp đồng còn hiệu lực ít nhất một ngày trong tháng đó.
@@ -59,6 +62,54 @@ public class TinhTienService {
                 .isPresent();
     }
 
+    /** Tính động tiền hóa đơn theo phòng + chỉ số cùng kỳ. */
+    public HoaDon tinhTienRuntime(HoaDon hoaDon) {
+        if (hoaDon == null) {
+            return null;
+        }
+        BigDecimal tienPhong = BigDecimal.ZERO;
+        if (hoaDon.getPhong() != null && hoaDon.getPhong().getGiaHienTai() != null) {
+            tienPhong = hoaDon.getPhong().getGiaHienTai();
+        }
+        BigDecimal tienDien = BigDecimal.ZERO;
+        BigDecimal tienNuoc = BigDecimal.ZERO;
+        if (hoaDon.getPhong() != null) {
+            chiSoDienNuocRepository
+                    .findByPhong_IdAndThangAndNam(hoaDon.getPhong().getId(), hoaDon.getThang(), hoaDon.getNam())
+                    .ifPresent(chiSo -> {
+                        hoaDon.setTienDien(tinhTienDienTuChiSo(chiSo));
+                        hoaDon.setTienNuoc(tinhTienNuocTuChiSo(chiSo));
+                    });
+            tienDien = hoaDon.getTienDien() != null ? hoaDon.getTienDien() : BigDecimal.ZERO;
+            tienNuoc = hoaDon.getTienNuoc() != null ? hoaDon.getTienNuoc() : BigDecimal.ZERO;
+        }
+        hoaDon.setTienPhong(tienPhong);
+        hoaDon.setTienDien(tienDien);
+        hoaDon.setTienNuoc(tienNuoc);
+        hoaDon.setTongTien(tienPhong.add(tienDien).add(tienNuoc));
+        return hoaDon;
+    }
+
+    private BangGiaDichVu layBangGiaMoiNhat() {
+        return bangGiaDichVuRepository
+                .findFirstByOrderByHieuLucTuDesc()
+                .orElse(null);
+    }
+
+    private BigDecimal tinhTienDienTuChiSo(ChiSoDienNuoc chiSo) {
+        BangGiaDichVu bangGia = layBangGiaMoiNhat();
+        BigDecimal donGiaDien = bangGia != null && bangGia.getGiaDien() != null ? bangGia.getGiaDien() : BigDecimal.ZERO;
+        int sanLuong = Math.max(0, chiSo.getDienMoi() - chiSo.getDienCu());
+        return donGiaDien.multiply(BigDecimal.valueOf(sanLuong));
+    }
+
+    private BigDecimal tinhTienNuocTuChiSo(ChiSoDienNuoc chiSo) {
+        BangGiaDichVu bangGia = layBangGiaMoiNhat();
+        BigDecimal donGiaNuoc = bangGia != null && bangGia.getGiaNuoc() != null ? bangGia.getGiaNuoc() : BigDecimal.ZERO;
+        int sanLuong = Math.max(0, chiSo.getNuocMoi() - chiSo.getNuocCu());
+        return donGiaNuoc.multiply(BigDecimal.valueOf(sanLuong));
+    }
+
     public HoaDon taoHoacCapNhatHoaDonTuChiSo(ChiSoDienNuoc chiSo) {
         HoaDon hoaDon = hoaDonRepository
                 .findByPhong_IdAndThangAndNam(chiSo.getPhong().getId(), chiSo.getThang(), chiSo.getNam())
@@ -67,18 +118,6 @@ public class TinhTienService {
         hoaDon.setPhong(chiSo.getPhong());
         hoaDon.setThang(chiSo.getThang());
         hoaDon.setNam(chiSo.getNam());
-
-        // Giá phòng lấy theo từng phòng (Phong.giaHienTai), không dùng bảng giá dịch vụ
-        BigDecimal giaPhong = chiSo.getPhong().getGiaHienTai() != null
-                ? chiSo.getPhong().getGiaHienTai() : BigDecimal.ZERO;
-        hoaDon.setTienPhong(giaPhong);
-        hoaDon.setTienDien(chiSo.getTienDien());
-        hoaDon.setTienNuoc(chiSo.getTienNuoc());
-
-        BigDecimal tong = giaPhong
-                .add(chiSo.getTienDien() != null ? chiSo.getTienDien() : BigDecimal.ZERO)
-                .add(chiSo.getTienNuoc() != null ? chiSo.getTienNuoc() : BigDecimal.ZERO);
-        hoaDon.setTongTien(tong);
 
         HopDong hopDongHoatDong = hopDongRepository
                 .findByPhong_IdAndTrangThai(chiSo.getPhong().getId(), TrangThaiHopDong.ACTIVE)
@@ -89,7 +128,8 @@ public class TinhTienService {
         } else {
             hoaDon.setKhachThue(null);
         }
-        return hoaDonRepository.save(hoaDon);
+        HoaDon daLuu = hoaDonRepository.save(hoaDon);
+        return tinhTienRuntime(daLuu);
     }
 
     /**
@@ -100,10 +140,7 @@ public class TinhTienService {
         if (hoaDon.getId() == null || hoaDon.getPhong() == null) {
             return hoaDon;
         }
-        return chiSoDienNuocRepository
-                .findByPhongAndThangAndNam(hoaDon.getPhong(), hoaDon.getThang(), hoaDon.getNam())
-                .map(this::taoHoacCapNhatHoaDonTuChiSo)
-                .orElse(hoaDon);
+        return tinhTienRuntime(hoaDon);
     }
 
     /**
@@ -130,26 +167,6 @@ public class TinhTienService {
             hoaDon.setNam(nam);
             hoaDon.setTrangThai(TrangThaiHoaDon.UNPAID);
 
-            BigDecimal giaPhong = hopDong.getPhong().getGiaHienTai() != null
-                    ? hopDong.getPhong().getGiaHienTai() : BigDecimal.ZERO;
-            hoaDon.setTienPhong(giaPhong);
-
-            hoaDon.setTienDien(BigDecimal.ZERO);
-            hoaDon.setTienNuoc(BigDecimal.ZERO);
-            chiSoDienNuocRepository.findByPhongAndThangAndNam(hopDong.getPhong(), thang, nam)
-                    .ifPresent(chiSo -> {
-                        if (chiSo.getTienDien() != null) {
-                            hoaDon.setTienDien(chiSo.getTienDien());
-                        }
-                        if (chiSo.getTienNuoc() != null) {
-                            hoaDon.setTienNuoc(chiSo.getTienNuoc());
-                        }
-                    });
-
-            BigDecimal tong = giaPhong
-                    .add(hoaDon.getTienDien())
-                    .add(hoaDon.getTienNuoc());
-            hoaDon.setTongTien(tong);
             hoaDonRepository.save(hoaDon);
             soTao++;
         }

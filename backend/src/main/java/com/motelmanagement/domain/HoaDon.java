@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,16 +46,20 @@ public class HoaDon {
     @Column(name = "nam")
     private int nam;
 
-    @Column(name = "tien_phong", precision = 12, scale = 2)
+    /** Tính động khi trả API, không lưu DB. */
+    @Transient
     private BigDecimal tienPhong;
 
-    @Column(name = "tien_dien", precision = 12, scale = 2)
+    /** Tính động khi trả API, không lưu DB. */
+    @Transient
     private BigDecimal tienDien;
 
-    @Column(name = "tien_nuoc", precision = 12, scale = 2)
+    /** Tính động khi trả API, không lưu DB. */
+    @Transient
     private BigDecimal tienNuoc;
 
-    @Column(name = "tong_tien", precision = 12, scale = 2)
+    /** Tính động khi trả API, không lưu DB. */
+    @Transient
     private BigDecimal tongTien;
 
     @Enumerated(EnumType.STRING)

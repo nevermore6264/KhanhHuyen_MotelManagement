@@ -36,6 +36,7 @@ public class NhacNoHoaDonService {
     private final HopDongRepository hopDongRepository;
     private final ThuocTinhMail thuocTinhMail;
     private final SmsService smsService;
+    private final TinhTienService tinhTienService;
 
     @Autowired(required = false)
     private JavaMailSender javaMailSender;
@@ -125,6 +126,7 @@ public class NhacNoHoaDonService {
             return Optional.of("Kênh không hợp lệ. Chọn email hoặc sms.");
         }
         HoaDon hoaDon = hoaDonRepository.timTheoIdCoPhong(maHoaDon).orElse(null);
+        hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
         if (hoaDon == null) {
             return Optional.of("Không tìm thấy hóa đơn.");
         }

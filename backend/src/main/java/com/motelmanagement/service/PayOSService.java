@@ -42,12 +42,14 @@ public class PayOSService {
     private final DonHangPayOSRepository donHangPayOSRepository;
     private final HoaDonRepository hoaDonRepository;
     private final ThanhToanRepository thanhToanRepository;
+    private final TinhTienService tinhTienService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
      * Tạo link thanh toán PayOS cho hóa đơn. Lưu orderCode -> invoiceId để xử lý webhook.
      */
     public String taoLinkThanhToan(HoaDon hoaDon) {
+        hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
         if (hoaDon == null || hoaDon.getTongTien() == null
                 || laRong(thuocTinhPayOS.getClientId()) || laRong(thuocTinhPayOS.getApiKey()) || laRong(thuocTinhPayOS.getChecksumKey())) {
             return null;
@@ -131,6 +133,7 @@ public class PayOSService {
             return donHangPayOSRepository.findByMaDonHang(maDonHang)
                     .map(donHang -> {
                         HoaDon hoaDon = hoaDonRepository.findById(donHang.getMaHoaDon()).orElse(null);
+                        hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
                         if (hoaDon == null) return false;
                         ThanhToan thanhToan = new ThanhToan();
                         thanhToan.setHoaDon(hoaDon);
