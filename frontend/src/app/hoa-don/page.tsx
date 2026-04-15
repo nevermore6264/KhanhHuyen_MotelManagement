@@ -441,7 +441,13 @@ export default function TrangHoaDon() {
                 header: "Khách thuê",
                 render: (i: Invoice) => {
                   const list = khachCuaHoaDon(i);
-                  if (!list.length) return "—";
+                  if (!list.length) {
+                    return (
+                      <span className="text-muted" title="Hóa đơn không gắn hợp đồng active trong kỳ, hoặc phòng chưa có khách đại diện.">
+                        Chưa có khách trong kỳ
+                      </span>
+                    );
+                  }
                   if (list.length === 1) {
                     return list[0].fullName?.trim() || "—";
                   }

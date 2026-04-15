@@ -1,6 +1,8 @@
 package com.motelmanagement.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -28,6 +30,35 @@ public class TinhTienService {
     private final HopDongRepository hopDongRepository;
     private final ChiSoDienNuocRepository chiSoDienNuocRepository;
 
+    /**
+     * Hóa đơn kỳ (tháng/năm) chỉ áp dụng khi hợp đồng còn hiệu lực ít nhất một ngày trong tháng đó.
+     * Không có ngày bắt đầu: giữ hành vi cũ (vẫn tính có hiệu lực).
+     */
+    private static boolean hopDongCoHieuLucTrongThang(HopDong hopDong, int thang, int nam) {
+        if (hopDong.getNgayBatDau() == null) {
+            return true;
+        }
+        YearMonth ky = YearMonth.of(nam, thang);
+        LocalDate dauKy = ky.atDay(1);
+        LocalDate cuoiKy = ky.atEndOfMonth();
+        if (hopDong.getNgayBatDau().isAfter(cuoiKy)) {
+            return false;
+        }
+        if (hopDong.getNgayKetThuc() != null && hopDong.getNgayKetThuc().isBefore(dauKy)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Phòng có hợp đồng ACTIVE và kỳ tháng/năm giao với hiệu lực hợp đồng (được nhập chỉ số điện nước).
+     */
+    public boolean phongCoHopDongActiveChoKy(long maPhong, int thang, int nam) {
+        return hopDongRepository.findByPhong_IdAndTrangThai(maPhong, TrangThaiHopDong.ACTIVE)
+                .filter(hd -> hopDongCoHieuLucTrongThang(hd, thang, nam))
+                .isPresent();
+    }
+
     public HoaDon taoHoacCapNhatHoaDonTuChiSo(ChiSoDienNuoc chiSo) {
         HoaDon hoaDon = hoaDonRepository
                 .findByPhong_IdAndThangAndNam(chiSo.getPhong().getId(), chiSo.getThang(), chiSo.getNam())
@@ -49,12 +80,14 @@ public class TinhTienService {
                 .add(chiSo.getTienNuoc() != null ? chiSo.getTienNuoc() : BigDecimal.ZERO);
         hoaDon.setTongTien(tong);
 
-        HopDong hopDongHoatDong = hopDongRepository.findByTrangThai(TrangThaiHopDong.ACTIVE).stream()
-                .filter(hd -> hd.getPhong().getId().equals(chiSo.getPhong().getId()))
-                .findFirst()
+        HopDong hopDongHoatDong = hopDongRepository
+                .findByPhong_IdAndTrangThai(chiSo.getPhong().getId(), TrangThaiHopDong.ACTIVE)
                 .orElse(null);
-        if (hopDongHoatDong != null) {
+        if (hopDongHoatDong != null
+                && hopDongCoHieuLucTrongThang(hopDongHoatDong, chiSo.getThang(), chiSo.getNam())) {
             hoaDon.setKhachThue(hopDongHoatDong.getKhachThue());
+        } else {
+            hoaDon.setKhachThue(null);
         }
         return hoaDonRepository.save(hoaDon);
     }
@@ -69,6 +102,9 @@ public class TinhTienService {
         int soTao = 0;
         for (HopDong hopDong : danhSachHopDong) {
             if (hopDong.getPhong() == null) continue;
+            if (!hopDongCoHieuLucTrongThang(hopDong, thang, nam)) {
+                continue;
+            }
             Long maPhong = hopDong.getPhong().getId();
             if (hoaDonRepository.findByPhong_IdAndThangAndNam(maPhong, thang, nam).isPresent()) {
                 continue;

@@ -146,7 +146,7 @@ export default function TrangChiSoDienNuoc() {
   const tai = async () => {
     const [resChiSo, resPhong, resKhu] = await Promise.all([
       api.get("/chi-so-dien-nuoc"),
-      api.get("/phong"),
+      api.get("/phong/co-hop-dong-active"),
       api.get("/khu-vuc"),
     ]);
     const mangChiSo = Array.isArray(resChiSo.data) ? resChiSo.data : [];
@@ -281,13 +281,20 @@ export default function TrangChiSoDienNuoc() {
       setPhongDangChon(null);
       tai();
     } catch (err: unknown) {
-      const ax = err as { response?: { status?: number } };
+      const ax = err as {
+        response?: {
+          status?: number;
+          data?: { message?: string };
+        };
+      };
       const status = ax?.response?.status;
+      const msgLoi = ax?.response?.data?.message;
       const thongBao =
         status === 403
           ? "Bạn không có quyền thao tác"
           : status === 400
-            ? "Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó."
+            ? msgLoi ||
+              "Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước; phòng phải có hợp đồng hiệu lực trong kỳ."
             : "Lưu chỉ số thất bại";
       setLoi(thongBao);
       notify(thongBao, "error");
@@ -347,7 +354,7 @@ export default function TrangChiSoDienNuoc() {
               <h3>Chọn khu & phòng</h3>
               <p className="card-subtitle">
                 {moChonKhuPhong
-                  ? "Chọn khu để xem danh sách phòng"
+                  ? "Chỉ phòng đang có hợp đồng hiệu lực — chọn khu để xem danh sách"
                   : phongDangChon
                     ? `Đang chọn: ${tenKhuVaPhong(phongDangChon)}`
                     : "Đã thu gọn — mở rộng để đổi khu hoặc phòng"}
@@ -378,7 +385,11 @@ export default function TrangChiSoDienNuoc() {
               </div>
               {phongTheoKhu.length === 0 ? (
                 <div className="room-empty room-empty-standalone">
-                  Không có phòng trong khu này.
+                  {idKhu
+                    ? "Không có phòng đang cho thuê trong khu này."
+                    : danhSachPhong.length === 0
+                      ? "Không có phòng đang cho thuê (chưa có hợp đồng đang hiệu lực)."
+                      : "Không có phòng trong khu này."}
                 </div>
               ) : (
                 <div className="room-list-by-area">

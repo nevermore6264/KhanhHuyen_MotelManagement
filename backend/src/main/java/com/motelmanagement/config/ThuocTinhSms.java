@@ -13,6 +13,10 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "app.sms")
 public class ThuocTinhSms {
     private boolean enabled = false;
+    /** Ví dụ Infobip: https://{base}.api.infobip.com/sms/3/messages */
     private String apiUrl = "";
+    /** Infobip: API key (header Authorization: App ...), không gồm tiền tố "App ". */
     private String apiKey = "";
+    /** Mã / tên gửi đã đăng ký trên Infobip (trường sender). */
+    private String sender = "";
 }

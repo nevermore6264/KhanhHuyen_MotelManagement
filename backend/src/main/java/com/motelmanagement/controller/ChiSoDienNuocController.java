@@ -6,8 +6,10 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,6 +64,11 @@ public class ChiSoDienNuocController {
         Phong phong = phongRepository.findById(chiSo.getPhong().getId()).orElse(null);
         if (phong == null) {
             return ResponseEntity.badRequest().build();
+        }
+        if (!tinhTienService.phongCoHopDongActiveChoKy(phong.getId(), chiSo.getThang(), chiSo.getNam())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Chỉ được nhập chỉ số cho phòng đang có hợp đồng hiệu lực trong kỳ tháng/năm đã chọn.");
         }
         chiSo.setPhong(phong);
 

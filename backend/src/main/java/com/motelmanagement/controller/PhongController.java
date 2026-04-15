@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.motelmanagement.domain.KhuVuc;
 import com.motelmanagement.domain.Phong;
+import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.domain.TrangThaiPhong;
 import com.motelmanagement.repository.KhuVucRepository;
 import com.motelmanagement.repository.PhongRepository;
@@ -33,6 +34,13 @@ public class PhongController {
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<Phong> layDanhSach() {
         return phongRepository.findAll();
+    }
+
+    /** Phòng đang có hợp đồng hiệu lực (nhập chỉ số điện nước). */
+    @GetMapping("/co-hop-dong-active")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public List<Phong> layPhongCoHopDongActive() {
+        return phongRepository.findDistinctByHopDong_TrangThai(TrangThaiHopDong.ACTIVE);
     }
 
     @GetMapping("/con-trong")
