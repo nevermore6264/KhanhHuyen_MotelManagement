@@ -1,14 +1,12 @@
 package com.motelmanagement.service;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,23 +15,16 @@ import com.motelmanagement.config.ThuocTinhSms;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-/**
- * Gửi SMS qua SpeedSMS API (POST /sms/send) dùng OkHttp.
- * Cấu hình: app.sms.enabled, app.sms.api-url, app.sms.api-key, app.sms.basic-password,
- * app.sms.sms-type, app.sms.sender.
- */
+/** Gửi SMS qua SpeedSMS API (POST /sms/send) dùng OkHttp. */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class SmsService {
-
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     private final ThuocTinhSms thuocTinhSms;
     /** Bean mặc định của Spring Boot (JSON Infobip). */
@@ -59,7 +50,7 @@ public class SmsService {
         return s != null && !s.trim().isEmpty();
     }
 
-    /** Chuẩn hóa số cho SpeedSMS: +84/84xxxxxxxxx -> 0xxxxxxxxx (nội địa). */
+    /** Chuẩn hóa số cho SpeedSMS: +84/84... -> 0... */
     static String chuanHoaSoChoSpeedSms(String sdt) {
         if (sdt == null) {
             return "";
@@ -97,13 +88,19 @@ public class SmsService {
             Map<String, Object> root = new LinkedHashMap<>();
             root.put("to", List.of(to));
             root.put("content", noiDung);
-            root.put("sms_type", thuocTinhSms.getSmsType());
-            // sender chỉ bắt buộc với một số sms_type (vd brandname)
-            if (notBlank(thuocTinhSms.getSender())) {
+            int smsType = thuocTinhSms.getSmsType();
+            root.put("sms_type", smsType);
+            // SpeedSMS docs có ví dụ gửi sms_type=2 vẫn truyền sender rỗng.
+            if (smsType == 2) {
+                root.put("sender", "");
+            } else if ((smsType == 3 || smsType == 5 || smsType == 6) && notBlank(thuocTinhSms.getSender())) {
                 root.put("sender", thuocTinhSms.getSender().trim());
             }
             String json = objectMapper.writeValueAsString(root);
-            RequestBody body = RequestBody.create(json.getBytes(Charset.forName("UTF-8")), JSON);
+            log.info("SpeedSMS outbound payload: {}", truncate(json, 1200));
+            RequestBody body = RequestBody.create(
+                    json.getBytes(StandardCharsets.UTF_8),
+                    okhttp3.MediaType.parse("application/json; charset=utf-8"));
             Request request = new Request.Builder()
                     .url(thuocTinhSms.getApiUrl().trim())
                     .post(body)
@@ -114,28 +111,24 @@ public class SmsService {
             try (Response response = httpClient.newCall(request).execute()) {
                 okhttp3.ResponseBody rawBody = response.body();
                 String respBody = rawBody != null ? rawBody.string() : "";
+                log.info("SpeedSMS raw response (HTTP {}): {}", response.code(), truncate(respBody, 1200));
                 if (!response.isSuccessful()) {
                     loiGanNhat = "HTTP " + response.code() + " từ SpeedSMS.";
                     log.warn("SMS SpeedSMS HTTP {}: {}", response.code(), truncate(respBody, 500));
                     return false;
                 }
-                boolean thanhCong = true;
                 try {
                     JsonNode node = objectMapper.readTree(respBody);
                     String status = node.path("status").asText("");
                     String code = node.path("code").asText("");
                     if (!"success".equalsIgnoreCase(status) || !"00".equals(code)) {
-                        thanhCong = false;
                         String message = node.path("message").asText("");
                         loiGanNhat = "SpeedSMS trả về code=" + code
                                 + (message != null && !message.isBlank() ? (", message=" + message) : "");
-                        log.warn("SMS SpeedSMS response not success: {}", truncate(respBody, 500));
+                        return false;
                     }
                 } catch (Exception ignored) {
-                    // Không chặn flow nếu response không phải JSON chuẩn, coi HTTP 2xx là tạm thành công.
-                }
-                if (!thanhCong) {
-                    return false;
+                    // Nếu parse JSON lỗi nhưng HTTP 2xx, coi là tạm thành công.
                 }
                 log.info("SMS sent to {} (SpeedSMS)", to);
                 if (log.isDebugEnabled()) {
