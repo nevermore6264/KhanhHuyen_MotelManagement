@@ -59,6 +59,51 @@ public class NhacNoHoaDonService {
         );
     }
 
+    private static String buildReminderBodyHtml(HoaDon hoaDon, KhachThue nguoiNhan) {
+        String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : "—";
+        String ky = hoaDon.getThang() + "/" + hoaDon.getNam();
+        String tong = formatMoney(hoaDon.getTongTien());
+        String ten = nguoiNhan != null && nguoiNhan.getHoTen() != null && !nguoiNhan.getHoTen().isBlank()
+                ? nguoiNhan.getHoTen()
+                : "Quý khách";
+
+        return String.format(
+                "<div style=\"font-family: Arial, Helvetica, sans-serif; background:#f5f7fb; margin:0; padding:24px;\">"
+                        + "<div style=\"max-width:620px; margin:0 auto; background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;\">"
+                        + "<div style=\"background:#1d4ed8; color:#ffffff; padding:16px 20px; font-size:18px; font-weight:700;\">"
+                        + "Nhắc nợ hóa đơn tiền trọ"
+                        + "</div>"
+                        + "<div style=\"padding:20px; color:#111827; line-height:1.55;\">"
+                        + "<p style=\"margin:0 0 12px;\">Kính gửi <strong>%s</strong>,</p>"
+                        + "<p style=\"margin:0 0 14px;\">Hệ thống ghi nhận hóa đơn của bạn đang ở trạng thái <strong>chưa thanh toán</strong>:</p>"
+                        + "<table role=\"presentation\" width=\"100%%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse; margin:0 0 14px;\">"
+                        + "<tr><td style=\"padding:8px 0; color:#6b7280;\">Phòng</td><td style=\"padding:8px 0; text-align:right; font-weight:600;\">%s</td></tr>"
+                        + "<tr><td style=\"padding:8px 0; color:#6b7280;\">Kỳ</td><td style=\"padding:8px 0; text-align:right; font-weight:600;\">%s</td></tr>"
+                        + "<tr><td style=\"padding:12px 0 4px; color:#6b7280;\">Tổng cộng</td><td style=\"padding:12px 0 4px; text-align:right; font-size:20px; font-weight:700; color:#dc2626;\">%s</td></tr>"
+                        + "</table>"
+                        + "<p style=\"margin:0 0 6px;\">Vui lòng thanh toán sớm để tránh gián đoạn dịch vụ.</p>"
+                        + "<p style=\"margin:0; color:#6b7280;\">Trân trọng,<br/>BQL nhà trọ</p>"
+                        + "</div>"
+                        + "</div>"
+                        + "</div>",
+                escapeHtml(ten),
+                escapeHtml(phong),
+                escapeHtml(ky),
+                escapeHtml(tong));
+    }
+
+    private static String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
     private static String buildReminderSmsText(HoaDon hoaDon) {
         String phong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : "—";
         String ky = hoaDon.getThang() + "/" + hoaDon.getNam();
@@ -153,6 +198,7 @@ public class NhacNoHoaDonService {
                     maHoaDon, emailNhan, maPhong, hoaDon.getThang(), hoaDon.getNam());
 
             String noiDung = buildReminderBody(hoaDon, nguoiNhan);
+            String noiDungHtml = buildReminderBodyHtml(hoaDon, nguoiNhan);
             if (javaMailSender != null) {
                 try {
                     MimeMessage message = javaMailSender.createMimeMessage();
@@ -161,7 +207,7 @@ public class NhacNoHoaDonService {
                     helper.setTo(emailNhan.trim());
                     helper.setSubject(String.format("Nhắc nợ - Hóa đơn phòng %s kỳ %d/%d",
                             maPhong != null ? maPhong : "", hoaDon.getThang(), hoaDon.getNam()));
-                    helper.setText(noiDung, false);
+                    helper.setText(noiDung, noiDungHtml);
                     javaMailSender.send(message);
                     log.info("Email sent to {}", emailNhan);
                 } catch (MessagingException e) {
