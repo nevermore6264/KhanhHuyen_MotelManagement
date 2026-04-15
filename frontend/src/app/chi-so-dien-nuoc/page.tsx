@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
-import { IconCheck } from "@/components/Icons";
+import { IconCheck, IconChevronDown, IconChevronUp } from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
@@ -50,6 +50,15 @@ function chuanHoaPhongTuApi(raw: RawJson): Room {
         }
       : undefined,
   };
+}
+
+/** Hiển thị: "Tên khu - Mã phòng" (dễ nhận diện khi nhiều khu). */
+function tenKhuVaPhong(room?: Room | null): string {
+  if (!room) return "—";
+  const tenKhu = (room.area?.name || "").trim();
+  const ma = (room.code || "").trim();
+  if (tenKhu && ma) return `${tenKhu} - ${ma}`;
+  return ma || tenKhu || "—";
 }
 
 function chuanHoaChiSoTuApi(raw: RawJson): MeterReading {
@@ -115,6 +124,8 @@ export default function TrangChiSoDienNuoc() {
   const [loi, setLoi] = useState("");
   const [idKhuLoc, setIdKhuLoc] = useState("");
   const [idPhongLoc, setIdPhongLoc] = useState("");
+  /** true = hiện đầy đủ khu + lưới phòng; false = thu gọn tiết kiệm chỗ */
+  const [moChonKhuPhong, setMoChonKhuPhong] = useState(true);
   const { notify } = useToast();
 
   const tai = async () => {
@@ -139,6 +150,45 @@ export default function TrangChiSoDienNuoc() {
     if (!idKhu) return danhSachPhong;
     return danhSachPhong.filter((r) => String(r.area?.id) === idKhu);
   }, [danhSachPhong, idKhu]);
+
+  /** Gom phòng theo khu; thứ tự khu theo danh sách khu API, cuối là phòng chưa gán khu. */
+  const phongNhomTheoKhu = useMemo(() => {
+    const nhomMap = new Map<string, { ten: string; phong: Room[] }>();
+    for (const p of phongTheoKhu) {
+      const kid =
+        p.area?.id != null ? String(p.area.id) : "_none";
+      const ten = (p.area?.name || "").trim() || "Chưa gán khu";
+      if (!nhomMap.has(kid)) {
+        nhomMap.set(kid, { ten, phong: [] });
+      }
+      nhomMap.get(kid)!.phong.push(p);
+    }
+    for (const v of nhomMap.values()) {
+      v.phong.sort((a, b) =>
+        a.code.localeCompare(b.code, "vi", { numeric: true }),
+      );
+    }
+    const thuTuKhu = new Map(
+      danhSachKhu.map((k, i) => [String(k.id), i]),
+    );
+    const cap = [...nhomMap.entries()].sort(([idA], [idB]) => {
+      if (idA === "_none") return 1;
+      if (idB === "_none") return -1;
+      const oa = thuTuKhu.get(idA);
+      const ob = thuTuKhu.get(idB);
+      if (oa !== undefined && ob !== undefined) return oa - ob;
+      if (oa !== undefined) return -1;
+      if (ob !== undefined) return 1;
+      return nhomMap
+        .get(idA)!
+        .ten.localeCompare(nhomMap.get(idB)!.ten, "vi");
+    });
+    return cap.map(([kid, v]) => ({
+      khuId: kid,
+      tenKhu: v.ten,
+      phong: v.phong,
+    }));
+  }, [phongTheoKhu, danhSachKhu]);
 
   const lichSuPhong = useMemo(() => {
     if (!phongDangChon) return [];
@@ -234,45 +284,76 @@ export default function TrangChiSoDienNuoc() {
       <ThanhDieuHuong />
       <div className="container">
         <h2>Nhập chỉ số điện nước</h2>
-        <div className="card">
-          <div className="card-header">
-            <div>
+        <div className="card meter-picker-card">
+          <div className="card-header meter-picker-card-header">
+            <div className="meter-picker-heading">
               <h3>Chọn khu & phòng</h3>
-              <p className="card-subtitle">Chọn khu để xem danh sách phòng</p>
+              <p className="card-subtitle">
+                {moChonKhuPhong
+                  ? "Chọn khu để xem danh sách phòng"
+                  : phongDangChon
+                    ? `Đang chọn: ${tenKhuVaPhong(phongDangChon)}`
+                    : "Đã thu gọn — mở rộng để đổi khu hoặc phòng"}
+              </p>
             </div>
+            <button
+              type="button"
+              className="btn-toggle-meter-picker"
+              onClick={() => setMoChonKhuPhong((v) => !v)}
+              aria-expanded={moChonKhuPhong}
+              aria-label={moChonKhuPhong ? "Thu gọn" : "Mở rộng"}
+              title={moChonKhuPhong ? "Thu gọn" : "Mở rộng"}
+            >
+              {moChonKhuPhong ? <IconChevronUp /> : <IconChevronDown />}
+            </button>
           </div>
-          <div className="meter-area-picker">
-            <label className="field-label">Khu vực</label>
-            <ChonKhuCombobox
-              danhSachKhu={danhSachKhuCombo}
-              value={idKhu}
-              onChange={setIdKhu}
-              placeholderChuaChon="Tất cả khu"
-              placeholderTim="Tìm theo tên khu…"
-            />
-          </div>
-          <div className="room-list">
-            {phongTheoKhu.map((r) => (
-              <button
-                key={r.id}
-                className={`room-row ${phongDangChon?.id === r.id ? "active" : ""}`}
-                onClick={() => setPhongDangChon(r)}
-              >
-                <span>{r.code}</span>
-                <span className="room-sub">Xem chỉ số</span>
-              </button>
-            ))}
-            {phongTheoKhu.length === 0 && (
-              <div className="room-empty">Không có phòng trong khu này.</div>
-            )}
-          </div>
+          {moChonKhuPhong && (
+            <>
+              <div className="meter-area-picker">
+                <label className="field-label">Khu vực</label>
+                <ChonKhuCombobox
+                  danhSachKhu={danhSachKhuCombo}
+                  value={idKhu}
+                  onChange={setIdKhu}
+                  placeholderChuaChon="Tất cả khu"
+                  placeholderTim="Tìm theo tên khu…"
+                />
+              </div>
+              {phongTheoKhu.length === 0 ? (
+                <div className="room-empty room-empty-standalone">
+                  Không có phòng trong khu này.
+                </div>
+              ) : (
+                <div className="room-list-by-area">
+                  {phongNhomTheoKhu.map((nhom) => (
+                    <section key={nhom.khuId} className="room-area-group">
+                      <h4 className="room-area-title">{nhom.tenKhu}</h4>
+                      <div className="room-list">
+                        {nhom.phong.map((r) => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            className={`room-row ${phongDangChon?.id === r.id ? "active" : ""}`}
+                            onClick={() => setPhongDangChon(r)}
+                          >
+                            <span className="room-row-label">{r.code}</span>
+                            <span className="room-sub">Xem chỉ số</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {phongDangChon && (
           <div className="card meter-panel">
             <div className="card-header">
               <div>
-                <h3>Phòng {phongDangChon.code}</h3>
+                <h3>{tenKhuVaPhong(phongDangChon)}</h3>
                 <p className="card-subtitle">
                   Xem lịch sử và nhập chỉ số tháng hiện tại
                 </p>
@@ -392,8 +473,7 @@ export default function TrangChiSoDienNuoc() {
                 <option value="">Tất cả phòng</option>
                 {phongTheoKhuLoc.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.code}
-                    {r.area?.name ? ` (${r.area.name})` : ""}
+                    {tenKhuVaPhong(r)}
                   </option>
                 ))}
               </select>
@@ -405,7 +485,7 @@ export default function TrangChiSoDienNuoc() {
               { header: "ID", render: (r: MeterReading) => r.id },
               {
                 header: "Phòng",
-                render: (r: MeterReading) => r.room?.code ?? "—",
+                render: (r: MeterReading) => tenKhuVaPhong(r.room),
               },
               {
                 header: "Tháng/Năm",

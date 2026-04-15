@@ -155,6 +155,24 @@ export function IconChevronRight() {
   );
 }
 
+/** Thu gọn panel (mũi lên) */
+export function IconChevronUp() {
+  return (
+    <svg {...thuocTinhSvg}>
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  );
+}
+
+/** Mở rộng panel (mũi xuống) */
+export function IconChevronDown() {
+  return (
+    <svg {...thuocTinhSvg}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function IconExclamation() {
   return (
     <svg {...thuocTinhSvg}>
