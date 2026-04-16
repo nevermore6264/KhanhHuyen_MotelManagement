@@ -15,11 +15,12 @@ import {
   createNotificationClient,
   type NotificationPayload,
 } from "@/lib/notificationSocket";
+import { mapThongBaoFromApi, type ThongBaoUi } from "@/lib/mapThongBaoApi";
 import { useToast } from "./NhaCungCapToast";
 
 type GiaTriNgonNguThongBao = {
   unreadCount: number;
-  refetchUnread: () => Promise<void>;
+  refetchUnread: (danhSach?: ThongBaoUi[]) => Promise<void>;
   lastIncoming: NotificationPayload | null;
   clearLastIncoming: () => void;
 };
@@ -43,25 +44,23 @@ export default function NhaCungCapThongBao({
   const [moiNhat, setMoiNhat] = useState<NotificationPayload | null>(null);
   const refClient = useRef<ReturnType<typeof createNotificationClient>>(null);
 
-  const taiLaiChuaDoc = useCallback(
-    async (danhSach?: { readFlag?: boolean }[]) => {
-      try {
-        if (danhSach) {
-          const so = danhSach.filter((n) => !n.readFlag).length;
-          setSoChuaDoc(so);
-          return;
-        }
-        const res = await api.get("/thong-bao");
-        const duLieu = res.data || [];
-        setSoChuaDoc(
-          duLieu.filter((n: { readFlag?: boolean }) => !n.readFlag).length,
-        );
-      } catch {
-        setSoChuaDoc(0);
+  const taiLaiChuaDoc = useCallback(async (danhSach?: ThongBaoUi[]) => {
+    try {
+      if (danhSach) {
+        const so = danhSach.filter((n) => !n.readFlag).length;
+        setSoChuaDoc(so);
+        return;
       }
-    },
-    [],
-  );
+      const res = await api.get("/thong-bao");
+      const duLieu = Array.isArray(res.data) ? res.data : [];
+      const mapped = duLieu.map((x) =>
+        mapThongBaoFromApi(x as Record<string, unknown>),
+      );
+      setSoChuaDoc(mapped.filter((n) => !n.readFlag).length);
+    } catch {
+      setSoChuaDoc(0);
+    }
+  }, []);
 
   const xoaMoiNhat = useCallback(() => setMoiNhat(null), []);
 

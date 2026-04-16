@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PayOSService {
     private static final String CREATE_PAYMENT_URL = "https://api-merchant.payos.vn/v2/payment-requests";
+    private static final String CONFIRM_WEBHOOK_URL = "https://api-merchant.payos.vn/confirm-webhook";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ThuocTinhPayOS thuocTinhPayOS;
@@ -106,6 +107,38 @@ public class PayOSService {
             log.warn("PayOS create payment link failed", e);
         }
         return null;
+    }
+
+    /**
+     * Đăng ký webhook với PayOS (API confirm-webhook). PayOS sẽ POST bản tin thanh toán tới URL đã cấu hình.
+     * Không liên quan CORS (gọi server-to-server); nếu URL sai (ví dụ trỏ port frontend) webhook sẽ không tới BE.
+     */
+    public boolean xacNhanWebhookVoiPayOS() {
+        if (laRong(thuocTinhPayOS.getWebhookUrl()) || laRong(thuocTinhPayOS.getClientId())
+                || laRong(thuocTinhPayOS.getApiKey())) {
+            log.debug("PayOS: bỏ qua confirm-webhook (thiếu webhook-url, client-id hoặc api-key)");
+            return false;
+        }
+        try {
+            ObjectNode bodyNode = OBJECT_MAPPER.createObjectNode();
+            bodyNode.put("webhookUrl", thuocTinhPayOS.getWebhookUrl().trim());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("x-client-id", thuocTinhPayOS.getClientId());
+            headers.set("x-api-key", thuocTinhPayOS.getApiKey());
+            ResponseEntity<String> phanHoi = restTemplate.exchange(
+                    CONFIRM_WEBHOOK_URL,
+                    HttpMethod.POST,
+                    new HttpEntity<>(bodyNode.toString(), headers),
+                    String.class);
+            if (phanHoi.getStatusCode().is2xxSuccessful()) {
+                log.info("PayOS confirm-webhook OK: {}", phanHoi.getBody());
+                return true;
+            }
+        } catch (Exception e) {
+            log.warn("PayOS confirm-webhook failed", e);
+        }
+        return false;
     }
 
     /**

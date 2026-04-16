@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
@@ -13,19 +13,87 @@ import {
 import { useToast } from "@/components/NhaCungCapToast";
 import { useThongBao } from "@/components/NhaCungCapThongBao";
 import { IconPlus, IconTimes, IconSend, IconCheck } from "@/components/Icons";
-
-type Notification = {
+import type { ThongBaoUi } from "@/lib/mapThongBaoApi";
+import { mapThongBaoFromApi } from "@/lib/mapThongBaoApi";
+type User = {
   id: number;
-  message: string;
-  readFlag: boolean;
-  sentAt: string;
+  username: string;
+  fullName?: string;
+  role?: string;
+  phongHienThue?: string;
+  khuHienThue?: string;
 };
-type User = { id: number; username: string; fullName?: string };
+
+function tenVaiTroApi(code: string): string {
+  const c = code.toUpperCase();
+  if (c === "ADMIN") return "Quản trị";
+  if (c === "STAFF") return "Nhân viên";
+  if (c === "TENANT") return "Khách thuê";
+  return code;
+}
+
+function mapNguoiDungChoThongBaoFromApi(raw: Record<string, unknown>): User | null {
+  const id = Number(raw.id);
+  if (!Number.isFinite(id) || id <= 0) return null;
+  const username = String(raw.tenDangNhap ?? raw.username ?? "").trim();
+  if (!username) return null;
+  const fullName = String(raw.hoTen ?? raw.fullName ?? "").trim();
+  const role = String(raw.vaiTro ?? raw.role ?? "").trim();
+  const phongHienThue = String(raw.phongHienThue ?? "").trim();
+  const khuHienThue = String(raw.khuHienThue ?? "").trim();
+  return {
+    id,
+    username,
+    fullName: fullName || undefined,
+    role: role || undefined,
+    phongHienThue: phongHienThue || undefined,
+    khuHienThue: khuHienThue || undefined,
+  };
+}
+
+function mapNguoiDungFromApi(raw: Record<string, unknown>): User | null {
+  const id = Number(raw.id);
+  if (!Number.isFinite(id) || id <= 0) return null;
+  const username = String(raw.tenDangNhap ?? raw.username ?? "").trim();
+  if (!username) return null;
+  const fullName = String(raw.hoTen ?? raw.fullName ?? "").trim();
+  const role = String(raw.vaiTro ?? raw.role ?? "").trim();
+  return {
+    id,
+    username,
+    fullName: fullName || undefined,
+    role: role || undefined,
+  };
+}
+
+function chuoiHienThiNguoiDung(u: User): string {
+  const hoTen = u.fullName ? ` (${u.fullName})` : "";
+  const vai = u.role ? ` — ${tenVaiTroApi(u.role)}` : "";
+  const phongKhu =
+    u.phongHienThue || u.khuHienThue
+      ? ` · ${[u.phongHienThue, u.khuHienThue].filter(Boolean).join(" · ")}`
+      : "";
+  return `${u.username}${hoTen}${vai}${phongKhu}`;
+}
+
+function chuoiLocNguoiDung(u: User): string {
+  return [
+    u.username,
+    u.fullName ?? "",
+    u.role ?? "",
+    u.role ? tenVaiTroApi(u.role) : "",
+    u.phongHienThue ?? "",
+    u.khuHienThue ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+}
 
 export default function TrangThongBao() {
   const [daMount, setDaMount] = useState(false);
-  const [danhSach, setDanhSach] = useState<Notification[]>([]);
+  const [danhSach, setDanhSach] = useState<ThongBaoUi[]>([]);
   const [danhSachNguoiDung, setDanhSachNguoiDung] = useState<User[]>([]);
+  const [locNguoiNhan, setLocNguoiNhan] = useState("");
   const [noiDung, setNoiDung] = useState("");
   const [idNguoiNhan, setIdNguoiNhan] = useState("");
   const [hienThiTaoMoi, setHienThiTaoMoi] = useState(false);
@@ -33,6 +101,7 @@ export default function TrangThongBao() {
   const [dangTao, setDangTao] = useState(false);
   const vaiTro = daMount ? getRole() : null;
   const laQuanTri = vaiTro === "ADMIN";
+  const camDanhDauDaDoc = vaiTro === "ADMIN" || vaiTro === "STAFF";
   const { notify } = useToast();
   const contextThongBao = useThongBao();
   const clientRef = useRef<ReturnType<typeof createNotificationClient>>(null);
@@ -43,9 +112,12 @@ export default function TrangThongBao() {
 
   const tai = async () => {
     const phanHoi = await api.get("/thong-bao");
-    const duLieu = phanHoi.data || [];
-    setDanhSach(duLieu);
-    contextThongBao?.refetchUnread(duLieu);
+    const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
+    const mapped = duLieu.map((x) =>
+      mapThongBaoFromApi(x as Record<string, unknown>),
+    );
+    setDanhSach(mapped);
+    contextThongBao?.refetchUnread(mapped);
   };
 
   useEffect(() => {
@@ -71,14 +143,39 @@ export default function TrangThongBao() {
     if (!daMount || !laQuanTri) return;
     const taiNguoiDung = async () => {
       try {
-        const phanHoi = await api.get("/nguoi-dung");
-        setDanhSachNguoiDung(phanHoi.data || []);
+        const phanHoi = await api.get("/nguoi-dung/cho-thong-bao");
+        const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
+        const mapped = duLieu
+          .map((x) => mapNguoiDungChoThongBaoFromApi(x as Record<string, unknown>))
+          .filter((u): u is User => u != null);
+        setDanhSachNguoiDung(mapped);
       } catch {
-        setDanhSachNguoiDung([]);
+        try {
+          const phanHoi = await api.get("/nguoi-dung");
+          const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
+          const mapped = duLieu
+            .map((x) => mapNguoiDungFromApi(x as Record<string, unknown>))
+            .filter((u): u is User => u != null);
+          setDanhSachNguoiDung(mapped);
+        } catch {
+          setDanhSachNguoiDung([]);
+        }
       }
     };
     taiNguoiDung();
   }, [daMount, laQuanTri]);
+
+  const danhSachNguoiDungLoc = useMemo(() => {
+    const q = locNguoiNhan.trim().toLowerCase();
+    const locTheoChuoi = q
+      ? danhSachNguoiDung.filter((u) => chuoiLocNguoiDung(u).includes(q))
+      : danhSachNguoiDung;
+    const selId = idNguoiNhan ? Number(idNguoiNhan) : NaN;
+    if (!Number.isFinite(selId) || selId <= 0) return locTheoChuoi;
+    if (locTheoChuoi.some((u) => u.id === selId)) return locTheoChuoi;
+    const dangChon = danhSachNguoiDung.find((u) => u.id === selId);
+    return dangChon ? [dangChon, ...locTheoChuoi] : locTheoChuoi;
+  }, [danhSachNguoiDung, locNguoiNhan, idNguoiNhan]);
 
   useEffect(() => {
     if (!daMount || !laQuanTri) return;
@@ -167,6 +264,7 @@ export default function TrangThongBao() {
                 className="btn"
                 onClick={() => {
                   setHienThiTaoMoi(true);
+                  setLocNguoiNhan("");
                   setLoi("");
                 }}
               >
@@ -191,6 +289,12 @@ export default function TrangThongBao() {
                   <button
                     type="button"
                     className="btn"
+                    disabled={camDanhDauDaDoc}
+                    title={
+                      camDanhDauDaDoc
+                        ? "Chỉ khách thuê mới đánh dấu đã đọc thông báo của mình."
+                        : undefined
+                    }
                     onClick={() => danhDauDaDoc(n.id)}
                   >
                     <IconCheck /> Đánh dấu đã đọc
@@ -228,14 +332,22 @@ export default function TrangThongBao() {
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">Gửi đến</label>
+                  <input
+                    type="search"
+                    placeholder="Lọc theo tên đăng nhập, họ tên, phòng, khu, vai trò…"
+                    value={locNguoiNhan}
+                    onChange={(e) => setLocNguoiNhan(e.target.value)}
+                    aria-label="Lọc danh sách người nhận"
+                    style={{ width: "100%", marginBottom: 8 }}
+                  />
                   <select
                     value={idNguoiNhan}
                     onChange={(e) => setIdNguoiNhan(e.target.value)}
                   >
                     <option value="">Tất cả người dùng</option>
-                    {danhSachNguoiDung.map((u) => (
+                    {danhSachNguoiDungLoc.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.username} {u.fullName ? `(${u.fullName})` : ""}
+                        {chuoiHienThiNguoiDung(u)}
                       </option>
                     ))}
                   </select>
@@ -247,6 +359,7 @@ export default function TrangThongBao() {
                     className="btn btn-secondary"
                     onClick={() => {
                       setHienThiTaoMoi(false);
+                      setLocNguoiNhan("");
                       setLoi("");
                     }}
                   >

@@ -6,8 +6,8 @@ import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
-
-type Invoice = { id: number; month: number; year: number };
+import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
+import { mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
 type Payment = { id: number; amount: number; method: string; paidAt: string };
 
 const formatVND = (value?: number | null) => {
@@ -23,7 +23,10 @@ export default function TrangThanhToanCuaToi() {
   const [invoiceId, setInvoiceId] = useState("");
 
   useEffect(() => {
-    api.get("/hoa-don/cua-toi").then((res) => setInvoices(res.data || []));
+    api.get("/hoa-don/cua-toi").then((res) => {
+      const arr = Array.isArray(res.data) ? res.data : [];
+      setInvoices(arr.map((x) => mapHoaDonFromApi(x as RawJson)));
+    });
   }, []);
 
   useEffect(() => {

@@ -22,7 +22,8 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.2.0",
     "react-zoom-pan-pinch": "^4.0.3",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "supports-color": "^10.2.2"
   },
   "devDependencies": {
     "@types/node": "^20.12.8",

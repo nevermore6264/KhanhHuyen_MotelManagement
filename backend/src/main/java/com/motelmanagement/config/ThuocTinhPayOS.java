@@ -15,7 +15,10 @@ public class ThuocTinhPayOS {
     private String clientId = "";
     private String apiKey = "";
     private String checksumKey = "";
+    /** URL BE nhận webhook (POST). Phải là backend :8080, không dùng port Next.js. */
     private String webhookUrl = "";
+    /** true: khi khởi động gọi API PayOS confirm-webhook để đăng ký webhookUrl. */
+    private boolean autoConfirmWebhook = false;
     private String returnUrl = "http://localhost:4002/my-invoices?payment=success";
     private String cancelUrl = "http://localhost:4002/my-invoices?payment=cancel";
 }

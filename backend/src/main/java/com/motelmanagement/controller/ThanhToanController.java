@@ -1,6 +1,7 @@
 package com.motelmanagement.controller;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.motelmanagement.domain.HoaDon;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
+import com.motelmanagement.domain.PhuongThucThanhToan;
 import com.motelmanagement.domain.ThanhToan;
 import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.dto.GhiNhanThanhToanRequest;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.ThanhToanRepository;
@@ -91,6 +94,20 @@ public class ThanhToanController {
         return ResponseEntity.ok(Map.of("paymentUrl", linkThanhToan));
     }
 
+    /**
+     * Kiểm tra URL webhook (GET trong trình duyệt). PayOS thực tế gửi POST JSON — không gọi từ frontend Next.js.
+     * Nếu cấu hình nhầm port 4002 hoặc thiếu {@code /api} thì webhook không tới backend.
+     */
+    @GetMapping("/payos/webhook")
+    public ResponseEntity<Map<String, String>> webhookPayOSThongTin() {
+        return ResponseEntity.ok(Map.of(
+                "endpoint", "PayOS webhook",
+                "method", "POST JSON từ máy chủ PayOS",
+                "path", "/api/thanh-toan/payos/webhook",
+                "backend", "http://<host>:8080 (Spring), không phải port frontend Next.js",
+                "ghiChu", "CORS không áp dụng cho POST từ PayOS → BE; lỗi CORS thường do gọi nhầm URL từ trình duyệt."));
+    }
+
     /** Webhook PayOS gửi kết quả thanh toán. Cho phép không đăng nhập. */
     @PostMapping("/payos/webhook")
     public ResponseEntity<Void> webhookPayOS(@RequestBody String body) {
@@ -100,28 +117,59 @@ public class ThanhToanController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<ThanhToan> tao(@RequestBody ThanhToan thanhToan) {
-        if (thanhToan.getHoaDon() == null || thanhToan.getHoaDon().getId() == null) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> ghiNhanThanhToan(@RequestBody GhiNhanThanhToanRequest yeuCau) {
+        if (yeuCau == null || yeuCau.getInvoiceId() == null || yeuCau.getAmount() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Thiếu mã hóa đơn hoặc số tiền."));
         }
-        HoaDon hoaDon = hoaDonRepository.findById(thanhToan.getHoaDon().getId()).orElse(null);
+        BigDecimal soTien = yeuCau.getAmount().setScale(0, RoundingMode.HALF_UP);
+        if (soTien.compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Số tiền phải lớn hơn 0."));
+        }
+        HoaDon hoaDon = hoaDonRepository.findById(yeuCau.getInvoiceId()).orElse(null);
         hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
-        if (hoaDon == null) {
-            return ResponseEntity.badRequest().build();
+        if (hoaDon == null || hoaDon.getTongTien() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy hóa đơn."));
         }
-        thanhToan.setHoaDon(hoaDon);
-        ThanhToan daLuu = thanhToanRepository.save(thanhToan);
-
-        BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDonId(hoaDon.getId()).stream()
+        if (hoaDon.getTrangThai() == TrangThaiHoaDon.PAID) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Hóa đơn đã thanh toán đủ."));
+        }
+        BigDecimal daThu = thanhToanRepository.findByHoaDonId(hoaDon.getId()).stream()
                 .map(ThanhToan::getSoTien)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal conLai = hoaDon.getTongTien().subtract(daThu);
+        if (conLai.compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Không còn số tiền cần thu."));
+        }
+        if (soTien.compareTo(conLai) > 0) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message",
+                    "Số tiền vượt quá phần còn lại (" + conLai.toPlainString() + " VNĐ)."));
+        }
+        PhuongThucThanhToan phuongThuc = chuyenPhuongThuc(yeuCau.getMethod());
+        ThanhToan thanhToan = new ThanhToan();
+        thanhToan.setHoaDon(hoaDon);
+        thanhToan.setSoTien(soTien);
+        thanhToan.setPhuongThuc(phuongThuc);
+        ThanhToan daLuu = thanhToanRepository.save(thanhToan);
 
-        if (tongDaThanhToan.compareTo(hoaDon.getTongTien()) >= 0) {
+        BigDecimal tongSau = daThu.add(soTien);
+        if (tongSau.compareTo(hoaDon.getTongTien()) >= 0) {
             hoaDon.setTrangThai(TrangThaiHoaDon.PAID);
-        } else if (tongDaThanhToan.compareTo(BigDecimal.ZERO) > 0) {
+        } else {
             hoaDon.setTrangThai(TrangThaiHoaDon.PARTIAL);
         }
         hoaDonRepository.save(hoaDon);
         return ResponseEntity.ok(daLuu);
+    }
+
+    private static PhuongThucThanhToan chuyenPhuongThuc(String method) {
+        if (method == null || method.isBlank()) {
+            return PhuongThucThanhToan.CASH;
+        }
+        try {
+            return PhuongThucThanhToan.valueOf(method.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return PhuongThucThanhToan.CASH;
+        }
     }
 }

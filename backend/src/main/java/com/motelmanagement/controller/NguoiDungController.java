@@ -17,9 +17,11 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.DtoLienKetNguoiDungKhachThue;
+import com.motelmanagement.dto.DtoNguoiDungChoThongBao;
 import com.motelmanagement.dto.YeuCauTaoNguoiDung;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
+import com.motelmanagement.service.NguoiDungChoThongBaoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,11 +33,19 @@ public class NguoiDungController {
     private final NguoiDungRepository nguoiDungRepository;
     private final KhachThueRepository khachThueRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NguoiDungChoThongBaoService nguoiDungChoThongBaoService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<NguoiDung> layDanhSach() {
         return nguoiDungRepository.findAll();
+    }
+
+    /** Danh sách người dùng kèm phòng/khu đang thuê (hợp đồng ACTIVE) để chọn người nhận thông báo. */
+    @GetMapping("/cho-thong-bao")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<DtoNguoiDungChoThongBao> layChoThongBao() {
+        return nguoiDungChoThongBaoService.layDanhSach();
     }
 
     @PostMapping

@@ -27,6 +27,12 @@ public interface HopDongRepository extends JpaRepository<HopDong, Long> {
                     + "WHERE h.khachThue.id = :kid OR tv.khachThue.id = :kid")
     List<HopDong> findThuocKhachThue(@Param("kid") Long kid);
 
+    @EntityGraph(attributePaths = {"phong", "phong.khuVuc"})
+    @Query(
+            "SELECT DISTINCT h FROM HopDong h LEFT JOIN h.thanhVien tv "
+                    + "WHERE h.khachThue.id = :kid OR tv.khachThue.id = :kid")
+    List<HopDong> findThuocKhachThueCoPhong(@Param("kid") Long kid);
+
     @Query(
             "SELECT CASE WHEN COUNT(h) > 0 THEN true ELSE false END FROM HopDong h LEFT JOIN h.thanhVien tv "
                     + "WHERE h.id = :hid AND (h.khachThue.id = :kid OR tv.khachThue.id = :kid)")

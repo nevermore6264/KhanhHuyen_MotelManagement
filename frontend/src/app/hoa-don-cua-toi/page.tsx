@@ -7,15 +7,8 @@ import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import { IconCheck } from "@/components/Icons";
 import api from "@/lib/api";
-
-type Invoice = {
-  id: number;
-  room?: { code: string };
-  month: number;
-  year: number;
-  total?: number;
-  status?: string;
-};
+import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
+import { mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
 
 const formatVND = (value?: number | null) => {
   if (value == null || Number.isNaN(Number(value))) return "—";
@@ -59,7 +52,10 @@ export default function TrangHoaDonCuaToi() {
   } | null>(null);
 
   useEffect(() => {
-    api.get("/hoa-don/cua-toi").then((res) => setItems(res.data || []));
+    api.get("/hoa-don/cua-toi").then((res) => {
+      const arr = Array.isArray(res.data) ? res.data : [];
+      setItems(arr.map((x) => mapHoaDonFromApi(x as RawJson)));
+    });
   }, []);
 
   useEffect(() => {
