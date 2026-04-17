@@ -9,7 +9,6 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,11 +16,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
-import com.motelmanagement.dto.YeuCauCapNhatChiSoDienNuoc;
 import com.motelmanagement.domain.BangGiaDichVu;
 import com.motelmanagement.domain.ChiSoDienNuoc;
 import com.motelmanagement.domain.Phong;
+import com.motelmanagement.dto.YeuCauCapNhatChiSoDienNuoc;
 import com.motelmanagement.repository.BangGiaDichVuRepository;
 import com.motelmanagement.repository.ChiSoDienNuocRepository;
 import com.motelmanagement.repository.PhongRepository;
@@ -29,7 +29,7 @@ import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API chỉ số điện/nước (nhập theo phòng, tháng). */
+/** API chỉ số điện/nước (nhập theo phòng, tháng). Số cũ lấy tự động từ số mới tháng trước. */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chi-so-dien-nuoc")
@@ -42,7 +42,16 @@ public class ChiSoDienNuocController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<ChiSoDienNuoc> layDanhSach() {
-        return chiSoDienNuocRepository.findAll();
+        List<ChiSoDienNuoc> tatCa = chiSoDienNuocRepository.findAll();
+        for (ChiSoDienNuoc c : tatCa) {
+            ganChiSoCuHienThi(c);
+        }
+        return tatCa;
+    }
+
+    private void ganChiSoCuHienThi(ChiSoDienNuoc c) {
+        c.setDienCu(tinhTienService.layChiSoDienCuTheoKy(c));
+        c.setNuocCu(tinhTienService.layChiSoNuocCuTheoKy(c));
     }
 
     /** Chỉ cho phép nhập chỉ số tháng hiện tại hoặc tháng trước đó */
@@ -55,6 +64,7 @@ public class ChiSoDienNuocController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<ChiSoDienNuoc> tao(@RequestBody ChiSoDienNuoc chiSo) {
+        chiSo.setId(null);
         if (chiSo.getPhong() == null || chiSo.getPhong().getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -76,6 +86,7 @@ public class ChiSoDienNuocController {
 
         ChiSoDienNuoc daLuu = chiSoDienNuocRepository.save(chiSo);
         tinhTienService.taoHoacCapNhatHoaDonTuChiSo(daLuu);
+        ganChiSoCuHienThi(daLuu);
         return ResponseEntity.ok(daLuu);
     }
 
@@ -83,7 +94,7 @@ public class ChiSoDienNuocController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<ChiSoDienNuoc> capNhat(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @RequestBody YeuCauCapNhatChiSoDienNuoc dto) {
         Optional<ChiSoDienNuoc> opt = chiSoDienNuocRepository.findById(id);
         if (opt.isEmpty()) {
@@ -93,13 +104,12 @@ public class ChiSoDienNuocController {
         if (!choPhepThang(hienTai.getThang(), hienTai.getNam())) {
             return ResponseEntity.<ChiSoDienNuoc>badRequest().build();
         }
-        hienTai.setDienCu(dto.getDienCu());
         hienTai.setDienMoi(dto.getDienMoi());
-        hienTai.setNuocCu(dto.getNuocCu());
         hienTai.setNuocMoi(dto.getNuocMoi());
         tinhLaiTienDienNuoc(hienTai);
         ChiSoDienNuoc daLuu = chiSoDienNuocRepository.save(hienTai);
         tinhTienService.taoHoacCapNhatHoaDonTuChiSo(daLuu);
+        ganChiSoCuHienThi(daLuu);
         return ResponseEntity.ok(daLuu);
     }
 
@@ -116,8 +126,13 @@ public class ChiSoDienNuocController {
                 ? bangGia.getGiaNuoc()
                 : BigDecimal.ZERO;
 
-        int dungDien = Math.max(0, chiSo.getDienMoi() - chiSo.getDienCu());
-        int dungNuoc = Math.max(0, chiSo.getNuocMoi() - chiSo.getNuocCu());
+        int dienCu = tinhTienService.layChiSoDienCuTheoKy(chiSo);
+        int nuocCu = tinhTienService.layChiSoNuocCuTheoKy(chiSo);
+        chiSo.setDienCu(dienCu);
+        chiSo.setNuocCu(nuocCu);
+
+        int dungDien = Math.max(0, chiSo.getDienMoi() - dienCu);
+        int dungNuoc = Math.max(0, chiSo.getNuocMoi() - nuocCu);
 
         chiSo.setTienDien(donGiaDien.multiply(BigDecimal.valueOf(dungDien)));
         chiSo.setTienNuoc(donGiaNuoc.multiply(BigDecimal.valueOf(dungNuoc)));

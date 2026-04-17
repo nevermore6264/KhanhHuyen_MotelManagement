@@ -167,7 +167,7 @@ public class NhacNoHoaDonService {
     }
 
     /** Gửi nhắc nợ qua email (JavaMailSender). */
-    public Optional<String> guiNhacNo(Long maHoaDon, String kenh) {
+    public Optional<String> guiNhacNo(String maHoaDon, String kenh) {
         if (!"email".equalsIgnoreCase(kenh)) {
             return Optional.of("Kênh không hợp lệ. Chọn email.");
         }

@@ -9,14 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.motelmanagement.domain.BangGiaDichVu;
 import com.motelmanagement.domain.ChiSoDienNuoc;
 import com.motelmanagement.domain.HoaDon;
+import com.motelmanagement.domain.HoaDonChiTiet;
 import com.motelmanagement.domain.HopDong;
-import com.motelmanagement.domain.BangGiaDichVu;
 import com.motelmanagement.domain.TrangThaiHoaDon;
 import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.repository.BangGiaDichVuRepository;
 import com.motelmanagement.repository.ChiSoDienNuocRepository;
+import com.motelmanagement.repository.HoaDonChiTietRepository;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
 
@@ -32,6 +34,7 @@ public class TinhTienService {
     private final HopDongRepository hopDongRepository;
     private final ChiSoDienNuocRepository chiSoDienNuocRepository;
     private final BangGiaDichVuRepository bangGiaDichVuRepository;
+    private final HoaDonChiTietRepository hoaDonChiTietRepository;
 
     /**
      * Hóa đơn kỳ (tháng/năm) chỉ áp dụng khi hợp đồng còn hiệu lực ít nhất một ngày trong tháng đó.
@@ -83,11 +86,42 @@ public class TinhTienService {
             tienDien = hoaDon.getTienDien() != null ? hoaDon.getTienDien() : BigDecimal.ZERO;
             tienNuoc = hoaDon.getTienNuoc() != null ? hoaDon.getTienNuoc() : BigDecimal.ZERO;
         }
+        BigDecimal tienKhoanKhac = BigDecimal.ZERO;
+        if (hoaDon.getId() != null && !hoaDon.getId().isBlank()) {
+            tienKhoanKhac = hoaDonChiTietRepository.findByHoaDon_IdOrderByThuTuAsc(hoaDon.getId()).stream()
+                    .map(HoaDonChiTiet::getSoTien)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
         hoaDon.setTienPhong(tienPhong);
         hoaDon.setTienDien(tienDien);
         hoaDon.setTienNuoc(tienNuoc);
-        hoaDon.setTongTien(tienPhong.add(tienDien).add(tienNuoc));
+        hoaDon.setTongTien(tienPhong.add(tienDien).add(tienNuoc).add(tienKhoanKhac));
         return hoaDon;
+    }
+
+    /** Số điện đầu kỳ = số mới tháng trước (cùng phòng); không có tháng trước thì 0. */
+    public int layChiSoDienCuTheoKy(ChiSoDienNuoc chiSo) {
+        if (chiSo.getPhong() == null) {
+            return 0;
+        }
+        YearMonth ky = YearMonth.of(chiSo.getNam(), chiSo.getThang()).minusMonths(1);
+        return chiSoDienNuocRepository
+                .findByPhong_IdAndThangAndNam(chiSo.getPhong().getId(), ky.getMonthValue(), ky.getYear())
+                .map(ChiSoDienNuoc::getDienMoi)
+                .orElse(0);
+    }
+
+    /** Số nước đầu kỳ = số mới tháng trước. */
+    public int layChiSoNuocCuTheoKy(ChiSoDienNuoc chiSo) {
+        if (chiSo.getPhong() == null) {
+            return 0;
+        }
+        YearMonth ky = YearMonth.of(chiSo.getNam(), chiSo.getThang()).minusMonths(1);
+        return chiSoDienNuocRepository
+                .findByPhong_IdAndThangAndNam(chiSo.getPhong().getId(), ky.getMonthValue(), ky.getYear())
+                .map(ChiSoDienNuoc::getNuocMoi)
+                .orElse(0);
     }
 
     private BangGiaDichVu layBangGiaMoiNhat() {
@@ -99,14 +133,16 @@ public class TinhTienService {
     private BigDecimal tinhTienDienTuChiSo(ChiSoDienNuoc chiSo) {
         BangGiaDichVu bangGia = layBangGiaMoiNhat();
         BigDecimal donGiaDien = bangGia != null && bangGia.getGiaDien() != null ? bangGia.getGiaDien() : BigDecimal.ZERO;
-        int sanLuong = Math.max(0, chiSo.getDienMoi() - chiSo.getDienCu());
+        int dienCu = layChiSoDienCuTheoKy(chiSo);
+        int sanLuong = Math.max(0, chiSo.getDienMoi() - dienCu);
         return donGiaDien.multiply(BigDecimal.valueOf(sanLuong));
     }
 
     private BigDecimal tinhTienNuocTuChiSo(ChiSoDienNuoc chiSo) {
         BangGiaDichVu bangGia = layBangGiaMoiNhat();
         BigDecimal donGiaNuoc = bangGia != null && bangGia.getGiaNuoc() != null ? bangGia.getGiaNuoc() : BigDecimal.ZERO;
-        int sanLuong = Math.max(0, chiSo.getNuocMoi() - chiSo.getNuocCu());
+        int nuocCu = layChiSoNuocCuTheoKy(chiSo);
+        int sanLuong = Math.max(0, chiSo.getNuocMoi() - nuocCu);
         return donGiaNuoc.multiply(BigDecimal.valueOf(sanLuong));
     }
 
@@ -137,7 +173,7 @@ public class TinhTienService {
      * khi chỉ số nhập sau lúc sinh hóa đơn).
      */
     public HoaDon dongBoHoaDonTheoChiSoNeuCo(HoaDon hoaDon) {
-        if (hoaDon.getId() == null || hoaDon.getPhong() == null) {
+        if (hoaDon.getId() == null || hoaDon.getId().isBlank() || hoaDon.getPhong() == null) {
             return hoaDon;
         }
         return tinhTienRuntime(hoaDon);

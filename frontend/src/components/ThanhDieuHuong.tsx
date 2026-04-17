@@ -93,7 +93,8 @@ const menuTheoVaiTro: Record<string, NhomMenu[]> = {
 /** Thanh điều hướng chính: menu theo vai trò, chuông thông báo, đăng xuất. */
 export default function ThanhDieuHuong() {
   const router = useRouter();
-  const [vaiTro, setVaiTro] = useState("ADMIN");
+  /** null = chưa đọc localStorage — tránh một khung hình menu ADMIN rồi prefetch link nhân viên (403 với JWT khách). */
+  const [vaiTro, setVaiTro] = useState<string | null>(null);
   const [ten, setTen] = useState("User");
   const contextThongBao = useThongBao();
 
@@ -119,26 +120,27 @@ export default function ThanhDieuHuong() {
         </div>
 
         <div className="nav-menu">
-          {menuTheoVaiTro[vaiTro]?.map((nhom) => (
-            <div key={nhom.label} className="nav-item">
-              {nhom.href ? (
-                <Link className="nav-link" href={nhom.href}>
-                  {nhom.label}
-                </Link>
-              ) : (
-                <>
-                  <span className="nav-link">{nhom.label}</span>
-                  <div className="nav-dropdown">
-                    {nhom.items?.map((muc) => (
-                      <Link key={muc.href} href={muc.href}>
-                        {muc.label}
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+          {vaiTro != null &&
+            menuTheoVaiTro[vaiTro]?.map((nhom) => (
+              <div key={nhom.label} className="nav-item">
+                {nhom.href ? (
+                  <Link className="nav-link" href={nhom.href}>
+                    {nhom.label}
+                  </Link>
+                ) : (
+                  <>
+                    <span className="nav-link">{nhom.label}</span>
+                    <div className="nav-dropdown">
+                      {nhom.items?.map((muc) => (
+                        <Link key={muc.href} href={muc.href}>
+                          {muc.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
         </div>
 
         <div className="nav-actions">
@@ -172,7 +174,8 @@ export default function ThanhDieuHuong() {
             </Link>
           )}
           <span className="nav-user">
-            {ten} ({vaiTro})
+            {ten}
+            {vaiTro != null ? ` (${vaiTro})` : ""}
           </span>
           <button className="btn btn-secondary" onClick={dangXuat}>
             <IconLogout /> Đăng xuất

@@ -28,8 +28,8 @@ public class DonHangPayOS {
     private long maDonHang;
 
     /** Hóa đơn tương ứng */
-    @jakarta.persistence.Column(name = "hoa_don_id")
-    private Long maHoaDon;
+    @jakarta.persistence.Column(name = "hoa_don_id", length = 36)
+    private String maHoaDon;
 
     @jakarta.persistence.Column(name = "ngay_tao")
     private LocalDateTime ngayTao = LocalDateTime.now();

@@ -1,5 +1,6 @@
 package com.motelmanagement.controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
+import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.domain.YeuCauHoTro;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.YeuCauHoTroRepository;
@@ -31,9 +33,23 @@ public class YeuCauHoTroController {
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
     public List<YeuCauHoTro> layDanhSach() {
-        return yeuCauHoTroRepository.findAll();
+        NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
+        if (nguoiDung == null) {
+            return Collections.emptyList();
+        }
+        if (nguoiDung.getVaiTro() == VaiTro.ADMIN || nguoiDung.getVaiTro() == VaiTro.STAFF) {
+            return yeuCauHoTroRepository.findAll();
+        }
+        if (nguoiDung.getVaiTro() == VaiTro.TENANT) {
+            KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
+            if (khachThue == null) {
+                return Collections.emptyList();
+            }
+            return yeuCauHoTroRepository.findByKhachThue_IdOrderByNgayTaoDesc(khachThue.getId());
+        }
+        return Collections.emptyList();
     }
 
     @PostMapping

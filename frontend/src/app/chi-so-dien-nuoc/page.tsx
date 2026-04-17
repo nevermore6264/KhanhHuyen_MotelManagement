@@ -18,7 +18,7 @@ import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 type Area = { id: number; name: string };
 type Room = { id: number; code: string; area?: Area };
 type MeterReading = {
-  id: number;
+  id: string;
   room?: Room;
   month: number;
   year: number;
@@ -75,7 +75,7 @@ function chuanHoaChiSoTuApi(raw: RawJson): MeterReading {
       ? chuanHoaPhongTuApi(phongRaw as RawJson)
       : undefined;
   return {
-    id: Number(r.id),
+    id: String(r.id ?? ""),
     room: phongObj,
     month: Number(r.thang ?? r.month ?? 0),
     year: Number(r.nam ?? r.year ?? 0),
@@ -126,9 +126,7 @@ export default function TrangChiSoDienNuoc() {
   const [idPhong, setIdPhong] = useState("");
   const [thang, setThang] = useState("");
   const [nam, setNam] = useState("");
-  const [dienCu, setDienCu] = useState("");
   const [dienMoi, setDienMoi] = useState("");
-  const [nuocCu, setNuocCu] = useState("");
   const [nuocMoi, setNuocMoi] = useState("");
   const [loi, setLoi] = useState("");
   const [idKhuLoc, setIdKhuLoc] = useState("");
@@ -136,9 +134,7 @@ export default function TrangChiSoDienNuoc() {
   /** true = hiện đầy đủ khu + lưới phòng; false = thu gọn tiết kiệm chỗ */
   const [moChonKhuPhong, setMoChonKhuPhong] = useState(true);
   const [chiSoSua, setChiSoSua] = useState<MeterReading | null>(null);
-  const [suaDienCu, setSuaDienCu] = useState("");
   const [suaDienMoi, setSuaDienMoi] = useState("");
-  const [suaNuocCu, setSuaNuocCu] = useState("");
   const [suaNuocMoi, setSuaNuocMoi] = useState("");
   const [loiSuaChiSo, setLoiSuaChiSo] = useState("");
   const { notify } = useToast();
@@ -235,13 +231,42 @@ export default function TrangChiSoDienNuoc() {
     const bayGio = new Date();
     setThang(String(bayGio.getMonth() + 1));
     setNam(String(bayGio.getFullYear()));
-    const moiNhat = lichSuPhong[0];
-    setDienCu(moiNhat ? String(moiNhat.newElectric ?? 0) : "");
-    setNuocCu(moiNhat ? String(moiNhat.newWater ?? 0) : "");
     setDienMoi("");
     setNuocMoi("");
     setLoi("");
   }, [phongDangChon, lichSuPhong]);
+
+  const kyNhapChiSo = useMemo(() => {
+    const m = Number(thang);
+    const y = Number(nam);
+    if (!phongDangChon || !thang || !nam || !Number.isFinite(m) || !Number.isFinite(y)) {
+      return null;
+    }
+    return { month: m, year: y };
+  }, [phongDangChon, thang, nam]);
+
+  /** Số cũ = số mới tháng trước (cùng phòng), tính trên client để hiển thị. */
+  const chiSoDauKyHienThi = useMemo(() => {
+    if (!phongDangChon || !kyNhapChiSo) {
+      return { dienCu: 0, nuocCu: 0 };
+    }
+    let pm = kyNhapChiSo.month - 1;
+    let py = kyNhapChiSo.year;
+    if (pm < 1) {
+      pm = 12;
+      py -= 1;
+    }
+    const hit = danhSachChiSo.find(
+      (r) =>
+        r.room?.id === phongDangChon.id &&
+        r.month === pm &&
+        r.year === py,
+    );
+    return {
+      dienCu: hit?.newElectric ?? 0,
+      nuocCu: hit?.newWater ?? 0,
+    };
+  }, [danhSachChiSo, phongDangChon, kyNhapChiSo]);
 
   const tao = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,18 +290,14 @@ export default function TrangChiSoDienNuoc() {
         phong: { id: Number(idPhong) },
         thang: m,
         nam: y,
-        dienCu: Number(dienCu || 0),
         dienMoi: Number(dienMoi || 0),
-        nuocCu: Number(nuocCu || 0),
         nuocMoi: Number(nuocMoi || 0),
       });
       notify("Lưu chỉ số thành công", "success");
       setIdPhong("");
       setThang("");
       setNam("");
-      setDienCu("");
       setDienMoi("");
-      setNuocCu("");
       setNuocMoi("");
       setPhongDangChon(null);
       tai();
@@ -303,9 +324,7 @@ export default function TrangChiSoDienNuoc() {
 
   const moModalSuaChiSo = (r: MeterReading) => {
     setChiSoSua(r);
-    setSuaDienCu(String(r.oldElectric));
     setSuaDienMoi(String(r.newElectric));
-    setSuaNuocCu(String(r.oldWater));
     setSuaNuocMoi(String(r.newWater));
     setLoiSuaChiSo("");
   };
@@ -321,9 +340,7 @@ export default function TrangChiSoDienNuoc() {
     setLoiSuaChiSo("");
     try {
       await api.put(`/chi-so-dien-nuoc/${chiSoSua.id}`, {
-        dienCu: Number(suaDienCu || 0),
         dienMoi: Number(suaDienMoi || 0),
-        nuocCu: Number(suaNuocCu || 0),
         nuocMoi: Number(suaNuocMoi || 0),
       });
       notify("Đã cập nhật chỉ số", "success");
@@ -478,13 +495,16 @@ export default function TrangChiSoDienNuoc() {
                     onChange={(e) => setNam(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="field-label">Số điện cũ</label>
-                  <input
-                    placeholder="Số điện cũ"
-                    value={dienCu}
-                    onChange={(e) => setDienCu(e.target.value)}
-                  />
+                <div className="form-span-2">
+                  <p
+                    className="card-subtitle"
+                    style={{ marginBottom: 8, fontSize: "0.9rem" }}
+                  >
+                    Số điện/nước <strong>đầu kỳ</strong> lấy tự động từ{" "}
+                    <strong>số mới tháng trước</strong> (cùng phòng): điện{" "}
+                    <strong>{chiSoDauKyHienThi.dienCu}</strong>, nước{" "}
+                    <strong>{chiSoDauKyHienThi.nuocCu}</strong>.
+                  </p>
                 </div>
                 <div>
                   <label className="field-label">Số điện mới</label>
@@ -492,14 +512,7 @@ export default function TrangChiSoDienNuoc() {
                     placeholder="Số điện mới"
                     value={dienMoi}
                     onChange={(e) => setDienMoi(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Số nước cũ</label>
-                  <input
-                    placeholder="Số nước cũ"
-                    value={nuocCu}
-                    onChange={(e) => setNuocCu(e.target.value)}
+                    inputMode="numeric"
                   />
                 </div>
                 <div>
@@ -508,6 +521,7 @@ export default function TrangChiSoDienNuoc() {
                     placeholder="Số nước mới"
                     value={nuocMoi}
                     onChange={(e) => setNuocMoi(e.target.value)}
+                    inputMode="numeric"
                   />
                 </div>
                 {loi && <div className="form-error">{loi}</div>}
@@ -561,7 +575,12 @@ export default function TrangChiSoDienNuoc() {
           <BangDonGian
             data={danhSachChiSoLoc}
             columns={[
-              { header: "ID", render: (r: MeterReading) => r.id },
+              {
+                header: "ID",
+                render: (r: MeterReading) => (
+                  <span title={r.id}>{r.id ? `${r.id.slice(0, 8)}…` : "—"}</span>
+                ),
+              },
               {
                 header: "Phòng",
                 render: (r: MeterReading) => tenKhuVaPhong(r.room),
@@ -611,27 +630,18 @@ export default function TrangChiSoDienNuoc() {
                 </div>
               </div>
               <form onSubmit={luuSuaChiSo} className="form-grid">
-                <div>
-                  <label className="field-label">Số điện cũ</label>
-                  <input
-                    value={suaDienCu}
-                    onChange={(e) => setSuaDienCu(e.target.value)}
-                    inputMode="numeric"
-                  />
+                <div className="form-span-2">
+                  <p className="card-subtitle" style={{ fontSize: "0.9rem" }}>
+                    Số cũ lấy từ tháng trước: điện{" "}
+                    <strong>{chiSoSua.oldElectric}</strong>, nước{" "}
+                    <strong>{chiSoSua.oldWater}</strong>.
+                  </p>
                 </div>
                 <div>
                   <label className="field-label">Số điện mới</label>
                   <input
                     value={suaDienMoi}
                     onChange={(e) => setSuaDienMoi(e.target.value)}
-                    inputMode="numeric"
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Số nước cũ</label>
-                  <input
-                    value={suaNuocCu}
-                    onChange={(e) => setSuaNuocCu(e.target.value)}
                     inputMode="numeric"
                   />
                 </div>

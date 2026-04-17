@@ -40,6 +40,21 @@ public class KhachThueController {
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final FileKhachThueService fileKhachThueService;
 
+    /**
+     * Một tài khoản chỉ gắn một dòng khách (unique nguoi_dung_id). Trước khi gán user cho
+     * khách này, gỡ user đó khỏi dòng khách khác (nếu có) để tránh lỗi unique constraint.
+     */
+    private void ganNguoiDungChoKhach(KhachThue khach, NguoiDung nguoiDung) {
+        if (nguoiDung != null && nguoiDung.getId() != null) {
+            KhachThue daCo = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
+            if (daCo != null && !daCo.getId().equals(khach.getId())) {
+                daCo.setNguoiDung(null);
+                khachThueRepository.save(daCo);
+            }
+        }
+        khach.setNguoiDung(nguoiDung);
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<KhachThue> layDanhSach(@RequestParam(value = "q", required = false) String tuKhoa) {
@@ -75,7 +90,9 @@ public class KhachThueController {
         khachThue.setDiaChi(dto.getAddress());
         khachThue.setEmail(dto.getEmail());
         if (dto.getUserId() != null) {
-            khachThue.setNguoiDung(nguoiDungRepository.findById(dto.getUserId()).orElse(null));
+            ganNguoiDungChoKhach(
+                    khachThue,
+                    nguoiDungRepository.findById(dto.getUserId()).orElse(null));
         }
         return khachThueRepository.save(khachThue);
     }
@@ -99,7 +116,9 @@ public class KhachThueController {
             khachThue.setDiaChi(address != null && !address.isBlank() ? address.trim() : null);
             khachThue.setEmail(email != null && !email.isBlank() ? email.trim() : null);
             if (userId != null) {
-                khachThue.setNguoiDung(nguoiDungRepository.findById(userId).orElse(null));
+                ganNguoiDungChoKhach(
+                        khachThue,
+                        nguoiDungRepository.findById(userId).orElse(null));
             }
             if (portrait != null && !portrait.isEmpty()) {
                 khachThue.setAnhChanDung(fileKhachThueService.luuAnh(portrait));
@@ -134,7 +153,11 @@ public class KhachThueController {
                     hienTai.setDiaChi(khachThue.getDiaChi());
                     hienTai.setEmail(khachThue.getEmail());
                     if (khachThue.getNguoiDung() != null && khachThue.getNguoiDung().getId() != null) {
-                        hienTai.setNguoiDung(nguoiDungRepository.findById(khachThue.getNguoiDung().getId()).orElse(null));
+                        ganNguoiDungChoKhach(
+                                hienTai,
+                                nguoiDungRepository
+                                        .findById(khachThue.getNguoiDung().getId())
+                                        .orElse(null));
                     }
                     return ResponseEntity.ok(khachThueRepository.save(hienTai));
                 })
@@ -171,7 +194,9 @@ public class KhachThueController {
                             } else {
                                 try {
                                     Long uid = Long.parseLong(userIdStr.trim());
-                                    hienTai.setNguoiDung(nguoiDungRepository.findById(uid).orElse(null));
+                                    ganNguoiDungChoKhach(
+                                            hienTai,
+                                            nguoiDungRepository.findById(uid).orElse(null));
                                 } catch (NumberFormatException ignored) {
                                     hienTai.setNguoiDung(null);
                                 }

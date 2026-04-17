@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
-import { IconTimes, IconEye, IconRefresh } from "@/components/Icons";
+import { IconTimes, IconEye, IconRefresh, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
@@ -20,6 +20,11 @@ const formatMoney = (n?: number | null) => {
   if (n == null || isNaN(Number(n))) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
 };
+
+const formatChiSo = (n?: number) =>
+  n != null && Number.isFinite(n)
+    ? new Intl.NumberFormat("vi-VN").format(n)
+    : "—";
 
 /** Nhãn khách thuê để phân biệt khi trùng tên: "Họ tên — SĐT" hoặc "Họ tên — CCCD" */
 const tenantOptionLabel = (t: Tenant) => {
@@ -71,24 +76,29 @@ export default function TrangHoaDon() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRoomId, setFilterRoomId] = useState("");
-  const [remindingId, setRemindingId] = useState<number | null>(null);
+  const [remindingId, setRemindingId] = useState<string | null>(null);
   const [viewReminderInvoice, setViewReminderInvoice] =
     useState<Invoice | null>(null);
   const [viewDetailInvoice, setViewDetailInvoice] = useState<Invoice | null>(
     null,
   );
+  const [dongChinhSuaChiTiet, setDongChinhSuaChiTiet] = useState<
+    { tenKhoan: string; soTien: string }[]
+  >([]);
+  const [dangLuuChiTiet, setDangLuuChiTiet] = useState(false);
   const [generating, setGenerating] = useState(false);
   const role = mounted ? getRole() : null;
   const isTenant = role === "TENANT";
   const isAdmin = role === "ADMIN";
   const canRemind = (isAdmin || role === "STAFF") && !isTenant;
+  const canSuaChiTiet = (isAdmin || role === "STAFF") && !isTenant;
   const { notify } = useToast();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const sendReminder = async (invoiceId: number) => {
+  const sendReminder = async (invoiceId: string) => {
     setRemindingId(invoiceId);
     try {
       const res = await api.post<{ message?: string }>(
@@ -167,6 +177,40 @@ export default function TrangHoaDon() {
     }
     return list;
   }, [invoices, filterStatus, filterRoomId]);
+
+  const khoiTaoDongChiTietTuHoaDon = (i: Invoice) => {
+    const co = i.lineItems && i.lineItems.length > 0;
+    setDongChinhSuaChiTiet(
+      co
+        ? i.lineItems!.map((l) => ({
+            tenKhoan: l.tenKhoan,
+            soTien: String(l.soTien),
+          }))
+        : [{ tenKhoan: "", soTien: "" }],
+    );
+  };
+
+  const luuChiTietHoaDon = async () => {
+    if (!viewDetailInvoice || !canSuaChiTiet) return;
+    setDangLuuChiTiet(true);
+    try {
+      await api.put(`/hoa-don/${viewDetailInvoice.id}/chi-tiet`, {
+        dong: dongChinhSuaChiTiet
+          .filter((r) => r.tenKhoan.trim())
+          .map((r) => ({
+            tenKhoan: r.tenKhoan.trim(),
+            soTien: Number(String(r.soTien).replace(/\s/g, "")) || 0,
+          })),
+      });
+      notify("Đã lưu chi tiết hóa đơn.", "success");
+      await load();
+      setViewDetailInvoice(null);
+    } catch {
+      notify("Lưu chi tiết thất bại.", "error");
+    } finally {
+      setDangLuuChiTiet(false);
+    }
+  };
 
   const runGenerateInvoices = async () => {
     setGenerating(true);
@@ -328,7 +372,10 @@ export default function TrangHoaDon() {
                       type="button"
                       className="btn btn-sm btn-secondary"
                       style={{ padding: "2px 8px" }}
-                      onClick={() => setViewDetailInvoice(i)}
+                      onClick={() => {
+                        setViewDetailInvoice(i);
+                        khoiTaoDongChiTietTuHoaDon(i);
+                      }}
                       title="Xem chi tiết các khoản"
                     >
                       <IconEye /> Xem chi tiết
@@ -466,6 +513,30 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
+                  <span>Số điện cũ</span>
+                  <strong>{formatChiSo(viewDetailInvoice.electricOld)}</strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <span>Số điện mới</span>
+                  <strong>{formatChiSo(viewDetailInvoice.electricNew)}</strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
                   <span>Tiền điện</span>
                   <strong>
                     {formatMoney(viewDetailInvoice.electricityCost)}
@@ -480,9 +551,50 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
+                  <span>Số nước cũ</span>
+                  <strong>{formatChiSo(viewDetailInvoice.waterOld)}</strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <span>Số nước mới</span>
+                  <strong>{formatChiSo(viewDetailInvoice.waterNew)}</strong>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 0",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
                   <span>Tiền nước</span>
                   <strong>{formatMoney(viewDetailInvoice.waterCost)}</strong>
                 </div>
+                {viewDetailInvoice.lineItems &&
+                  viewDetailInvoice.lineItems.length > 0 &&
+                  viewDetailInvoice.lineItems.map((l) => (
+                    <div
+                      key={l.id ?? `${l.tenKhoan}-${l.soTien}`}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 0",
+                        borderBottom: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <span>{l.tenKhoan}</span>
+                      <strong>{formatMoney(l.soTien)}</strong>
+                    </div>
+                  ))}
                 <div
                   style={{
                     display: "flex",
@@ -498,7 +610,117 @@ export default function TrangHoaDon() {
                   <strong>{formatMoney(viewDetailInvoice.total)}</strong>
                 </div>
               </div>
+              {canSuaChiTiet && (
+                <div style={{ marginTop: 20 }}>
+                  <h4 style={{ margin: "0 0 8px", fontSize: "1rem" }}>
+                    Chỉnh sửa các khoản thêm
+                  </h4>
+                  <p
+                    className="card-subtitle"
+                    style={{ marginBottom: 10, fontSize: "0.85rem" }}
+                  >
+                    Thêm dòng (giữ xe, wifi, sửa chữa…). Lưu sẽ thay toàn bộ
+                    danh sách phụ trên hóa đơn.
+                  </p>
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
+                        <th style={{ textAlign: "left", padding: "6px 4px" }}>
+                          Tên khoản
+                        </th>
+                        <th style={{ textAlign: "left", padding: "6px 4px" }}>
+                          Số tiền (VNĐ)
+                        </th>
+                        <th style={{ width: 72 }} />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dongChinhSuaChiTiet.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          style={{ borderBottom: "1px solid #f1f5f9" }}
+                        >
+                          <td style={{ padding: "6px 4px" }}>
+                            <input
+                              style={{ width: "100%" }}
+                              value={row.tenKhoan}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setDongChinhSuaChiTiet((prev) =>
+                                  prev.map((r, i) =>
+                                    i === idx ? { ...r, tenKhoan: v } : r,
+                                  ),
+                                );
+                              }}
+                              placeholder="VD: Tiền giữ xe"
+                            />
+                          </td>
+                          <td style={{ padding: "6px 4px" }}>
+                            <input
+                              type="number"
+                              min={0}
+                              style={{ width: "100%" }}
+                              value={row.soTien}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setDongChinhSuaChiTiet((prev) =>
+                                  prev.map((r, i) =>
+                                    i === idx ? { ...r, soTien: v } : r,
+                                  ),
+                                );
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "6px 4px" }}>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              disabled={dongChinhSuaChiTiet.length <= 1}
+                              onClick={() =>
+                                setDongChinhSuaChiTiet((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                )
+                              }
+                            >
+                              Xóa
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ marginTop: 8 }}
+                    onClick={() =>
+                      setDongChinhSuaChiTiet((prev) => [
+                        ...prev,
+                        { tenKhoan: "", soTien: "" },
+                      ])
+                    }
+                  >
+                    <IconPlus /> Thêm dòng
+                  </button>
+                </div>
+              )}
               <div className="modal-actions" style={{ marginTop: 16 }}>
+                {canSuaChiTiet && (
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={dangLuuChiTiet}
+                    onClick={() => void luuChiTietHoaDon()}
+                  >
+                    {dangLuuChiTiet ? "Đang lưu…" : "Lưu chi tiết"}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn-secondary"

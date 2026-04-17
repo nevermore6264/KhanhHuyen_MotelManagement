@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GhiNhanThanhToanRequest {
-    private Long invoiceId;
+    private String invoiceId;
     /** Số tiền lần này (VNĐ). */
     private BigDecimal amount;
     /** "CASH" hoặc "TRANSFER". */

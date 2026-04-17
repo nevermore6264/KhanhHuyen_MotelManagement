@@ -13,10 +13,10 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.TrangThaiHoaDon;
 
 /** Repository hóa đơn. */
-public interface HoaDonRepository extends JpaRepository<HoaDon, Long> {
+public interface HoaDonRepository extends JpaRepository<HoaDon, String> {
     @EntityGraph(attributePaths = {"phong", "khachThue", "phong.khuVuc"})
     @Query("SELECT h FROM HoaDon h WHERE h.id = :id")
-    Optional<HoaDon> timTheoIdCoPhong(@Param("id") Long id);
+    Optional<HoaDon> timTheoIdCoPhong(@Param("id") String id);
 
     Optional<HoaDon> findByPhong_IdAndThangAndNam(Long roomId, int thang, int nam);
 

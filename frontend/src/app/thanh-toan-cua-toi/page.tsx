@@ -8,7 +8,10 @@ import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
 import { mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
-type Payment = { id: number; amount: number; method: string; paidAt: string };
+import {
+  chuanHoaThanhToanTuApi,
+  type PaymentRow,
+} from "@/lib/chuanHoaThanhToanTuApi";
 
 const formatVND = (value?: number | null) => {
   if (value == null || Number.isNaN(Number(value))) return "—";
@@ -19,7 +22,7 @@ export default function TrangThanhToanCuaToi() {
   const searchParams = useSearchParams();
   const appliedUrlRef = useRef(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [invoiceId, setInvoiceId] = useState("");
 
   useEffect(() => {
@@ -39,14 +42,24 @@ export default function TrangThanhToanCuaToi() {
       setInvoiceId(id);
       api
         .get(`/thanh-toan/hoa-don/${id}`)
-        .then((res) => setPayments(res.data || []));
+        .then((res) =>
+          setPayments(
+            (Array.isArray(res.data) ? res.data : []).map((x) =>
+              chuanHoaThanhToanTuApi(x as Record<string, unknown>),
+            ),
+          ),
+        );
     }
   }, [searchParams, invoices]);
 
   const loadPayments = async (id: string) => {
     if (!id) return;
     const res = await api.get(`/thanh-toan/hoa-don/${id}`);
-    setPayments(res.data || []);
+    setPayments(
+      (Array.isArray(res.data) ? res.data : []).map((x) =>
+        chuanHoaThanhToanTuApi(x as Record<string, unknown>),
+      ),
+    );
   };
 
   return (

@@ -59,8 +59,8 @@ public class ThanhToanController {
 
     @GetMapping("/hoa-don/{invoiceId}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
-    public List<ThanhToan> layTheoHoaDon(@PathVariable("invoiceId") Long maHoaDon) {
-        return thanhToanRepository.findByHoaDonId(maHoaDon);
+    public List<ThanhToan> layTheoHoaDon(@PathVariable("invoiceId") String maHoaDon) {
+        return thanhToanRepository.findByHoaDon_Id(maHoaDon);
     }
 
     /** Tạo link thanh toán PayOS (tenant chỉ được tạo cho hóa đơn của mình). */
@@ -69,15 +69,9 @@ public class ThanhToanController {
     public ResponseEntity<Map<String, String>> taoLinkThanhToan(@RequestBody Map<String, Object> body) {
         Object idObj = body != null ? body.get("invoiceId") : null;
         if (idObj == null) return ResponseEntity.badRequest().build();
-        long maHoaDon;
-        if (idObj instanceof Number) {
-            maHoaDon = ((Number) idObj).longValue();
-        } else {
-            try {
-                maHoaDon = Long.parseLong(idObj.toString());
-            } catch (NumberFormatException e) {
-                return ResponseEntity.badRequest().build();
-            }
+        String maHoaDon = idObj.toString().trim();
+        if (maHoaDon.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) return ResponseEntity.status(403).build();
@@ -118,7 +112,8 @@ public class ThanhToanController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<?> ghiNhanThanhToan(@RequestBody GhiNhanThanhToanRequest yeuCau) {
-        if (yeuCau == null || yeuCau.getInvoiceId() == null || yeuCau.getAmount() == null) {
+        if (yeuCau == null || yeuCau.getInvoiceId() == null || yeuCau.getInvoiceId().isBlank()
+                || yeuCau.getAmount() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Thiếu mã hóa đơn hoặc số tiền."));
         }
         BigDecimal soTien = yeuCau.getAmount().setScale(0, RoundingMode.HALF_UP);
@@ -133,7 +128,7 @@ public class ThanhToanController {
         if (hoaDon.getTrangThai() == TrangThaiHoaDon.PAID) {
             return ResponseEntity.badRequest().body(Map.of("message", "Hóa đơn đã thanh toán đủ."));
         }
-        BigDecimal daThu = thanhToanRepository.findByHoaDonId(hoaDon.getId()).stream()
+        BigDecimal daThu = thanhToanRepository.findByHoaDon_Id(hoaDon.getId()).stream()
                 .map(ThanhToan::getSoTien)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal conLai = hoaDon.getTongTien().subtract(daThu);

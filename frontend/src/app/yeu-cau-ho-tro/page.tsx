@@ -55,8 +55,14 @@ export default function TrangYeuCauHoTro() {
   const { notify } = useToast();
 
   const tai = async () => {
-    const phanHoi = await api.get("/yeu-cau-ho-tro");
-    setDanhSach(phanHoi.data);
+    try {
+      const phanHoi = await api.get("/yeu-cau-ho-tro");
+      const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
+      setDanhSach(duLieu);
+    } catch {
+      setDanhSach([]);
+      notify("Không tải được danh sách yêu cầu.", "error");
+    }
   };
 
   useEffect(() => {

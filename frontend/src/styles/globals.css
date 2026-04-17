@@ -432,6 +432,36 @@ a {
   transform: translateY(0);
 }
 
+/* Nút thật sự disabled — khác rõ màu với nút bật (gradient xanh). */
+.btn:disabled,
+.btn[disabled] {
+  cursor: not-allowed;
+  background: #cbd5e1;
+  color: #475569;
+  opacity: 1;
+  box-shadow: none;
+  filter: none;
+}
+
+.btn:disabled::after,
+.btn[disabled]::after {
+  opacity: 0 !important;
+  transform: none !important;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.btn-secondary:disabled,
+.btn-secondary[disabled] {
+  background: #94a3b8;
+  color: #e2e8f0;
+}
+
 a.btn {
   text-decoration: none;
   color: #fff;

@@ -20,6 +20,10 @@ import { IconReceipt, IconFile, IconHome, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { chuanHoaDanhSachHopDongTuApi } from "@/lib/chuanHoaHopDongTuApi";
+import {
+  chuanHoaThanhToanTuApi,
+  type PaymentRow,
+} from "@/lib/chuanHoaThanhToanTuApi";
 
 ChartJS.register(
   CategoryScale,
@@ -38,14 +42,6 @@ type Contract = {
   startDate?: string;
   endDate?: string;
   status?: string;
-};
-
-type Payment = {
-  id: number;
-  amount: number;
-  paidAt: string;
-  method: string;
-  invoice?: { id: number; month: number; year: number };
 };
 
 const paymentMethodLabel = (value?: string) => {
@@ -159,7 +155,7 @@ export default function TrangTongQuan() {
   const [debt, setDebt] = useState(0);
   const [revenue, setRevenue] = useState(0);
   const [myContracts, setMyContracts] = useState<Contract[]>([]);
-  const [myPayments, setMyPayments] = useState<Payment[]>([]);
+  const [myPayments, setMyPayments] = useState<PaymentRow[]>([]);
 
   const role = mounted ? getRole() : null;
   const isTenant = role === "TENANT";
@@ -184,7 +180,15 @@ export default function TrangTongQuan() {
         .catch(() => setMyContracts([]));
       api
         .get("/thanh-toan/cua-toi?gioiHan=10")
-        .then((res) => setMyPayments(Array.isArray(res.data) ? res.data : []))
+        .then((res) =>
+          setMyPayments(
+            Array.isArray(res.data)
+              ? res.data.map((x) =>
+                  chuanHoaThanhToanTuApi(x as Record<string, unknown>),
+                )
+              : [],
+          ),
+        )
         .catch(() => setMyPayments([]));
       return;
     }
@@ -458,7 +462,11 @@ export default function TrangTongQuan() {
                               ? `Tháng ${p.invoice.month}/${p.invoice.year}`
                               : "—"}
                           </td>
-                          <td>{formatNumber(Number(p.amount))} đ</td>
+                          <td>
+                            {Number.isFinite(p.amount)
+                              ? `${formatNumber(p.amount)} đ`
+                              : "—"}
+                          </td>
                           <td>{paymentMethodLabel(p.method)}</td>
                           <td>{formatDateDMY(p.paidAt)}</td>
                         </tr>

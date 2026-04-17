@@ -15,8 +15,14 @@ export type Tenant = {
   idNumber?: string;
 };
 
+export type InvoiceLineItem = {
+  id?: string;
+  tenKhoan: string;
+  soTien: number;
+};
+
 export type Invoice = {
-  id: number;
+  id: string;
   room?: Room;
   tenant?: Tenant;
   tenants?: Tenant[];
@@ -25,6 +31,13 @@ export type Invoice = {
   roomCost?: number;
   electricityCost?: number;
   waterCost?: number;
+  /** Chỉ số công tơ cùng kỳ (nếu có bản ghi chỉ số). */
+  electricOld?: number;
+  electricNew?: number;
+  waterOld?: number;
+  waterNew?: number;
+  /** Các khoản phụ (giữ xe, wifi, …) */
+  lineItems?: InvoiceLineItem[];
   total?: number;
   status?: string;
   lastReminderEmailAt?: string | null;
@@ -41,6 +54,12 @@ function soTienTuApi(v: unknown): number | undefined {
   }
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
+}
+
+function soNguyenTuApi(v: unknown): number | undefined {
+  if (v == null) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : undefined;
 }
 
 /** Jackson có thể trả LocalDateTime dạng chuỗi ISO hoặc mảng [y,M,d,h,m,s]. */
@@ -106,8 +125,24 @@ export function mapHoaDonFromApi(raw: RawJson): Invoice {
     if (tenants.length === 0) tenants = undefined;
   }
 
+  const chiTietRaw = raw.chiTiet;
+  let lineItems: InvoiceLineItem[] | undefined;
+  if (Array.isArray(chiTietRaw)) {
+    const mapped = chiTietRaw
+      .filter((x) => x && typeof x === "object")
+      .map((x) => {
+        const o = x as RawJson;
+        return {
+          id: o.id != null ? String(o.id) : undefined,
+          tenKhoan: String(o.tenKhoan ?? "").trim(),
+          soTien: soTienTuApi(o.soTien) ?? 0,
+        };
+      });
+    if (mapped.length > 0) lineItems = mapped;
+  }
+
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     room:
       phongRaw && typeof phongRaw === "object"
         ? chuanHoaPhongTuApi(phongRaw as RawJson)
@@ -122,6 +157,11 @@ export function mapHoaDonFromApi(raw: RawJson): Invoice {
     roomCost: soTienTuApi(raw.tienPhong ?? raw.roomCost),
     electricityCost: soTienTuApi(raw.tienDien ?? raw.electricityCost),
     waterCost: soTienTuApi(raw.tienNuoc ?? raw.waterCost),
+    electricOld: soNguyenTuApi(raw.chiSoDienCu),
+    electricNew: soNguyenTuApi(raw.chiSoDienMoi),
+    waterOld: soNguyenTuApi(raw.chiSoNuocCu),
+    waterNew: soNguyenTuApi(raw.chiSoNuocMoi),
+    lineItems,
     total: soTienTuApi(raw.tongTien ?? raw.total),
     status: status || undefined,
     lastReminderEmailAt: (() => {

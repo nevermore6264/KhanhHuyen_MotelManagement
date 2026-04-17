@@ -18,7 +18,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class HoaDonResponseDto {
-    private Long id;
+    private String id;
     private Phong phong;
     private KhachThue khachThue;
     private int thang;
@@ -37,10 +37,22 @@ public class HoaDonResponseDto {
     private String noiDungSmsCuoi;
     private List<KhachThueTomTatDto> danhSachKhachThue;
 
-    public static HoaDonResponseDto tu(HoaDon h, List<KhachThueTomTatDto> danhSachKhachThue) {
+    private List<HoaDonChiTietDongDto> chiTiet = List.of();
+
+    /** Chỉ số công tơ cùng kỳ với hóa đơn (null nếu chưa có bản ghi chỉ số). */
+    private Integer chiSoDienCu;
+    private Integer chiSoDienMoi;
+    private Integer chiSoNuocCu;
+    private Integer chiSoNuocMoi;
+
+    public static HoaDonResponseDto tu(
+            HoaDon h,
+            List<KhachThueTomTatDto> danhSachKhachThue,
+            List<HoaDonChiTietDongDto> chiTiet) {
         HoaDonResponseDto d = new HoaDonResponseDto();
         BeanUtils.copyProperties(h, d);
         d.setDanhSachKhachThue(danhSachKhachThue);
+        d.setChiTiet(chiTiet != null ? chiTiet : List.of());
         return d;
     }
 }

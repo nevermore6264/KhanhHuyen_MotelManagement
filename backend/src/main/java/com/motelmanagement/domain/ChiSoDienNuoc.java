@@ -3,14 +3,15 @@ package com.motelmanagement.domain;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,8 +24,9 @@ import lombok.Setter;
 @Table(name = "chi_so_dien_nuoc")
 public class ChiSoDienNuoc {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "phong_id")
@@ -36,13 +38,14 @@ public class ChiSoDienNuoc {
     @Column(name = "nam")
     private int nam;
 
-    @Column(name = "dien_cu")
+    /** Chỉ số đầu kỳ (số mới tháng trước) — không cột DB, gán trước khi trả JSON. */
+    @Transient
     private int dienCu;
 
     @Column(name = "dien_moi")
     private int dienMoi;
 
-    @Column(name = "nuoc_cu")
+    @Transient
     private int nuocCu;
 
     @Column(name = "nuoc_moi")

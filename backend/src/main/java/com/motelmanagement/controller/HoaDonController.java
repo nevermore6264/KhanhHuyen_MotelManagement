@@ -22,12 +22,18 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.domain.HoaDonChiTiet;
+import com.motelmanagement.dto.HoaDonChiTietDongDto;
 import com.motelmanagement.dto.HoaDonResponseDto;
 import com.motelmanagement.dto.KhachThueTomTatDto;
 import com.motelmanagement.dto.RemindRequest;
+import com.motelmanagement.dto.YeuCauLuuChiTietHoaDon;
+import com.motelmanagement.repository.ChiSoDienNuocRepository;
+import com.motelmanagement.repository.HoaDonChiTietRepository;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.service.HoaDonChiTietService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhacNoHoaDonService;
 import com.motelmanagement.service.TinhTienService;
@@ -40,11 +46,14 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/hoa-don")
 public class HoaDonController {
     private final HoaDonRepository hoaDonRepository;
+    private final HoaDonChiTietRepository hoaDonChiTietRepository;
+    private final ChiSoDienNuocRepository chiSoDienNuocRepository;
     private final HopDongRepository hopDongRepository;
     private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final NhacNoHoaDonService nhacNoHoaDonService;
     private final TinhTienService tinhTienService;
+    private final HoaDonChiTietService hoaDonChiTietService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
@@ -74,7 +83,33 @@ public class HoaDonController {
         HoaDon hienTai = tinhTienService.dongBoHoaDonTheoChiSoNeuCo(h);
         Long maPhong = hienTai.getPhong() != null ? hienTai.getPhong().getId() : null;
         List<KhachThueTomTatDto> ds = layDanhSachKhachTheoPhong(maPhong, hienTai.getKhachThue());
-        return HoaDonResponseDto.tu(hienTai, ds);
+        List<HoaDonChiTietDongDto> chiTiet = List.of();
+        if (hienTai.getId() != null && !hienTai.getId().isBlank()) {
+            chiTiet = hoaDonChiTietRepository.findByHoaDon_IdOrderByThuTuAsc(hienTai.getId()).stream()
+                    .map(this::xuongChiTiet)
+                    .toList();
+        }
+        HoaDonResponseDto dto = HoaDonResponseDto.tu(hienTai, ds, chiTiet);
+        if (maPhong != null) {
+            chiSoDienNuocRepository
+                    .findByPhong_IdAndThangAndNam(maPhong, hienTai.getThang(), hienTai.getNam())
+                    .ifPresent(cs -> {
+                        dto.setChiSoDienCu(tinhTienService.layChiSoDienCuTheoKy(cs));
+                        dto.setChiSoDienMoi(cs.getDienMoi());
+                        dto.setChiSoNuocCu(tinhTienService.layChiSoNuocCuTheoKy(cs));
+                        dto.setChiSoNuocMoi(cs.getNuocMoi());
+                    });
+        }
+        return dto;
+    }
+
+    private HoaDonChiTietDongDto xuongChiTiet(HoaDonChiTiet ct) {
+        HoaDonChiTietDongDto d = new HoaDonChiTietDongDto();
+        d.setId(ct.getId());
+        d.setTenKhoan(ct.getTenKhoan());
+        d.setSoTien(ct.getSoTien());
+        d.setThuTu(ct.getThuTu());
+        return d;
     }
 
     /**
@@ -110,9 +145,22 @@ public class HoaDonController {
         return hoaDonRepository.save(hoaDon);
     }
 
+    @PutMapping("/{id}/chi-tiet")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<?> luuChiTiet(
+            @PathVariable("id") String ma,
+            @RequestBody YeuCauLuuChiTietHoaDon yeuCau) {
+        try {
+            hoaDonChiTietService.luuChiTiet(ma, yeuCau);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PutMapping("/{id}/trang-thai")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<HoaDon> capNhatTrangThai(@PathVariable("id") Long ma, @RequestParam(value = "status") TrangThaiHoaDon trangThai) {
+    public ResponseEntity<HoaDon> capNhatTrangThai(@PathVariable("id") String ma, @RequestParam(value = "status") TrangThaiHoaDon trangThai) {
         return hoaDonRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setTrangThai(trangThai);
@@ -140,7 +188,7 @@ public class HoaDonController {
 
     @PostMapping("/{id}/nhac-no")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<?> guiNhacNo(@PathVariable("id") Long ma, @RequestBody RemindRequest yeuCau) {
+    public ResponseEntity<?> guiNhacNo(@PathVariable("id") String ma, @RequestBody RemindRequest yeuCau) {
         String kenh = yeuCau != null && yeuCau.getChannel() != null ? yeuCau.getChannel().trim() : "";
         java.util.Optional<String> loi = nhacNoHoaDonService.guiNhacNo(ma, kenh);
         if (loi.isPresent()) {

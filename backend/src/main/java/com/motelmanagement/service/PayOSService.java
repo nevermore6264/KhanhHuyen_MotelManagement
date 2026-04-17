@@ -173,7 +173,7 @@ public class PayOSService {
                         thanhToan.setSoTien(java.math.BigDecimal.valueOf(soTien));
                         thanhToan.setPhuongThuc(PhuongThucThanhToan.TRANSFER);
                         thanhToanRepository.save(thanhToan);
-                        java.math.BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDonId(hoaDon.getId()).stream()
+                        java.math.BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDon_Id(hoaDon.getId()).stream()
                                 .map(ThanhToan::getSoTien)
                                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
                         if (tongDaThanhToan.compareTo(hoaDon.getTongTien()) >= 0) {
