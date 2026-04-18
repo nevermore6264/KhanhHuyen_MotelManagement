@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -17,12 +18,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.motelmanagement.dto.PhanHoiXacThuc;
 import com.motelmanagement.dto.YeuCauXacThuc;
+import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.XacThucService;
 
-/** Slice MVC: BoLocGhiNhatKyApi (filter) can NhatKyService + NguoiDungHienTaiService — mock de khoi nen full context. */
+/**
+ * Slice MVC: mock phụ thuộc của filter (BoLocJwt & BoLocGhiNhatKyApi).
+ * {@code addFilters = false}: tránh Security mặc định (CSRF bật) — app thật đã {@code csrf().disable()} trong CauHinhBaoMat.
+ */
 @WebMvcTest(controllers = XacThucController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
 class XacThucControllerTest {
@@ -38,6 +44,8 @@ class XacThucControllerTest {
     private NhatKyService nhatKyService;
     @MockitoBean
     private NguoiDungHienTaiService nguoiDungHienTaiService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     void dangNhap_tra200() throws Exception {
