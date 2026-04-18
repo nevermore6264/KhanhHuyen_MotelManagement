@@ -26,6 +26,18 @@ const formatChiSo = (n?: number) =>
     ? new Intl.NumberFormat("vi-VN").format(n)
     : "—";
 
+/** Nhập số tiền (cùng cách `/phong`, `/thanh-toan`). */
+const dinhDangNhapTien = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+};
+
+const parseNhapTien = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return digits ? Number(digits) : null;
+};
+
 /** Nhãn khách thuê để phân biệt khi trùng tên: "Họ tên — SĐT" hoặc "Họ tên — CCCD" */
 const tenantOptionLabel = (t: Tenant) => {
   const name = t.fullName || `Khách ${t.id}`;
@@ -184,7 +196,13 @@ export default function TrangHoaDon() {
       co
         ? i.lineItems!.map((l) => ({
             tenKhoan: l.tenKhoan,
-            soTien: String(l.soTien),
+            soTien: dinhDangNhapTien(
+              String(
+                l.soTien != null && !Number.isNaN(Number(l.soTien))
+                  ? Math.round(Number(l.soTien))
+                  : 0,
+              ),
+            ),
           }))
         : [{ tenKhoan: "", soTien: "" }],
     );
@@ -199,7 +217,7 @@ export default function TrangHoaDon() {
           .filter((r) => r.tenKhoan.trim())
           .map((r) => ({
             tenKhoan: r.tenKhoan.trim(),
-            soTien: Number(String(r.soTien).replace(/\s/g, "")) || 0,
+            soTien: parseNhapTien(r.soTien) ?? 0,
           })),
       });
       notify("Đã lưu chi tiết hóa đơn.", "success");
@@ -635,7 +653,7 @@ export default function TrangHoaDon() {
                           Tên khoản
                         </th>
                         <th style={{ textAlign: "left", padding: "6px 4px" }}>
-                          Số tiền (VNĐ)
+                          Số tiền
                         </th>
                         <th style={{ width: 72 }} />
                       </tr>
@@ -661,21 +679,25 @@ export default function TrangHoaDon() {
                               placeholder="VD: Tiền giữ xe"
                             />
                           </td>
-                          <td style={{ padding: "6px 4px" }}>
-                            <input
-                              type="number"
-                              min={0}
-                              style={{ width: "100%" }}
-                              value={row.soTien}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                setDongChinhSuaChiTiet((prev) =>
-                                  prev.map((r, i) =>
-                                    i === idx ? { ...r, soTien: v } : r,
-                                  ),
-                                );
-                              }}
-                            />
+                          <td style={{ padding: "6px 4px", minWidth: 160 }}>
+                            <div className="input-suffix">
+                              <input
+                                placeholder="Ví dụ: 100.000"
+                                inputMode="numeric"
+                                autoComplete="off"
+                                style={{ width: "100%", minWidth: 0 }}
+                                value={row.soTien}
+                                onChange={(e) => {
+                                  const v = dinhDangNhapTien(e.target.value);
+                                  setDongChinhSuaChiTiet((prev) =>
+                                    prev.map((r, i) =>
+                                      i === idx ? { ...r, soTien: v } : r,
+                                    ),
+                                  );
+                                }}
+                              />
+                              <span>VNĐ</span>
+                            </div>
                           </td>
                           <td style={{ padding: "6px 4px" }}>
                             <button
