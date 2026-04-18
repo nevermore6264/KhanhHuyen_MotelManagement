@@ -26,6 +26,17 @@ public class BoLocJwt extends OncePerRequestFilter {
         this.tienIchJwt = tienIchJwt;
     }
 
+    /** Map claim role (ADMIN / ROLE_ADMIN) thành tên authority cho hasRole('ADMIN'). */
+    private static String chuyenVaiTroThanhTenQuyen(String vaiTro) {
+        if (vaiTro == null || vaiTro.isBlank()) {
+            return "ROLE_USER";
+        }
+        if (vaiTro.startsWith("ROLE_")) {
+            return vaiTro;
+        }
+        return "ROLE_" + vaiTro;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest yeuCau, HttpServletResponse phanHoi, FilterChain filterChain)
             throws ServletException, IOException {
@@ -36,8 +47,10 @@ public class BoLocJwt extends OncePerRequestFilter {
                 Claims claims = tienIchJwt.parseClaims(token);
                 String username = claims.getSubject();
                 String vaiTro = claims.get("role", String.class);
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    String role = (vaiTro != null && !vaiTro.isBlank()) ? ("ROLE_" + vaiTro) : "ROLE_USER";
+                // Luôn đặt xác thực từ JWT khi parse OK (tránh bỏ qua khi context đã có Anonymous
+                // hoặc filter khác; hasRole('ADMIN') cần ROLE_ADMIN đúng).
+                if (username != null) {
+                    String role = chuyenVaiTroThanhTenQuyen(vaiTro);
                     UsernamePasswordAuthenticationToken xacThuc = new UsernamePasswordAuthenticationToken(
                             username, null, List.of(new SimpleGrantedAuthority(role))
                     );

@@ -561,10 +561,15 @@ export default function TrangKhachThue() {
     setNewUserError("");
     try {
       const res = await api.post("/nguoi-dung", {
-        username: trimmedUsername,
-        password: newPassword,
-        role: "TENANT",
-        active: true,
+        tenDangNhap: trimmedUsername,
+        matKhau: newPassword,
+        vaiTro: "TENANT",
+        kichHoat: true,
+        hoTen: "",
+        maKhachThue:
+          createUserForPicker === "edit" && editing?.id != null
+            ? editing.id
+            : null,
       });
       await load();
       const newId = res.data?.id;
@@ -578,10 +583,16 @@ export default function TrangKhachThue() {
       notify("Tạo tài khoản thành công", "success");
       closeCreateUserForm();
     } catch (err: any) {
+      const status = err?.response?.status;
+      const data = err?.response?.data;
       const message =
-        err?.response?.data?.message || err?.response?.status === 403
+        status === 403
           ? "Bạn không có quyền thao tác"
-          : "Tạo tài khoản thất bại";
+          : typeof data === "string"
+            ? data
+            : typeof data?.message === "string"
+              ? data.message
+              : "Tạo tài khoản thất bại";
       setNewUserError(message);
       notify(message, "error");
     }
