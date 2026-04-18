@@ -103,7 +103,8 @@ export default function ThanhDieuHuong() {
     setTen(getName() || "User");
   }, []);
 
-  const hienThiChuong = vaiTro === "TENANT" || vaiTro === "STAFF";
+  const hienThiChuong =
+    vaiTro === "TENANT" || vaiTro === "STAFF" || vaiTro === "ADMIN";
   const soChuaDoc = contextThongBao?.unreadCount ?? 0;
 
   const dangXuat = () => {

@@ -38,11 +38,13 @@ public class ThongBaoService {
                 NguoiDung nguoiDung = hoaDon.getKhachThue().getNguoiDung();
                 ThongBao thongBao = new ThongBao();
                 thongBao.setNguoiDung(nguoiDung);
+                String maPhong = hoaDon.getPhong() != null ? hoaDon.getPhong().getMaPhong() : "?";
                 thongBao.setNoiDung(
                         "Nhắc thanh toán hóa đơn " + hoaDon.getThang() + "/" + hoaDon.getNam()
-                                + " cho phòng " + hoaDon.getPhong().getMaPhong()
+                                + " cho phòng " + maPhong
                                 + " vào " + hienTai);
-                thongBaoRepository.save(thongBao);
+                thongBao = thongBaoRepository.save(thongBao);
+                guiRealtimeDenNguoiDung(thongBao, nguoiDung);
             }
         }
     }
@@ -62,12 +64,30 @@ public class ThongBaoService {
             thongBao.setNguoiDung(nguoiDung);
             thongBao.setNoiDung(message.trim());
             thongBao = thongBaoRepository.save(thongBao);
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("id", thongBao.getId());
-            payload.put("message", thongBao.getNoiDung());
-            payload.put("readFlag", thongBao.isDaDoc());
-            payload.put("sentAt", thongBao.getThoiGianGui() != null ? thongBao.getThoiGianGui().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null);
-            messagingTemplate.convertAndSendToUser(nguoiDung.getTenDangNhap(), "/queue/notifications", payload);
+            guiRealtimeDenNguoiDung(thongBao, nguoiDung);
         }
+    }
+
+    private static Map<String, Object> buildPayloadThongBao(ThongBao thongBao) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", thongBao.getId());
+        payload.put("message", thongBao.getNoiDung());
+        payload.put("readFlag", thongBao.isDaDoc());
+        payload.put("sentAt", thongBao.getThoiGianGui() != null
+                ? thongBao.getThoiGianGui().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                : null);
+        return payload;
+    }
+
+    /** Đẩy tới subscription /user/queue/notifications (principal = tên đăng nhập). */
+    private void guiRealtimeDenNguoiDung(ThongBao thongBao, NguoiDung nguoiDung) {
+        if (nguoiDung == null || nguoiDung.getTenDangNhap() == null
+                || nguoiDung.getTenDangNhap().isBlank()) {
+            return;
+        }
+        messagingTemplate.convertAndSendToUser(
+                nguoiDung.getTenDangNhap(),
+                "/queue/notifications",
+                buildPayloadThongBao(thongBao));
     }
 }

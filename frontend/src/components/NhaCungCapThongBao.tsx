@@ -81,7 +81,8 @@ export default function NhaCungCapThongBao({
   useEffect(() => {
     if (!daMount) return;
     const vaiTro = getRole();
-    if (vaiTro !== "TENANT" && vaiTro !== "STAFF") return;
+    /** Mọi vai trò có GET /api/thong-bao đều cần đếm + WebSocket (trước đây thiếu ADMIN). */
+    if (vaiTro !== "TENANT" && vaiTro !== "STAFF" && vaiTro !== "ADMIN") return;
 
     taiLaiChuaDoc();
 

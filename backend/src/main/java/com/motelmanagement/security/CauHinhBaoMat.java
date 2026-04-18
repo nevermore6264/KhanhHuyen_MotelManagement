@@ -39,8 +39,13 @@ public class CauHinhBaoMat {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Pattern thay cho allowedOrigins("*") — tương thích Spring Security 6 + preflight từ SPA
-        config.setAllowedOriginPatterns(List.of("*"));
+        // Pattern (không dùng allowedOrigins("*") với credentials). Gồm cổng dev FE phổ biến.
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://localhost:*",
+                "https://127.0.0.1:*"));
+        config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("*"));

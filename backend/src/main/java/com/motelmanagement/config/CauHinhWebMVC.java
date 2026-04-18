@@ -25,7 +25,12 @@ public class CauHinhWebMVC implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
+                .allowedOriginPatterns(
+                        "http://localhost:*",
+                        "http://127.0.0.1:*",
+                        "https://localhost:*",
+                        "https://127.0.0.1:*")
+                .allowCredentials(true)
                 .allowedMethods("*")
                 .allowedHeaders("*");
     }

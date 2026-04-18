@@ -55,7 +55,7 @@ public class CauHinhWebSocket implements WebSocketMessageBrokerConfigurer {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String token = accessor.getFirstNativeHeader("token");
-                    if (!token.isBlank()) {
+                    if (token != null && !token.isBlank()) {
                         try {
                             Claims claims = tienIchJwt.parseClaims(token);
                             String username = claims.getSubject();
