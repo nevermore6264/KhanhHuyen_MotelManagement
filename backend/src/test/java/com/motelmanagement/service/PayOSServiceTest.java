@@ -48,8 +48,6 @@ class PayOSServiceTest {
         hd.setTongTien(BigDecimal.valueOf(100));
         when(tinhTienService.tinhTienRuntime(hd)).thenReturn(hd);
         when(thuocTinhPayOS.getClientId()).thenReturn("");
-        when(thuocTinhPayOS.getApiKey()).thenReturn("k");
-        when(thuocTinhPayOS.getChecksumKey()).thenReturn("c");
         assertNull(payOSService.taoLinkThanhToan(hd));
     }
 

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -22,12 +23,14 @@ import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.XacThucService;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 /**
  * Slice MVC: mock phụ thuộc của filter (BoLocJwt & BoLocGhiNhatKyApi).
  * {@code addFilters = false}: tránh Security mặc định (CSRF bật) — app thật đã {@code csrf().disable()} trong CauHinhBaoMat.
  */
 @WebMvcTest(controllers = XacThucController.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")

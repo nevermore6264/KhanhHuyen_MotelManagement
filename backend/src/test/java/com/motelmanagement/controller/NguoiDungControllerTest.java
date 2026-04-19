@@ -31,10 +31,13 @@ import com.motelmanagement.dto.YeuCauTaoNguoiDung;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.service.NguoiDungChoThongBaoService;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
+import com.motelmanagement.security.TienIchJwt;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = NguoiDungController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -53,6 +56,12 @@ class NguoiDungControllerTest {
     private PasswordEncoder passwordEncoder;
     @MockitoBean
     private NguoiDungChoThongBaoService nguoiDungChoThongBaoService;
+    @MockitoBean
+    private NguoiDungHienTaiService nguoiDungHienTaiService;
+    @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "ADMIN")

@@ -23,10 +23,13 @@ import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhuVucRepository;
 import com.motelmanagement.repository.PhongRepository;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.security.TienIchJwt;
+import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = KhuVucController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -41,6 +44,12 @@ class KhuVucControllerTest {
     private PhongRepository phongRepository;
     @MockitoBean
     private HopDongRepository hopDongRepository;
+    @MockitoBean
+    private NguoiDungHienTaiService nguoiDungHienTaiService;
+    @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "STAFF")

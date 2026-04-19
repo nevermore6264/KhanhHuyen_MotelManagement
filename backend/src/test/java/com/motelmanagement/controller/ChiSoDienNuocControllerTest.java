@@ -21,11 +21,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.motelmanagement.repository.BangGiaDichVuRepository;
 import com.motelmanagement.repository.ChiSoDienNuocRepository;
 import com.motelmanagement.repository.PhongRepository;
+import com.motelmanagement.security.TienIchJwt;
+import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.TinhTienService;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = ChiSoDienNuocController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -42,6 +45,12 @@ class ChiSoDienNuocControllerTest {
     private BangGiaDichVuRepository bangGiaDichVuRepository;
     @MockitoBean
     private TinhTienService tinhTienService;
+    @MockitoBean
+    private NguoiDungHienTaiService nguoiDungHienTaiService;
+    @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "STAFF")

@@ -30,12 +30,14 @@ import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
 import com.motelmanagement.dto.NotificationCreateDto;
 import com.motelmanagement.repository.ThongBaoRepository;
+import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.ThongBaoService;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = ThongBaoController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -51,7 +53,11 @@ class ThongBaoControllerTest {
     @MockitoBean
     private NguoiDungHienTaiService nguoiDungHienTaiService;
     @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
     private ThongBaoService thongBaoService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "STAFF")

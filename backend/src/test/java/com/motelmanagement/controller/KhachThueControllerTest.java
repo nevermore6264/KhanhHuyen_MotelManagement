@@ -30,12 +30,14 @@ import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.TenantCreateDto;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
+import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.FileKhachThueService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.service.NhatKyService;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = KhachThueController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -54,6 +56,10 @@ class KhachThueControllerTest {
     private NguoiDungHienTaiService nguoiDungHienTaiService;
     @MockitoBean
     private FileKhachThueService fileKhachThueService;
+    @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "STAFF")

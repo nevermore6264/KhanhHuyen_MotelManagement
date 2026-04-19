@@ -29,13 +29,15 @@ import com.motelmanagement.dto.GhiNhanThanhToanRequest;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.ThanhToanRepository;
+import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.PayOSService;
 import com.motelmanagement.service.TinhTienService;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = ThanhToanController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -55,9 +57,13 @@ class ThanhToanControllerTest {
     @MockitoBean
     private NguoiDungHienTaiService nguoiDungHienTaiService;
     @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
     private PayOSService payOSService;
     @MockitoBean
     private TinhTienService tinhTienService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     void webhookPayOSThongTin_tra200() throws Exception {

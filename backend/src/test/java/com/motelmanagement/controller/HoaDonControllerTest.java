@@ -35,14 +35,16 @@ import com.motelmanagement.repository.HoaDonChiTietRepository;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.HoaDonChiTietService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.NhacNoHoaDonService;
 import com.motelmanagement.service.TinhTienService;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = HoaDonController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -66,11 +68,15 @@ class HoaDonControllerTest {
     @MockitoBean
     private NguoiDungHienTaiService nguoiDungHienTaiService;
     @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
     private NhacNoHoaDonService nhacNoHoaDonService;
     @MockitoBean
     private TinhTienService tinhTienService;
     @MockitoBean
     private HoaDonChiTietService hoaDonChiTietService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "STAFF")

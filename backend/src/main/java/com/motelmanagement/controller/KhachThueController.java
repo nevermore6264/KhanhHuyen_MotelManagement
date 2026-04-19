@@ -56,7 +56,7 @@ public class KhachThueController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
     public List<KhachThue> layDanhSach(@RequestParam(value = "q", required = false) String tuKhoa) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung != null && nguoiDung.getVaiTro() == VaiTro.TENANT) {
@@ -70,7 +70,7 @@ public class KhachThueController {
     }
 
     @GetMapping("/cua-toi")
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
     public ResponseEntity<KhachThue> layThongTinToi() {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) {

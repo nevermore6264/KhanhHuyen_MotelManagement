@@ -18,10 +18,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.motelmanagement.repository.NhatKyHeThongRepository;
-import com.motelmanagement.support.KiemThuPhuongThucBaoMat;
+import com.motelmanagement.security.TienIchJwt;
+import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.NhatKyService;
+import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = NhatKyController.class)
-@Import(KiemThuPhuongThucBaoMat.class)
+@Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @SuppressWarnings("unused")
@@ -32,6 +35,12 @@ class NhatKyControllerTest {
 
     @MockitoBean
     private NhatKyHeThongRepository nhatKyHeThongRepository;
+    @MockitoBean
+    private NguoiDungHienTaiService nguoiDungHienTaiService;
+    @MockitoBean
+    private NhatKyService nhatKyService;
+    @MockitoBean
+    private TienIchJwt tienIchJwt;
 
     @Test
     @WithMockUser(roles = "ADMIN")

@@ -97,7 +97,6 @@ class XacThucServiceTest {
         nd.setKichHoat(false);
         nd.setVaiTro(VaiTro.ADMIN);
         when(nguoiDungRepository.findByTenDangNhap("u")).thenReturn(Optional.of(nd));
-        when(passwordEncoder.matches("p", "hash")).thenReturn(true);
 
         YeuCauXacThuc y = new YeuCauXacThuc();
         y.setTenDangNhap("u");

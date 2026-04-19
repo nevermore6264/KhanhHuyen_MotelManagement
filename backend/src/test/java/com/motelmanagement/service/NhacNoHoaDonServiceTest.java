@@ -11,6 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import jakarta.mail.internet.MimeMessage;
 
 import com.motelmanagement.config.ThuocTinhMail;
 import com.motelmanagement.domain.*;
@@ -54,6 +57,8 @@ class NhacNoHoaDonServiceTest {
         khach.setEmail("test@gmail.com");
 
         hoaDon.setKhachThue(khach);
+
+        ReflectionTestUtils.setField(service, "javaMailSender", javaMailSender);
     }
 
     @Test
@@ -101,7 +106,7 @@ class NhacNoHoaDonServiceTest {
         when(tinhTienService.tinhTienRuntime(hoaDon)).thenReturn(hoaDon);
 
         String result = service.guiNhacNo("H3", "email").orElse("");
-        assertTrue(result.contains("không có email"));
+        assertTrue(result.contains("có email để gửi nhắc nợ"));
     }
 
     @Test
@@ -110,7 +115,7 @@ class NhacNoHoaDonServiceTest {
         when(tinhTienService.tinhTienRuntime(hoaDon)).thenReturn(hoaDon);
         when(thuocTinhMail.getFrom()).thenReturn("admin@test.com");
 
-        var mimeMessage = mock(jakarta.mail.internet.MimeMessage.class);
+        MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
 
         Optional<String> result = service.guiNhacNo("H4", "email");
@@ -121,17 +126,16 @@ class NhacNoHoaDonServiceTest {
 
     @Test
     void guiNhacNo_khongCoMailSender_vanUpdateHoaDon() {
-        service = new NhacNoHoaDonService(
+        NhacNoHoaDonService khongMail = new NhacNoHoaDonService(
                 hoaDonRepository,
                 hopDongRepository,
                 thuocTinhMail,
-                tinhTienService
-        ); // không inject mailSender
+                tinhTienService);
 
         when(hoaDonRepository.timTheoIdCoPhong("H5")).thenReturn(Optional.of(hoaDon));
         when(tinhTienService.tinhTienRuntime(hoaDon)).thenReturn(hoaDon);
 
-        Optional<String> result = service.guiNhacNo("H5", "email");
+        Optional<String> result = khongMail.guiNhacNo("H5", "email");
 
         assertTrue(result.isEmpty());
         verify(hoaDonRepository).save(any());
