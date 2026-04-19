@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -29,7 +31,7 @@ public class ThanhToan {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "hoa_don_id")
+    @JoinColumn(name = "hoa_don_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private HoaDon hoaDon;
 
     @Column(name = "so_tien", precision = 12, scale = 2)

@@ -18,8 +18,10 @@ import com.motelmanagement.domain.HopDongThanhVien;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.TrangThaiHoaDon;
 import com.motelmanagement.domain.TrangThaiHopDong;
+import com.motelmanagement.domain.NhacNoHoaDonEmail;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
+import com.motelmanagement.repository.NhacNoHoaDonEmailRepository;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NhacNoHoaDonService {
 
     private final HoaDonRepository hoaDonRepository;
+    private final NhacNoHoaDonEmailRepository nhacNoHoaDonEmailRepository;
     private final HopDongRepository hopDongRepository;
     private final ThuocTinhMail thuocTinhMail;
     private final TinhTienService tinhTienService;
@@ -121,15 +124,23 @@ public class NhacNoHoaDonService {
                 .replace("'", "&#39;");
     }
 
-    /** Gắn khách đại diện từ hợp đồng ACTIVE nếu hóa đơn chưa có (chỉ bộ nhớ; lưu khi cập nhật nhắc nợ). */
-    private void ganKhachDaiDienTuHopDongNeuThieu(HoaDon hoaDon) {
+    /**
+     * Gắn khách đại diện từ hợp đồng ACTIVE nếu hóa đơn chưa có.
+     *
+     * @return {@code true} nếu đã gắn khách mới (cần {@code hoaDonRepository.save}).
+     */
+    private boolean ganKhachDaiDienTuHopDongNeuThieu(HoaDon hoaDon) {
         if (hoaDon.getKhachThue() != null || hoaDon.getPhong() == null) {
-            return;
+            return false;
         }
-        hopDongRepository
+        return hopDongRepository
                 .findByPhong_IdAndTrangThai(hoaDon.getPhong().getId(), TrangThaiHopDong.ACTIVE)
                 .map(HopDong::getKhachThue)
-                .ifPresent(hoaDon::setKhachThue);
+                .map(k -> {
+                    hoaDon.setKhachThue(k);
+                    return true;
+                })
+                .orElse(false);
     }
 
     /**
@@ -180,7 +191,7 @@ public class NhacNoHoaDonService {
             return Optional.of("Hóa đơn đã thanh toán, không cần nhắc.");
         }
 
-        ganKhachDaiDienTuHopDongNeuThieu(hoaDon);
+        boolean canLuuKhachMoi = ganKhachDaiDienTuHopDongNeuThieu(hoaDon);
         Map<Long, KhachThue> gomKhach = gomKhachTheoPhong(hoaDon);
         if (gomKhach.isEmpty()) {
             return Optional.of("Hóa đơn chưa gắn khách thuê và phòng không có hợp đồng đang hiệu lực.");
@@ -218,10 +229,15 @@ public class NhacNoHoaDonService {
             }
         }
 
-        hoaDon.setNhacNoEmailLanCuoi(LocalDateTime.now());
-        hoaDon.setSoLanNhacNoEmail(hoaDon.getSoLanNhacNoEmail() + 1);
-        hoaDon.setNoiDungEmailCuoi(noiDung);
-        hoaDonRepository.save(hoaDon);
+        if (canLuuKhachMoi) {
+            hoaDonRepository.save(hoaDon);
+        }
+        NhacNoHoaDonEmail banGhi = new NhacNoHoaDonEmail();
+        banGhi.setHoaDon(hoaDon);
+        banGhi.setGuiLuc(LocalDateTime.now());
+        banGhi.setEmailNguoiNhan(emailNhan.trim());
+        banGhi.setNoiDung(noiDung);
+        nhacNoHoaDonEmailRepository.save(banGhi);
         return Optional.empty();
     }
 }

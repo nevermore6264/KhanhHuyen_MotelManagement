@@ -1,0 +1,26 @@
+@startuml
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #334155
+skinparam ArrowColor #334155
+
+title Hình 2.11 — Quy trình ghi nhận thanh toán nội bộ (tiền mặt / chuyển khoản)
+
+|Quản trị / Nhân viên|
+start
+:Chọn hóa đơn cần ghi nhận;
+:Nhập số tiền, phương thức\n(CASH / TRANSFER);
+
+|Hệ thống|
+:Kiểm tra số tiền và hóa đơn;
+:Tạo bản ghi thanh toán,\ncập nhật trạng thái hóa đơn\n(đã thanh toán / một phần\n— theo logic hệ thống);
+
+|Quản trị / Nhân viên|
+:Xác nhận trên giao diện,\nđối soát với sổ quỹ;
+stop
+
+note right
+  Khác với PayOS (Hình 2.4):\nkhông qua cổng online.\nAPI: POST /api/thanh-toan (ghi nhận).
+end note
+
+@enduml

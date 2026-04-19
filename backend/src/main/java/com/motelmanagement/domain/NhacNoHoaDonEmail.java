@@ -1,10 +1,8 @@
 package com.motelmanagement.domain;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.UuidGenerator;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
@@ -19,14 +17,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Một dòng chi tiết trên hóa đơn (giữ xe, wifi, sửa chữa, …). */
+/**
+ * Lịch sử gửi email nhắc nợ theo hóa đơn (tách khỏi bảng {@code hoa_don}).
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "hoa_don_chi_tiet")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "hoaDon"})
-public class HoaDonChiTiet {
+@Table(name = "nhac_no_hoa_don_email")
+public class NhacNoHoaDonEmail {
+
     @Id
     @UuidGenerator
     @Column(name = "id", length = 36, updatable = false, nullable = false)
@@ -39,12 +39,13 @@ public class HoaDonChiTiet {
             foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private HoaDon hoaDon;
 
-    @Column(name = "ten_khoan", nullable = false, length = 200)
-    private String tenKhoan;
+    @Column(name = "gui_luc", nullable = false)
+    private LocalDateTime guiLuc = LocalDateTime.now();
 
-    @Column(name = "so_tien", precision = 12, scale = 2, nullable = false)
-    private BigDecimal soTien;
+    @Column(name = "email_nguoi_nhan", length = 255)
+    private String emailNguoiNhan;
 
-    @Column(name = "thu_tu", nullable = false)
-    private int thuTu;
+    /** Nội dung plain text đã gửi (khớp phần text trong email). */
+    @Column(name = "noi_dung", length = 2000)
+    private String noiDung;
 }

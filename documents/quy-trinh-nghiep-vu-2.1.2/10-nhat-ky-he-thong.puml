@@ -1,0 +1,26 @@
+@startuml
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #334155
+skinparam ArrowColor #334155
+
+title Hình 2.10 — Quy trình tra cứu nhật ký hệ thống (quản trị)
+
+|Quản trị viên|
+start
+:Vào mục nhật ký hệ thống;
+
+|Hệ thống|
+:Hiển thị các bản ghi:\nngười thực hiện, hành động,\nđối tượng, thời gian;
+
+|Quản trị viên|
+:Lọc / tìm theo thời gian\nhoặc loại thao tác;
+:Phục vụ kiểm tra, audit\nnội bộ;
+stop
+
+note right
+  Chỉ vai trò ADMIN (theo API).
+  Endpoint: /api/nhat-ky/…
+end note
+
+@enduml

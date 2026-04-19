@@ -69,28 +69,4 @@ public class HoaDon {
 
     @Column(name = "ngay_tao")
     private LocalDateTime ngayTao = LocalDateTime.now();
-
-    /** Thời điểm gửi nhắc nợ qua email gần nhất (null = chưa gửi). */
-    @Column(name = "nhac_no_email_lan_cuoi")
-    private LocalDateTime nhacNoEmailLanCuoi;
-
-    /** Số lần đã gửi nhắc nợ qua email. */
-    @Column(name = "so_lan_nhac_no_email")
-    private int soLanNhacNoEmail;
-
-    /** Nội dung email nhắc nợ gần nhất (để hiển thị lại). */
-    @Column(name = "noi_dung_email_cuoi", length = 2000)
-    private String noiDungEmailCuoi;
-
-    /** Thời điểm gửi nhắc nợ qua SMS gần nhất (null = chưa gửi). */
-    @Column(name = "nhac_no_sms_lan_cuoi")
-    private LocalDateTime nhacNoSmsLanCuoi;
-
-    /** Số lần đã gửi nhắc nợ qua SMS. */
-    @Column(name = "so_lan_nhac_no_sms")
-    private int soLanNhacNoSms;
-
-    /** Nội dung SMS nhắc nợ gần nhất (để hiển thị lại). */
-    @Column(name = "noi_dung_sms_cuoi", length = 500)
-    private String noiDungSmsCuoi;
 }

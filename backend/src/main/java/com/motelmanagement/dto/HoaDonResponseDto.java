@@ -29,12 +29,10 @@ public class HoaDonResponseDto {
     private BigDecimal tongTien;
     private TrangThaiHoaDon trangThai;
     private LocalDateTime ngayTao;
+    /** Tổng hợp từ bảng {@code nhac_no_hoa_don_email}, không lưu trên entity HoaDon. */
     private LocalDateTime nhacNoEmailLanCuoi;
     private int soLanNhacNoEmail;
     private String noiDungEmailCuoi;
-    private LocalDateTime nhacNoSmsLanCuoi;
-    private int soLanNhacNoSms;
-    private String noiDungSmsCuoi;
     private List<KhachThueTomTatDto> danhSachKhachThue;
 
     private List<HoaDonChiTietDongDto> chiTiet = List.of();

@@ -1,0 +1,30 @@
+@startuml
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #334155
+skinparam ArrowColor #334155
+
+title Hình 2.9 — Quy trình xem báo cáo và thống kê
+
+|Quản trị / Nhân viên|
+start
+:Đăng nhập vào hệ thống;
+:Chọn mục báo cáo / tổng quan;
+
+|Hệ thống|
+:Truy vấn dữ liệu hóa đơn,\nthanh toán, phòng, hợp đồng\n(theo API báo cáo);
+
+|Quản trị / Nhân viên|
+:Xem biểu đồ, bảng số liệu\n(doanh thu, công nợ, tình hình phòng…);
+
+if (Cần xuất / in?) then (có)
+  :Xuất hoặc chụp màn hình\ntheo nhu cầu nội bộ;
+endif
+
+stop
+
+note right
+  API: /api/bao-cao/… (doanh thu, công nợ, …).
+end note
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #334155
+skinparam ArrowColor #334155
+
+title Hình 2.2 — Quy trình tiếp nhận khách thuê, hợp đồng và gán phòng
+
+|Quản trị / Nhân viên|
+start
+:Tạo / cập nhật hồ sơ khách thuê;
+:Chọn phòng trống phù hợp\n(trạng thái, giá);
+:Nhập điều khoản hợp đồng\n(thời hạn, tiền cọc, …);
+:Lưu hợp đồng trạng thái hiệu lực\n(gán khách — phòng);
+
+if (Cần tài khoản đăng nhập?) then (có)
+  :Tạo hoặc gắn tài khoản\nTENANT với hồ sơ khách;
+else (không)
+endif
+
+|Khách thuê|
+if (Đã có tài khoản?) then (có)
+  :Đăng nhập để xem\nhợp đồng / phòng;
+else (không)
+  :Tra cứu theo hướng dẫn BQL\n(không bắt buộc app);
+endif
+
+stop
+
+@enduml

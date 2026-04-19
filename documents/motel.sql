@@ -84,12 +84,6 @@ CREATE TABLE `hoa_don` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `nam` int(11) DEFAULT NULL,
   `ngay_tao` datetime(6) DEFAULT NULL,
-  `nhac_no_email_lan_cuoi` datetime(6) DEFAULT NULL,
-  `nhac_no_sms_lan_cuoi` datetime(6) DEFAULT NULL,
-  `noi_dung_email_cuoi` varchar(2000) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `noi_dung_sms_cuoi` varchar(500) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `so_lan_nhac_no_email` int(11) DEFAULT NULL,
-  `so_lan_nhac_no_sms` int(11) DEFAULT NULL,
   `thang` int(11) DEFAULT NULL,
   `trang_thai` enum('PAID','PARTIAL','UNPAID') COLLATE utf8_unicode_ci NOT NULL,
   `khach_thue_id` bigint(20) DEFAULT NULL,
@@ -100,6 +94,20 @@ CREATE TABLE `hoa_don` (
   CONSTRAINT `FK4pdctcv5ombgobtpyelkyfwl` FOREIGN KEY (`phong_id`) REFERENCES `phong` (`id`),
   CONSTRAINT `FKabbyj2m48l5v1l6a451gpf6po` FOREIGN KEY (`khach_thue_id`) REFERENCES `khach_thue` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+DROP TABLE IF EXISTS `nhac_no_hoa_don_email`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `nhac_no_hoa_don_email` (
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
+  `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
+  `gui_luc` datetime(6) NOT NULL,
+  `email_nguoi_nhan` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `noi_dung` varchar(2000) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_nhac_email_hoa_don` (`hoa_don_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -298,10 +306,9 @@ CREATE TABLE `thanh_toan` (
   `phuong_thuc` enum('CASH','TRANSFER') COLLATE utf8_unicode_ci NOT NULL,
   `so_tien` decimal(12,2) DEFAULT NULL,
   `thoi_gian_thanh_toan` datetime(6) DEFAULT NULL,
-  `hoa_don_id` bigint(20) DEFAULT NULL,
+  `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FKbyudoen2dblfb1j2vgcq2cxxd` (`hoa_don_id`),
-  CONSTRAINT `FKbyudoen2dblfb1j2vgcq2cxxd` FOREIGN KEY (`hoa_don_id`) REFERENCES `hoa_don` (`id`)
+  KEY `idx_thanh_toan_hoa_don` (`hoa_don_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

@@ -2,3 +2,4 @@ frontend/node_modules/
 frontend/.next/
 docs
 User_Story.md
+test-case/cases/TestCase.csv

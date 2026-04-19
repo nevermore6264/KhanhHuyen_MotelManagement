@@ -35,6 +35,7 @@ import com.motelmanagement.repository.HoaDonChiTietRepository;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.repository.NhacNoHoaDonEmailRepository;
 import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.HoaDonChiTietService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
@@ -65,6 +66,8 @@ class HoaDonControllerTest {
     private HopDongRepository hopDongRepository;
     @MockitoBean
     private KhachThueRepository khachThueRepository;
+    @MockitoBean
+    private NhacNoHoaDonEmailRepository nhacNoHoaDonEmailRepository;
     @MockitoBean
     private NguoiDungHienTaiService nguoiDungHienTaiService;
     @MockitoBean

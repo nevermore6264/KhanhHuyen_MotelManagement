@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.motelmanagement.domain.HoaDon;
-import com.motelmanagement.domain.HopDong;
 import com.motelmanagement.domain.HopDongThanhVien;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
@@ -33,6 +32,7 @@ import com.motelmanagement.repository.HoaDonChiTietRepository;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhachThueRepository;
+import com.motelmanagement.repository.NhacNoHoaDonEmailRepository;
 import com.motelmanagement.service.HoaDonChiTietService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhacNoHoaDonService;
@@ -52,6 +52,7 @@ public class HoaDonController {
     private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final NhacNoHoaDonService nhacNoHoaDonService;
+    private final NhacNoHoaDonEmailRepository nhacNoHoaDonEmailRepository;
     private final TinhTienService tinhTienService;
     private final HoaDonChiTietService hoaDonChiTietService;
 
@@ -90,6 +91,7 @@ public class HoaDonController {
                     .toList();
         }
         HoaDonResponseDto dto = HoaDonResponseDto.tu(hienTai, ds, chiTiet);
+        ganThongTinNhacNoEmailVaoDto(dto, hienTai.getId());
         if (maPhong != null) {
             chiSoDienNuocRepository
                     .findByPhong_IdAndThangAndNam(maPhong, hienTai.getThang(), hienTai.getNam())
@@ -101,6 +103,18 @@ public class HoaDonController {
                     });
         }
         return dto;
+    }
+
+    /** Điền nhắc nợ email (từ bảng lịch sử) vào DTO trả về. */
+    private void ganThongTinNhacNoEmailVaoDto(HoaDonResponseDto dto, String maHoaDon) {
+        if (maHoaDon == null || maHoaDon.isBlank()) {
+            return;
+        }
+        dto.setSoLanNhacNoEmail((int) nhacNoHoaDonEmailRepository.countByHoaDon_Id(maHoaDon));
+        nhacNoHoaDonEmailRepository.findTopByHoaDon_IdOrderByGuiLucDesc(maHoaDon).ifPresent(log -> {
+            dto.setNhacNoEmailLanCuoi(log.getGuiLuc());
+            dto.setNoiDungEmailCuoi(log.getNoiDung());
+        });
     }
 
     private HoaDonChiTietDongDto xuongChiTiet(HoaDonChiTiet ct) {

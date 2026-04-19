@@ -19,12 +19,15 @@ import com.motelmanagement.config.ThuocTinhMail;
 import com.motelmanagement.domain.*;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
+import com.motelmanagement.repository.NhacNoHoaDonEmailRepository;
 
 @ExtendWith(MockitoExtension.class)
 class NhacNoHoaDonServiceTest {
 
     @Mock
     private HoaDonRepository hoaDonRepository;
+    @Mock
+    private NhacNoHoaDonEmailRepository nhacNoHoaDonEmailRepository;
     @Mock
     private HopDongRepository hopDongRepository;
     @Mock
@@ -121,13 +124,14 @@ class NhacNoHoaDonServiceTest {
         Optional<String> result = service.guiNhacNo("H4", "email");
 
         assertTrue(result.isEmpty());
-        verify(hoaDonRepository).save(any());
+        verify(nhacNoHoaDonEmailRepository).save(any());
     }
 
     @Test
-    void guiNhacNo_khongCoMailSender_vanUpdateHoaDon() {
+    void guiNhacNo_khongCoMailSender_vanLuuBanGhiEmail() {
         NhacNoHoaDonService khongMail = new NhacNoHoaDonService(
                 hoaDonRepository,
+                nhacNoHoaDonEmailRepository,
                 hopDongRepository,
                 thuocTinhMail,
                 tinhTienService);
@@ -138,6 +142,6 @@ class NhacNoHoaDonServiceTest {
         Optional<String> result = khongMail.guiNhacNo("H5", "email");
 
         assertTrue(result.isEmpty());
-        verify(hoaDonRepository).save(any());
+        verify(nhacNoHoaDonEmailRepository).save(any());
     }
 }

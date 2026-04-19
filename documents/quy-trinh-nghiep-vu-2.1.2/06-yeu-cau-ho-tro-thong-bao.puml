@@ -1,0 +1,28 @@
+@startuml
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #334155
+skinparam ArrowColor #334155
+
+title Hình 2.6 — Quy trình yêu cầu hỗ trợ và thông báo
+
+|Khách thuê|
+start
+:Gửi yêu cầu hỗ trợ\n(tiêu đề, mô tả);
+
+|Quản trị / Nhân viên|
+:Tiếp nhận, xử lý,\ncập nhật trạng thái ticket;
+
+|Khách thuê|
+:Theo dõi phản hồi trên ứng dụng;
+
+|Quản trị / Nhân viên|
+partition "Thông báo" {
+  :Soạn và gửi thông báo\nđến người nhận chọn;
+}
+
+|Khách thuê / Nhân viên / Quản trị|
+:Đọc thông báo,\nđánh dấu đã đọc;
+stop
+
+@enduml

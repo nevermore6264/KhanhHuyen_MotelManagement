@@ -1,0 +1,26 @@
+@startuml
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #334155
+skinparam ArrowColor #334155
+
+title Hình 2.1 — Tổng quan vận hành thuê phòng và thu tiền theo kỳ (iTro)
+
+|Quản trị / Nhân viên|
+start
+:Khai báo khu vực, phòng,\nbảng giá điện — nước;
+:Tiếp nhận khách, lập hợp đồng\ngán phòng;
+:Ghi nhận chỉ số điện nước\ntheo kỳ;
+:Sinh / kiểm tra hóa đơn kỳ;
+:Gửi thông báo / nhắc thanh toán;
+
+|Khách thuê|
+:Đăng nhập, xem hóa đơn;
+:Thanh toán (PayOS / BQL);
+
+|Quản trị / Nhân viên|
+:Đối soát, cập nhật trạng thái;
+:Báo cáo doanh thu, công nợ;
+stop
+
+@enduml
