@@ -11,5 +11,5 @@ import com.motelmanagement.domain.Phong;
 public interface ChiSoDienNuocRepository extends JpaRepository<ChiSoDienNuoc, String> {
     Optional<ChiSoDienNuoc> findByPhongAndThangAndNam(Phong phong, int thang, int nam);
 
-    Optional<ChiSoDienNuoc> findByPhong_IdAndThangAndNam(Long phongId, int thang, int nam);
+    Optional<ChiSoDienNuoc> findByPhong_IdAndThangAndNam(String phongId, int thang, int nam);
 }

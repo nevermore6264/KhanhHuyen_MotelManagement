@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 public class DtoLienKetNguoiDungKhachThue {
     /** ID khách thuê để gắn với user này. Null = bỏ gắn. */
-    private Long tenantId;
+    private String tenantId;
 }

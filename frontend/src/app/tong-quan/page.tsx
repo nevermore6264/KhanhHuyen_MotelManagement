@@ -37,7 +37,7 @@ ChartJS.register(
 );
 
 type Contract = {
-  id: number;
+  id: string;
   room?: { code: string };
   startDate?: string;
   endDate?: string;

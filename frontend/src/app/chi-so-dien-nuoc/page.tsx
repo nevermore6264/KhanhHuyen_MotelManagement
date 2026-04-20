@@ -15,8 +15,8 @@ import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 
-type Area = { id: number; name: string };
-type Room = { id: number; code: string; area?: Area };
+type Area = { id: string; name: string };
+type Room = { id: string; code: string; area?: Area };
 type MeterReading = {
   id: string;
   room?: Room;
@@ -36,7 +36,7 @@ type RawJson = Record<string, unknown>;
 function chuanHoaKhuTuApi(raw: RawJson): Area {
   const r = raw;
   return {
-    id: Number(r.id),
+    id: r.id != null ? String(r.id) : "",
     name: String(r.ten ?? r.name ?? "").trim(),
   };
 }
@@ -47,11 +47,11 @@ function chuanHoaPhongTuApi(raw: RawJson): Room {
   const kvObj =
     kv && typeof kv === "object" ? (kv as RawJson) : undefined;
   return {
-    id: Number(r.id),
+    id: r.id != null ? String(r.id) : "",
     code: String(r.maPhong ?? r.ma_phong ?? r.code ?? "").trim(),
     area: kvObj
       ? {
-          id: Number(kvObj.id),
+          id: kvObj.id != null ? String(kvObj.id) : "",
           name: String(kvObj.ten ?? kvObj.name ?? "").trim(),
         }
       : undefined,
@@ -287,7 +287,7 @@ export default function TrangChiSoDienNuoc() {
     setLoi("");
     try {
       await api.post("/chi-so-dien-nuoc", {
-        phong: { id: Number(idPhong) },
+        phong: { id: idPhong },
         thang: m,
         nam: y,
         dienMoi: Number(dienMoi || 0),

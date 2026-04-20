@@ -3,14 +3,14 @@ package com.motelmanagement.domain;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -27,8 +27,9 @@ import lombok.Setter;
 @Table(name = "thanh_toan")
 public class ThanhToan {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "hoa_don_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

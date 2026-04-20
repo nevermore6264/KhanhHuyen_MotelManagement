@@ -34,7 +34,7 @@ public class ThongBaoController {
 
     @PutMapping("/{id}/da-doc")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
-    public ResponseEntity<ThongBao> danhDauDaDoc(@PathVariable("id") Long ma) {
+    public ResponseEntity<ThongBao> danhDauDaDoc(@PathVariable("id") String ma) {
         return thongBaoRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setDaDoc(true);

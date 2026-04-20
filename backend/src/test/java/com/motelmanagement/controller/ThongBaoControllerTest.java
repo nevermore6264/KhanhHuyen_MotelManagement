@@ -72,7 +72,7 @@ class ThongBaoControllerTest {
     @WithMockUser(roles = "TENANT")
     void layDanhSach_coDuLieu() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
         when(thongBaoRepository.findByNguoiDung(nd)).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/thong-bao"))
@@ -106,7 +106,7 @@ class ThongBaoControllerTest {
     @Test
     @WithMockUser(roles = "STAFF")
     void danhDauDaDoc_tra404() throws Exception {
-        when(thongBaoRepository.findById(99L)).thenReturn(Optional.empty());
+        when(thongBaoRepository.findById("99")).thenReturn(Optional.empty());
         mockMvc.perform(put("/api/thong-bao/99/da-doc"))
                 .andExpect(status().isNotFound());
     }
@@ -115,9 +115,9 @@ class ThongBaoControllerTest {
     @WithMockUser(roles = "STAFF")
     void danhDauDaDoc_tra200() throws Exception {
         ThongBao tb = new ThongBao();
-        tb.setId(1L);
+        tb.setId("1");
         tb.setDaDoc(false);
-        when(thongBaoRepository.findById(1L)).thenReturn(Optional.of(tb));
+        when(thongBaoRepository.findById("1")).thenReturn(Optional.of(tb));
         when(thongBaoRepository.save(any(ThongBao.class))).thenAnswer(inv -> inv.getArgument(0));
 
         mockMvc.perform(put("/api/thong-bao/1/da-doc"))

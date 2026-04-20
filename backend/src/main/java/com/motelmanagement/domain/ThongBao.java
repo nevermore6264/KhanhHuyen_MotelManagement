@@ -2,10 +2,10 @@ package com.motelmanagement.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -14,7 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Thông báo gửi tới một người dùng (in-app + WebSocket). */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,8 +21,9 @@ import lombok.Setter;
 @Table(name = "thong_bao")
 public class ThongBao {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "nguoi_dung_id")

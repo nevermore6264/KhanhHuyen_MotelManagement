@@ -4,12 +4,12 @@ import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -18,7 +18,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Phòng cho thuê thuộc một khu vực. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,10 +26,10 @@ import lombok.Setter;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Phong {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
 
-    /** Mã phòng (VD: P101) */
     @Column(name = "ma_phong", nullable = false, length = 30)
     private String maPhong;
 
@@ -45,11 +44,9 @@ public class Phong {
     @JoinColumn(name = "khu_vuc_id")
     private KhuVuc khuVuc;
 
-    /** Giá thuê hiện tại */
     @Column(name = "gia_hien_tai", precision = 12, scale = 2)
     private BigDecimal giaHienTai;
 
-    /** Diện tích (m²) */
     @Column(name = "dien_tich", precision = 8, scale = 2)
     private BigDecimal dienTich;
 }

@@ -29,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-/** Dịch vụ gửi nhắc nợ hóa đơn qua email. */
 @RequiredArgsConstructor
 @Slf4j
 public class NhacNoHoaDonService {
@@ -48,9 +47,6 @@ public class NhacNoHoaDonService {
         return String.format("%,d", amount.longValue()) + " VNĐ";
     }
 
-    /**
-     * Nội dung nhắc nợ dùng chung cho plain và HTML (email multipart dùng cùng một bản chữ).
-     */
     private static final class NoiDungNhacNo {
         private final String ten;
         private final String phong;
@@ -74,7 +70,6 @@ public class NhacNoHoaDonService {
             return new NoiDungNhacNo(ten, phong, ky, tong);
         }
 
-        /** Bản plain text (lưu DB + phần text trong email) — khớp nội dung thực tế người nhận thấy trong HTML. */
         String plain() {
             return String.format(
                     "Kính gửi %s,\n\n"
@@ -124,11 +119,6 @@ public class NhacNoHoaDonService {
                 .replace("'", "&#39;");
     }
 
-    /**
-     * Gắn khách đại diện từ hợp đồng ACTIVE nếu hóa đơn chưa có.
-     *
-     * @return {@code true} nếu đã gắn khách mới (cần {@code hoaDonRepository.save}).
-     */
     private boolean ganKhachDaiDienTuHopDongNeuThieu(HoaDon hoaDon) {
         if (hoaDon.getKhachThue() != null || hoaDon.getPhong() == null) {
             return false;
@@ -143,11 +133,8 @@ public class NhacNoHoaDonService {
                 .orElse(false);
     }
 
-    /**
-     * Thứ tự: khách trên hóa đơn (nếu có) → đại diện HĐ → các thành viên. Chọn người đầu tiên có email.
-     */
-    private Map<Long, KhachThue> gomKhachTheoPhong(HoaDon hoaDon) {
-        LinkedHashMap<Long, KhachThue> gom = new LinkedHashMap<>();
+    private Map<String, KhachThue> gomKhachTheoPhong(HoaDon hoaDon) {
+        LinkedHashMap<String, KhachThue> gom = new LinkedHashMap<>();
         if (hoaDon.getKhachThue() != null) {
             gom.put(hoaDon.getKhachThue().getId(), hoaDon.getKhachThue());
         }
@@ -171,13 +158,12 @@ public class NhacNoHoaDonService {
         return gom;
     }
 
-    private static Optional<KhachThue> chonKhachCoEmail(Map<Long, KhachThue> gom) {
+    private static Optional<KhachThue> chonKhachCoEmail(Map<String, KhachThue> gom) {
         return gom.values().stream()
                 .filter(k -> k.getEmail() != null && !k.getEmail().isBlank())
                 .findFirst();
     }
 
-    /** Gửi nhắc nợ qua email (JavaMailSender). */
     public Optional<String> guiNhacNo(String maHoaDon, String kenh) {
         if (!"email".equalsIgnoreCase(kenh)) {
             return Optional.of("Kênh không hợp lệ. Chọn email.");
@@ -192,7 +178,7 @@ public class NhacNoHoaDonService {
         }
 
         boolean canLuuKhachMoi = ganKhachDaiDienTuHopDongNeuThieu(hoaDon);
-        Map<Long, KhachThue> gomKhach = gomKhachTheoPhong(hoaDon);
+        Map<String, KhachThue> gomKhach = gomKhachTheoPhong(hoaDon);
         if (gomKhach.isEmpty()) {
             return Optional.of("Hóa đơn chưa gắn khách thuê và phòng không có hợp đồng đang hiệu lực.");
         }

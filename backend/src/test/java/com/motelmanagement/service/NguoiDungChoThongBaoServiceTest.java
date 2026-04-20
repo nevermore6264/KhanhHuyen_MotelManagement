@@ -40,12 +40,12 @@ class NguoiDungChoThongBaoServiceTest {
     @Test
     void layDanhSach_khongGanKhach() {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         nd.setTenDangNhap("u");
         nd.setHoTen("T");
         nd.setVaiTro(VaiTro.TENANT);
         when(nguoiDungRepository.findAll()).thenReturn(List.of(nd));
-        when(khachThueRepository.findByNguoiDung_Id(1L)).thenReturn(null);
+        when(khachThueRepository.findByNguoiDung_Id("1")).thenReturn(null);
 
         List<DtoNguoiDungChoThongBao> list = nguoiDungChoThongBaoService.layDanhSach();
 
@@ -66,17 +66,17 @@ class NguoiDungChoThongBaoServiceTest {
         hd.setPhong(phong);
 
         KhachThue kt = new KhachThue();
-        kt.setId(10L);
+        kt.setId("10");
 
         NguoiDung nd = new NguoiDung();
-        nd.setId(2L);
+        nd.setId("2");
         nd.setTenDangNhap("renter");
         nd.setHoTen("R");
         nd.setVaiTro(VaiTro.TENANT);
 
         when(nguoiDungRepository.findAll()).thenReturn(List.of(nd));
-        when(khachThueRepository.findByNguoiDung_Id(2L)).thenReturn(kt);
-        when(hopDongRepository.findThuocKhachThueCoPhong(10L)).thenReturn(List.of(hd));
+        when(khachThueRepository.findByNguoiDung_Id("2")).thenReturn(kt);
+        when(hopDongRepository.findThuocKhachThueCoPhong("10")).thenReturn(List.of(hd));
 
         List<DtoNguoiDungChoThongBao> list = nguoiDungChoThongBaoService.layDanhSach();
 

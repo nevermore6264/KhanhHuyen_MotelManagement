@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AreaWithRoomCountDto {
-    private Long id;
+    private String id;
     private String ten;
     private String diaChi;
     private String moTa;

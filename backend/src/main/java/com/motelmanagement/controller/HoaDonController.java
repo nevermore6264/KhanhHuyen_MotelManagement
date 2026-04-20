@@ -82,7 +82,7 @@ public class HoaDonController {
 
     private HoaDonResponseDto xuongDto(HoaDon h) {
         HoaDon hienTai = tinhTienService.dongBoHoaDonTheoChiSoNeuCo(h);
-        Long maPhong = hienTai.getPhong() != null ? hienTai.getPhong().getId() : null;
+        String maPhong = hienTai.getPhong() != null ? hienTai.getPhong().getId() : null;
         List<KhachThueTomTatDto> ds = layDanhSachKhachTheoPhong(maPhong, hienTai.getKhachThue());
         List<HoaDonChiTietDongDto> chiTiet = List.of();
         if (hienTai.getId() != null && !hienTai.getId().isBlank()) {
@@ -130,13 +130,13 @@ public class HoaDonController {
      * Khách hiển thị trên hóa đơn: đại diện + thành viên hợp đồng ACTIVE của phòng;
      * nếu không có hợp đồng / không có thành viên thì dùng khách ghi trên hóa đơn.
      */
-    private List<KhachThueTomTatDto> layDanhSachKhachTheoPhong(Long maPhong, KhachThue fallback) {
+    private List<KhachThueTomTatDto> layDanhSachKhachTheoPhong(String maPhong, KhachThue fallback) {
         if (maPhong == null) {
             return fallback != null ? List.of(KhachThueTomTatDto.tu(fallback)) : List.of();
         }
         return hopDongRepository.findByPhong_IdAndTrangThai(maPhong, TrangThaiHopDong.ACTIVE)
                 .map(hd -> {
-                    LinkedHashMap<Long, KhachThue> gom = new LinkedHashMap<>();
+                    LinkedHashMap<String, KhachThue> gom = new LinkedHashMap<>();
                     if (hd.getKhachThue() != null) {
                         gom.put(hd.getKhachThue().getId(), hd.getKhachThue());
                     }

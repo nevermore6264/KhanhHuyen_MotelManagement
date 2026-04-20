@@ -18,7 +18,7 @@ import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhachThueCombobox from "@/components/ChonKhachThueCombobox";
 
 type User = {
-  id: number;
+  id: string;
   username: string;
   fullName: string;
   role: string;
@@ -27,11 +27,11 @@ type User = {
   phone?: string | null;
 };
 type Tenant = {
-  id: number;
+  id: string;
   fullName: string;
   phone?: string;
   idNumber?: string;
-  user?: { id: number };
+  user?: { id: string };
 };
 
 type RawJson = Record<string, unknown>;
@@ -57,7 +57,7 @@ function chuanHoaNguoiDungTuApi(raw: RawJson): User {
 
   const sdt = r.soDienThoai ?? r.so_dien_thoai ?? r.phone;
   return {
-    id: Number(r.id),
+    id: r.id != null ? String(r.id) : "",
     username: String(
       r.tenDangNhap ??
         r.ten_dang_nhap ??
@@ -76,11 +76,11 @@ function chuanHoaNguoiDungTuApi(raw: RawJson): User {
 }
 
 function chuanHoaKhachThueTuApi(raw: RawJson): Tenant {
-  const nd = raw.nguoiDung as { id?: number } | undefined;
-  const userObj = raw.user as { id?: number } | undefined;
+  const nd = raw.nguoiDung as { id?: string | number } | undefined;
+  const userObj = raw.user as { id?: string | number } | undefined;
   const userId = nd?.id ?? userObj?.id;
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     fullName: String(raw.hoTen ?? raw.fullName ?? "").trim(),
     phone:
       raw.soDienThoai != null
@@ -94,7 +94,7 @@ function chuanHoaKhachThueTuApi(raw: RawJson): Tenant {
         : raw.idNumber != null
           ? String(raw.idNumber)
           : undefined,
-    user: userId != null ? { id: Number(userId) } : undefined,
+    user: userId != null ? { id: String(userId) } : undefined,
   };
 }
 
@@ -149,7 +149,7 @@ const validateTenant = (data: {
   return "";
 };
 
-function khachLienKetTheoNguoi(ds: Tenant[], idNguoi: number) {
+function khachLienKetTheoNguoi(ds: Tenant[], idNguoi: string) {
   return ds.find((t) => t.user?.id === idNguoi);
 }
 
@@ -232,7 +232,9 @@ export default function TrangNguoiDung() {
         vaiTro,
         kichHoat: true,
         maKhachThue:
-          vaiTro === "TENANT" && idKhachThue ? Number(idKhachThue) : null,
+          vaiTro === "TENANT" && idKhachThue.trim()
+            ? idKhachThue.trim()
+            : null,
       });
       notify("Tạo tài khoản thành công", "success");
     } catch (err: unknown) {
@@ -298,7 +300,7 @@ export default function TrangNguoiDung() {
         matKhau: matKhauSua.trim() || null,
       });
       await api.put(`/nguoi-dung/${phanTuDangSua.id}/khach-thue`, {
-        tenantId: idKhachThueSua ? Number(idKhachThueSua) : null,
+        tenantId: idKhachThueSua ? idKhachThueSua.trim() : null,
       });
       notify("Cập nhật người dùng thành công", "success");
     } catch (err: unknown) {
@@ -351,7 +353,7 @@ export default function TrangNguoiDung() {
     setLoiLienKet("");
     try {
       await api.put(`/nguoi-dung/${nguoiDungLienKet.id}/khach-thue`, {
-        tenantId: idKhachThueLienKet ? Number(idKhachThueLienKet) : null,
+        tenantId: idKhachThueLienKet ? idKhachThueLienKet.trim() : null,
       });
       notify("Gắn khách thuê thành công", "success");
       setNguoiDungLienKet(null);

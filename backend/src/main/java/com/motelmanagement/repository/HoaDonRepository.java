@@ -18,7 +18,7 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, String> {
     @Query("SELECT h FROM HoaDon h WHERE h.id = :id")
     Optional<HoaDon> timTheoIdCoPhong(@Param("id") String id);
 
-    Optional<HoaDon> findByPhong_IdAndThangAndNam(Long roomId, int thang, int nam);
+    Optional<HoaDon> findByPhong_IdAndThangAndNam(String roomId, int thang, int nam);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "khachThue", "phong" })
     @Query("select i from HoaDon i")

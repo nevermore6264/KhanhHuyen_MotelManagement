@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.motelmanagement.domain.BangGiaDichVu;
 
 /** Repository đơn giá dịch vụ (điện, nước). */
-public interface BangGiaDichVuRepository extends JpaRepository<BangGiaDichVu, Long> {
+public interface BangGiaDichVuRepository extends JpaRepository<BangGiaDichVu, String> {
     /** Dùng cho luồng nhập chỉ số hiện tại (giữ tương thích code cũ). */
     Optional<BangGiaDichVu> findFirstByHieuLucTuLessThanEqualOrderByHieuLucTuDesc(LocalDate date);
 

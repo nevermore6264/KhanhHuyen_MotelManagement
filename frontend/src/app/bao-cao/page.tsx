@@ -14,7 +14,7 @@ const formatMoney = (n?: number | null) => {
 };
 
 type DebtInvoice = {
-  id: number;
+  id: string;
   roomCode?: string;
   tenantName?: string;
   month: number;
@@ -23,7 +23,7 @@ type DebtInvoice = {
   status?: string;
 };
 type VacantRoom = {
-  id: number;
+  id: string;
   code: string;
   areaName?: string;
   currentPrice?: number;

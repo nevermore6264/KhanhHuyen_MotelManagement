@@ -1,9 +1,5 @@
 "use client";
 
-/**
- * Trang quản lý hợp đồng: danh sách hợp đồng, tìm kiếm, tạo/sửa/gia hạn/kết thúc,
- * xem/tải Word, phân quyền Admin/Staff/Tenant.
- */
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
@@ -83,7 +79,6 @@ const contractStatusBadge = (value?: string) => {
   }
 };
 
-/** Định dạng ngày thành dd/MM/yyyy */
 const formatDateDMY = (dateStr?: string) => {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
@@ -94,7 +89,6 @@ const formatDateDMY = (dateStr?: string) => {
   return `${day}/${month}/${year}`;
 };
 
-/** Định dạng tiền cho in hợp đồng (1.000.000 VNĐ) */
 const formatMoneyDoc = (n?: number | null) => {
   if (n == null || isNaN(n)) return "—";
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(n))} VNĐ`;
@@ -111,14 +105,12 @@ const parseCurrencyInput = (value: string) => {
   return digits ? Number(digits) : null;
 };
 
-/** Nhãn khách thuê để phân biệt khi trùng tên: "Họ tên — SĐT" hoặc "Họ tên — CCCD" */
 const tenantOptionLabel = (t: Tenant) => {
   const name = t.fullName || `Khách ${t.id}`;
   const extra = t.phone || t.idNumber;
   return extra ? `${name} — ${extra}` : name;
 };
 
-/** Tính ngày kết thúc = ngày bắt đầu + N tháng, trừ 1 ngày (hết hạn vào ngày cuối) */
 const addMonthsToDate = (startYMD: string, months: number): string => {
   if (!startYMD || months < 1) return "";
   const d = new Date(startYMD + "T12:00:00");
@@ -138,15 +130,11 @@ export default function TrangHopDong() {
   const [khuId, setKhuId] = useState("");
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [roomId, setRoomId] = useState("");
-  /** Khách thuê tham gia hợp đồng (một phòng có thể nhiều người). */
-  const [selectedTenantIds, setSelectedTenantIds] = useState<number[]>([]);
-  /** Người đại diện / chịu trách nhiệm chính — phải nằm trong selectedTenantIds. */
-  const [daiDienTenantId, setDaiDienTenantId] = useState<number | null>(null);
-  /** Popup chọn nhiều khách + đại diện (bản nháp cho đến khi Xác nhận). */
+  const [selectedTenantIds, setSelectedTenantIds] = useState<string[]>([]);
+  const [daiDienTenantId, setDaiDienTenantId] = useState<string | null>(null);
   const [showChonKhachModal, setShowChonKhachModal] = useState(false);
-  const [draftKhachIds, setDraftKhachIds] = useState<number[]>([]);
-  const [draftDaiDienId, setDraftDaiDienId] = useState<number | null>(null);
-  /** Lọc danh sách trong modal chọn khách (danh sách có thể rất dài). */
+  const [draftKhachIds, setDraftKhachIds] = useState<string[]>([]);
+  const [draftDaiDienId, setDraftDaiDienId] = useState<string | null>(null);
   const [chonKhachLoc, setChonKhachLoc] = useState("");
   const chonKhachInputRef = useRef<HTMLInputElement>(null);
   const [startDate, setStartDate] = useState("");
@@ -159,9 +147,9 @@ export default function TrangHopDong() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const [extendId, setExtendId] = useState<number | null>(null);
+  const [extendId, setExtendId] = useState<string | null>(null);
   const [extendDate, setExtendDate] = useState("");
-  const [confirmEndId, setConfirmEndId] = useState<number | null>(null);
+  const [confirmEndId, setConfirmEndId] = useState<string | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -202,10 +190,12 @@ export default function TrangHopDong() {
       setContracts(chuanHoaDanhSachHopDongTuApi(cRes.data));
       setRooms(((rRes.data as RawPhong[]) || []).map(chuanHoaPhongTuApi));
       setDanhSachKhu(
-        ((kRes.data as { id?: number; ten?: string }[]) || []).map((k) => ({
-          id: Number(k.id),
-          ten: String(k.ten ?? ""),
-        })),
+        ((kRes.data as { id?: string | number; ten?: string }[]) || []).map(
+          (k) => ({
+            id: k.id != null ? String(k.id) : "",
+            ten: String(k.ten ?? ""),
+          }),
+        ),
       );
       setTenants(
         ((tRes.data as Record<string, unknown>[]) || [])
@@ -254,8 +244,8 @@ export default function TrangHopDong() {
       setError("Vui lòng chọn người đại diện trong danh sách khách đã chọn");
       return;
     }
-    const idKhu = Number(khuId);
-    const phongDaChon = rooms.find((r) => Number(roomId) === r.id);
+    const idKhu = khuId;
+    const phongDaChon = rooms.find((r) => roomId !== "" && r.id === roomId);
     if (
       phongDaChon &&
       phongDaChon.khuVucId != null &&
@@ -276,7 +266,7 @@ export default function TrangHopDong() {
       setError("Ngày kết thúc phải sau ngày bắt đầu");
       return;
     }
-    const selectedRoom = rooms.find((r) => Number(roomId) === r.id);
+    const selectedRoom = rooms.find((r) => roomId !== "" && r.id === roomId);
     const rentValue =
       parseCurrencyInput(rent) ?? selectedRoom?.currentPrice ?? null;
     if (rentValue != null && rentValue < 0) {
@@ -291,7 +281,7 @@ export default function TrangHopDong() {
     setError("");
     try {
       await api.post("/hop-dong", {
-        phongId: Number(roomId),
+        phongId: roomId,
         khachThueIds: selectedTenantIds,
         daiDienKhachThueId: daiDienTenantId,
         startDate,
@@ -353,7 +343,8 @@ export default function TrangHopDong() {
   };
 
   const phongTrongTheoKhu = rooms.filter(
-    (r) => r.status === "AVAILABLE" && khuId && r.khuVucId === Number(khuId),
+    (r) =>
+      r.status === "AVAILABLE" && khuId && r.khuVucId === khuId,
   );
 
   const filtered = contracts.filter((c) => {
@@ -371,7 +362,7 @@ export default function TrangHopDong() {
   });
 
   /** Khách thuê đang có hợp đồng ACTIVE thì không cho chọn khi tạo hợp đồng mới */
-  const tenantIdsWithActiveContract = new Set<number>();
+  const tenantIdsWithActiveContract = new Set<string>();
   for (const c of contracts) {
     if (c.status !== "ACTIVE") continue;
     if (c.tenant?.id != null) tenantIdsWithActiveContract.add(c.tenant.id);
@@ -425,7 +416,7 @@ export default function TrangHopDong() {
     setShowChonKhachModal(false);
   };
 
-  const toggleDraftKhach = (id: number) => {
+  const toggleDraftKhach = (id: string) => {
     setDraftKhachIds((prev) => {
       const has = prev.includes(id);
       const next = has ? prev.filter((x) => x !== id) : [...prev, id];
@@ -765,7 +756,7 @@ export default function TrangHopDong() {
                         onChange={(e) => {
                           const id = e.target.value;
                           setRoomId(id);
-                          const room = rooms.find((r) => Number(id) === r.id);
+                          const room = rooms.find((r) => id !== "" && r.id === id);
                           setRent(
                             room?.currentPrice != null
                               ? formatCurrencyInput(String(room.currentPrice))

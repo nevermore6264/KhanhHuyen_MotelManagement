@@ -67,13 +67,13 @@ class YeuCauHoTroControllerTest {
     @WithMockUser(roles = "TENANT")
     void layDanhSach_tenant_traTheoKhach() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(2L);
+        nd.setId("2");
         nd.setVaiTro(VaiTro.TENANT);
         KhachThue kt = new KhachThue();
-        kt.setId(9L);
+        kt.setId("9");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(khachThueRepository.findByNguoiDung_Id(2L)).thenReturn(kt);
-        when(yeuCauHoTroRepository.findByKhachThue_IdOrderByNgayTaoDesc(9L)).thenReturn(Collections.emptyList());
+        when(khachThueRepository.findByNguoiDung_Id("2")).thenReturn(kt);
+        when(yeuCauHoTroRepository.findByKhachThue_IdOrderByNgayTaoDesc("9")).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/api/yeu-cau-ho-tro"))
                 .andExpect(status().isOk());
@@ -83,16 +83,16 @@ class YeuCauHoTroControllerTest {
     @WithMockUser(roles = "TENANT")
     void tao_tra200() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(3L);
+        nd.setId("3");
         nd.setHoTen("Khách");
         nd.setVaiTro(VaiTro.TENANT);
         KhachThue kt = new KhachThue();
-        kt.setId(11L);
+        kt.setId("11");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(khachThueRepository.findByNguoiDung_Id(3L)).thenReturn(kt);
+        when(khachThueRepository.findByNguoiDung_Id("3")).thenReturn(kt);
         when(yeuCauHoTroRepository.save(any(YeuCauHoTro.class))).thenAnswer(inv -> {
             YeuCauHoTro y = inv.getArgument(0);
-            y.setId(100L);
+            y.setId("100");
             return y;
         });
 
@@ -100,16 +100,16 @@ class YeuCauHoTroControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tieuDe\":\"Sửa ống nước\",\"moTa\":\"Phòng A\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(100));
+                .andExpect(jsonPath("$.id").value("100"));
     }
 
     @Test
     @WithMockUser(roles = "STAFF")
     void capNhat_tra200() throws Exception {
         YeuCauHoTro hienTai = new YeuCauHoTro();
-        hienTai.setId(1L);
+        hienTai.setId("1");
         hienTai.setTieuDe("Cũ");
-        when(yeuCauHoTroRepository.findById(1L)).thenReturn(Optional.of(hienTai));
+        when(yeuCauHoTroRepository.findById("1")).thenReturn(Optional.of(hienTai));
         when(yeuCauHoTroRepository.save(any(YeuCauHoTro.class))).thenAnswer(inv -> inv.getArgument(0));
 
         mockMvc.perform(put("/api/yeu-cau-ho-tro/1")

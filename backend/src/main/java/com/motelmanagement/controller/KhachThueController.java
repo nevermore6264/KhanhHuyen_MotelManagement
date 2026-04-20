@@ -105,7 +105,7 @@ public class KhachThueController {
             @RequestParam(value = "idNumber", required = false) String idNumber,
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "userId", required = false) String userId,
             @RequestParam(value = "portrait", required = false) MultipartFile portrait,
             @RequestParam(value = "idCard", required = false) MultipartFile idCard) {
         try {
@@ -140,7 +140,7 @@ public class KhachThueController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<?> capNhat(@PathVariable("id") Long ma, @RequestBody KhachThue khachThue) {
+    public ResponseEntity<?> capNhat(@PathVariable("id") String ma, @RequestBody KhachThue khachThue) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null || nguoiDung.getVaiTro() != VaiTro.ADMIN) {
             return ResponseEntity.status(403).build();
@@ -167,7 +167,7 @@ public class KhachThueController {
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<?> capNhatVoiFile(
-            @PathVariable("id") Long ma,
+            @PathVariable("id") String ma,
             @RequestParam("fullName") String fullName,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "idNumber", required = false) String idNumber,
@@ -192,14 +192,10 @@ public class KhachThueController {
                             if (userIdStr.isBlank()) {
                                 hienTai.setNguoiDung(null);
                             } else {
-                                try {
-                                    Long uid = Long.parseLong(userIdStr.trim());
-                                    ganNguoiDungChoKhach(
-                                            hienTai,
-                                            nguoiDungRepository.findById(uid).orElse(null));
-                                } catch (NumberFormatException ignored) {
-                                    hienTai.setNguoiDung(null);
-                                }
+                                String uid = userIdStr.trim();
+                                ganNguoiDungChoKhach(
+                                        hienTai,
+                                        nguoiDungRepository.findById(uid).orElse(null));
                             }
                         }
                         if (portrait != null && !portrait.isEmpty()) {
@@ -224,7 +220,7 @@ public class KhachThueController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<?> xoa(@PathVariable("id") Long ma) {
+    public ResponseEntity<?> xoa(@PathVariable("id") String ma) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null || nguoiDung.getVaiTro() != VaiTro.ADMIN) {
             return ResponseEntity.status(403).build();

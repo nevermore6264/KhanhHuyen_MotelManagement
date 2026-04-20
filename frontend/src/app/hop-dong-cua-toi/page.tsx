@@ -14,16 +14,16 @@ import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import { useToast } from "@/components/NhaCungCapToast";
 
-type Room = { id: number; code: string; currentPrice?: number };
+type Room = { id: string; code: string; currentPrice?: number };
 type Tenant = {
-  id: number;
+  id: string;
   fullName: string;
   phone?: string;
   idNumber?: string;
   address?: string;
 };
 type Contract = {
-  id: number;
+  id: string;
   room?: Room;
   tenant?: Tenant;
   coThue?: (Tenant & { laDaiDien?: boolean })[];
@@ -99,7 +99,7 @@ export default function TrangHopDongCuaToi() {
       .then((res) => setItems(chuanHoaDanhSachHopDongTuApi(res.data || [])));
   }, []);
 
-  const fetchContractForDoc = async (id: number): Promise<Contract | null> => {
+  const fetchContractForDoc = async (id: string): Promise<Contract | null> => {
     try {
       const res = await api.get(`/hop-dong/cua-toi/${id}`);
       return chuanHoaHopDongTuApi(res.data as Record<string, unknown>);

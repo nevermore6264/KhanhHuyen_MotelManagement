@@ -94,9 +94,9 @@ class HoaDonControllerTest {
     @WithMockUser(roles = "TENANT")
     void layHoaDonCuaToi_khongCoKhach_traRong() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(khachThueRepository.findByNguoiDung_Id(1L)).thenReturn(null);
+        when(khachThueRepository.findByNguoiDung_Id("1")).thenReturn(null);
         mockMvc.perform(get("/api/hoa-don/cua-toi"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());

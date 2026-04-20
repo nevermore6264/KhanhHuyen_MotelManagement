@@ -1,14 +1,9 @@
-/**
- * Chuẩn hóa JSON hóa đơn từ Spring (phong, khachThue, thang, nam, trangThai, …)
- * sang shape dùng trên UI (room, tenant, month, year, status, …).
- */
-
 export type RawJson = Record<string, unknown>;
 
-export type Room = { id: number; code: string };
+export type Room = { id: string; code: string };
 
 export type Tenant = {
-  id: number;
+  id: string;
   fullName: string;
   email?: string;
   phone?: string;
@@ -31,12 +26,10 @@ export type Invoice = {
   roomCost?: number;
   electricityCost?: number;
   waterCost?: number;
-  /** Chỉ số công tơ cùng kỳ (nếu có bản ghi chỉ số). */
   electricOld?: number;
   electricNew?: number;
   waterOld?: number;
   waterNew?: number;
-  /** Các khoản phụ (giữ xe, wifi, …) */
   lineItems?: InvoiceLineItem[];
   total?: number;
   status?: string;
@@ -62,7 +55,6 @@ function soNguyenTuApi(v: unknown): number | undefined {
   return Number.isFinite(n) ? Math.trunc(n) : undefined;
 }
 
-/** Jackson có thể trả LocalDateTime dạng chuỗi ISO hoặc mảng [y,M,d,h,m,s]. */
 function ngayRaChuoiIso(v: unknown): string | null | undefined {
   if (v == null) return null;
   if (typeof v === "string") return v;
@@ -81,14 +73,14 @@ function ngayRaChuoiIso(v: unknown): string | null | undefined {
 
 export function chuanHoaPhongTuApi(raw: RawJson): Room {
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     code: String(raw.maPhong ?? raw.ma_phong ?? raw.code ?? "").trim(),
   };
 }
 
 export function chuanHoaKhachThueTuApi(raw: RawJson): Tenant {
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     fullName: String(raw.hoTen ?? raw.fullName ?? "").trim(),
     email: raw.email != null ? String(raw.email) : undefined,
     phone:
@@ -183,7 +175,6 @@ export function mapHoaDonFromApi(raw: RawJson): Invoice {
   };
 }
 
-/** Khách hiển thị: ưu tiên danh sách hợp đồng, không thì khách trên hóa đơn. */
 export function khachCuaHoaDon(i: Invoice): Tenant[] {
   if (i.tenants && i.tenants.length > 0) return i.tenants;
   if (i.tenant) return [i.tenant];

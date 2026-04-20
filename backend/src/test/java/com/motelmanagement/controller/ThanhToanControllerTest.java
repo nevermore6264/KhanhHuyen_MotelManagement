@@ -150,7 +150,7 @@ class ThanhToanControllerTest {
     @WithMockUser(roles = "TENANT")
     void taoLinkThanhToan_thieuInvoiceId_tra400() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
         mockMvc.perform(post("/api/thanh-toan/tao-link")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,15 +162,15 @@ class ThanhToanControllerTest {
     @WithMockUser(roles = "TENANT")
     void taoLinkThanhToan_traOk() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         KhachThue kt = new KhachThue();
-        kt.setId(10L);
+        kt.setId("10");
         HoaDon hd = new HoaDon();
         hd.setId("INV-1");
         hd.setKhachThue(kt);
 
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(khachThueRepository.findByNguoiDung_Id(1L)).thenReturn(kt);
+        when(khachThueRepository.findByNguoiDung_Id("1")).thenReturn(kt);
         when(hoaDonRepository.findById("INV-1")).thenReturn(Optional.of(hd));
         when(tinhTienService.tinhTienRuntime(hd)).thenReturn(hd);
         when(payOSService.taoLinkThanhToan(hd)).thenReturn("https://pay.example/checkout");

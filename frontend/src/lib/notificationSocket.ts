@@ -8,7 +8,7 @@ const WS_URL =
     : "";
 
 export type NotificationPayload = {
-  id: number;
+  id: string | number;
   message: string;
   readFlag: boolean;
   sentAt: string | null;

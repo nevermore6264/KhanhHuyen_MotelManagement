@@ -61,7 +61,7 @@ public class PhongController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Phong> capNhat(@PathVariable("id") Long ma, @RequestBody Phong phong) {
+    public ResponseEntity<Phong> capNhat(@PathVariable("id") String ma, @RequestBody Phong phong) {
         return phongRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setMaPhong(phong.getMaPhong());
@@ -79,7 +79,7 @@ public class PhongController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> xoa(@PathVariable("id") Long ma) {
+    public ResponseEntity<?> xoa(@PathVariable("id") String ma) {
         phongRepository.deleteById(ma);
         return ResponseEntity.ok().build();
     }

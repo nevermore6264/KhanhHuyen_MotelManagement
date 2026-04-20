@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-export type MucKhu = { id: number; ten: string };
+export type MucKhu = { id: string; ten: string };
 
 type Props = {
   danhSachKhu: MucKhu[];

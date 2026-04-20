@@ -70,7 +70,7 @@ public class NguoiDungController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<NguoiDung> capNhat(@PathVariable("id") Long ma, @RequestBody NguoiDung nguoiDung) {
+    public ResponseEntity<NguoiDung> capNhat(@PathVariable("id") String ma, @RequestBody NguoiDung nguoiDung) {
         return nguoiDungRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setHoTen(nguoiDung.getHoTen());
@@ -87,7 +87,7 @@ public class NguoiDungController {
 
     @PutMapping("/{id}/khoa")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<NguoiDung> khoa(@PathVariable("id") Long ma) {
+    public ResponseEntity<NguoiDung> khoa(@PathVariable("id") String ma) {
         return nguoiDungRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setKichHoat(false);
@@ -98,7 +98,7 @@ public class NguoiDungController {
 
     @PutMapping("/{id}/mo-khoa")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<NguoiDung> moKhoa(@PathVariable("id") Long ma) {
+    public ResponseEntity<NguoiDung> moKhoa(@PathVariable("id") String ma) {
         return nguoiDungRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setKichHoat(true);
@@ -110,7 +110,7 @@ public class NguoiDungController {
     /** Chỉ gắn hoặc bỏ gắn tài khoản với khách thuê. tenantId = null để bỏ gắn. */
     @PutMapping("/{id}/khach-thue")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> lienKetKhachThue(@PathVariable("id") Long maNguoiDung, @RequestBody DtoLienKetNguoiDungKhachThue dto) {
+    public ResponseEntity<?> lienKetKhachThue(@PathVariable("id") String maNguoiDung, @RequestBody DtoLienKetNguoiDungKhachThue dto) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(maNguoiDung).orElse(null);
         if (nguoiDung == null) {
             return ResponseEntity.notFound().build();

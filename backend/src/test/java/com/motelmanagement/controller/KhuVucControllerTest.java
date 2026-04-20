@@ -55,13 +55,13 @@ class KhuVucControllerTest {
     @WithMockUser(roles = "STAFF")
     void layDanhSach_tra200() throws Exception {
         KhuVuc k = new KhuVuc();
-        k.setId(1L);
+        k.setId("1");
         k.setTen("Khu A");
         k.setDiaChi("HN");
         k.setMoTa("m");
         when(khuVucRepository.findAll()).thenReturn(List.of(k));
-        when(phongRepository.countByKhuVuc_Id(1L)).thenReturn(3L);
-        when(hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai(1L, TrangThaiHopDong.ACTIVE)).thenReturn(0L);
+        when(phongRepository.countByKhuVuc_Id("1")).thenReturn(3L);
+        when(hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai("1", TrangThaiHopDong.ACTIVE)).thenReturn(0L);
 
         mockMvc.perform(get("/api/khu-vuc"))
                 .andExpect(status().isOk())
@@ -72,7 +72,7 @@ class KhuVucControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void xoa_conHopDongActive_tra400() throws Exception {
-        when(hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai(5L, TrangThaiHopDong.ACTIVE)).thenReturn(1L);
+        when(hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai("5", TrangThaiHopDong.ACTIVE)).thenReturn(1L);
         mockMvc.perform(delete("/api/khu-vuc/5"))
                 .andExpect(status().isBadRequest());
     }

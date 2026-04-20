@@ -2,11 +2,11 @@ package com.motelmanagement.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -26,8 +26,9 @@ import lombok.Setter;
 @Table(name = "phieu_dat_lai_mat_khau", indexes = @Index(columnList = "ma_token"))
 public class PhieuDatLaiMatKhau {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
 
     /** Token duy nhất gửi qua link/email */
     @Column(name = "ma_token", nullable = false, unique = true, length = 64)

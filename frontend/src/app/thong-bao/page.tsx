@@ -16,7 +16,7 @@ import { IconPlus, IconTimes, IconSend, IconCheck } from "@/components/Icons";
 import type { ThongBaoUi } from "@/lib/mapThongBaoApi";
 import { mapThongBaoFromApi } from "@/lib/mapThongBaoApi";
 type User = {
-  id: number;
+  id: string;
   username: string;
   fullName?: string;
   role?: string;
@@ -33,8 +33,8 @@ function tenVaiTroApi(code: string): string {
 }
 
 function mapNguoiDungChoThongBaoFromApi(raw: Record<string, unknown>): User | null {
-  const id = Number(raw.id);
-  if (!Number.isFinite(id) || id <= 0) return null;
+  const id = raw.id != null ? String(raw.id) : "";
+  if (!id) return null;
   const username = String(raw.tenDangNhap ?? raw.username ?? "").trim();
   if (!username) return null;
   const fullName = String(raw.hoTen ?? raw.fullName ?? "").trim();
@@ -52,8 +52,8 @@ function mapNguoiDungChoThongBaoFromApi(raw: Record<string, unknown>): User | nu
 }
 
 function mapNguoiDungFromApi(raw: Record<string, unknown>): User | null {
-  const id = Number(raw.id);
-  if (!Number.isFinite(id) || id <= 0) return null;
+  const id = raw.id != null ? String(raw.id) : "";
+  if (!id) return null;
   const username = String(raw.tenDangNhap ?? raw.username ?? "").trim();
   if (!username) return null;
   const fullName = String(raw.hoTen ?? raw.fullName ?? "").trim();
@@ -129,7 +129,7 @@ export default function TrangThongBao() {
     const p = contextThongBao.lastIncoming;
     setDanhSach((prev) => [
       {
-        id: p.id,
+        id: String(p.id),
         message: p.message,
         readFlag: p.readFlag ?? false,
         sentAt: p.sentAt || new Date().toISOString(),
@@ -170,8 +170,8 @@ export default function TrangThongBao() {
     const locTheoChuoi = q
       ? danhSachNguoiDung.filter((u) => chuoiLocNguoiDung(u).includes(q))
       : danhSachNguoiDung;
-    const selId = idNguoiNhan ? Number(idNguoiNhan) : NaN;
-    if (!Number.isFinite(selId) || selId <= 0) return locTheoChuoi;
+    const selId = idNguoiNhan.trim();
+    if (!selId) return locTheoChuoi;
     if (locTheoChuoi.some((u) => u.id === selId)) return locTheoChuoi;
     const dangChon = danhSachNguoiDung.find((u) => u.id === selId);
     return dangChon ? [dangChon, ...locTheoChuoi] : locTheoChuoi;
@@ -183,7 +183,7 @@ export default function TrangThongBao() {
       (payload: NotificationPayload) => {
         setDanhSach((prev) => [
           {
-            id: payload.id,
+            id: String(payload.id),
             message: payload.message,
             readFlag: payload.readFlag ?? false,
             sentAt: payload.sentAt || new Date().toISOString(),
@@ -210,7 +210,7 @@ export default function TrangThongBao() {
     };
   }, [daMount, laQuanTri, notify]);
 
-  const danhDauDaDoc = async (id: number) => {
+  const danhDauDaDoc = async (id: string) => {
     await api.put(`/thong-bao/${id}/da-doc`);
     await tai();
     contextThongBao?.refetchUnread();
@@ -228,7 +228,7 @@ export default function TrangThongBao() {
     try {
       await api.post("/thong-bao", {
         message: nd,
-        userId: idNguoiNhan ? Number(idNguoiNhan) : null,
+        userId: idNguoiNhan.trim() ? idNguoiNhan.trim() : null,
       });
       notify("Đã gửi thông báo", "success");
       setNoiDung("");

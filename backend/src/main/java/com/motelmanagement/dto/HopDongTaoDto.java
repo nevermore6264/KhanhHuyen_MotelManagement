@@ -15,14 +15,14 @@ import lombok.Setter;
 @Setter
 public class HopDongTaoDto {
     @JsonProperty("phongId")
-    private Long phongId;
+    private String phongId;
 
     @JsonProperty("khachThueIds")
-    private List<Long> khachThueIds = new ArrayList<>();
+    private List<String> khachThueIds = new ArrayList<>();
 
     /** Phải nằm trong khachThueIds. */
     @JsonProperty("daiDienKhachThueId")
-    private Long daiDienKhachThueId;
+    private String daiDienKhachThueId;
 
     @JsonProperty("startDate")
     private LocalDate startDate;

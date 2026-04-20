@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.motelmanagement.domain.NguoiDung;
 
 /** Repository người dùng (NguoiDung). */
-public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
+public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
     /** Tìm theo tên đăng nhập. */
     Optional<NguoiDung> findByTenDangNhap(String tenDangNhap);
 }

@@ -54,7 +54,7 @@ public class ThongBaoService {
      * @param message Nội dung thông báo
      * @param userId Null = gửi cho tất cả user; có giá trị = gửi cho user đó
      */
-    public void taoVaDay(String message, Long userId) {
+    public void taoVaDay(String message, String userId) {
         if (message == null || message.isBlank()) return;
         List<NguoiDung> danhSachNhan = userId != null
                 ? nguoiDungRepository.findById(userId).map(List::of).orElse(List.of())

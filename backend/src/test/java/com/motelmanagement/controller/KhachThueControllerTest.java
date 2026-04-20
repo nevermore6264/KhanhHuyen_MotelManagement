@@ -93,7 +93,7 @@ class KhachThueControllerTest {
     void tao_json() throws Exception {
         when(khachThueRepository.save(any(KhachThue.class))).thenAnswer(inv -> {
             KhachThue k = inv.getArgument(0);
-            k.setId(5L);
+            k.setId("5");
             return k;
         });
         TenantCreateDto dto = new TenantCreateDto();
@@ -129,9 +129,9 @@ class KhachThueControllerTest {
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
 
         KhachThue hienTai = new KhachThue();
-        hienTai.setId(1L);
+        hienTai.setId("1");
         hienTai.setHoTen("Cũ");
-        when(khachThueRepository.findById(1L)).thenReturn(Optional.of(hienTai));
+        when(khachThueRepository.findById("1")).thenReturn(Optional.of(hienTai));
         when(khachThueRepository.save(any(KhachThue.class))).thenAnswer(inv -> inv.getArgument(0));
 
         KhachThue body = new KhachThue();
@@ -147,13 +147,13 @@ class KhachThueControllerTest {
     @WithMockUser(roles = "TENANT")
     void layDanhSach_tenantChiThayMinh() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(10L);
+        nd.setId("10");
         nd.setVaiTro(VaiTro.TENANT);
         KhachThue kt = new KhachThue();
-        kt.setId(99L);
+        kt.setId("99");
         kt.setHoTen("Tôi");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(khachThueRepository.findByNguoiDung_Id(10L)).thenReturn(kt);
+        when(khachThueRepository.findByNguoiDung_Id("10")).thenReturn(kt);
 
         mockMvc.perform(get("/api/khach-thue"))
                 .andExpect(status().isOk())

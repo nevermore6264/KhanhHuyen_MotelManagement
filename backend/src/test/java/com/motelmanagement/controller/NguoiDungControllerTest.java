@@ -87,7 +87,7 @@ class NguoiDungControllerTest {
         when(passwordEncoder.encode(any())).thenReturn("encoded");
         when(nguoiDungRepository.save(any(NguoiDung.class))).thenAnswer(inv -> {
             NguoiDung n = inv.getArgument(0);
-            n.setId(1L);
+            n.setId("1");
             return n;
         });
 
@@ -108,7 +108,7 @@ class NguoiDungControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void capNhat_khongTimThay_tra404() throws Exception {
-        when(nguoiDungRepository.findById(999L)).thenReturn(Optional.empty());
+        when(nguoiDungRepository.findById("999")).thenReturn(Optional.empty());
 
         NguoiDung patch = new NguoiDung();
         patch.setHoTen("X");

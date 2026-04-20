@@ -32,7 +32,7 @@ class NhatKyServiceTest {
     @Test
     void ghiNhatKy_luuBanGhi() {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         nd.setTenDangNhap("u1");
         when(nhatKyHeThongRepository.save(any(NhatKyHeThong.class))).thenAnswer(i -> i.getArgument(0));
 

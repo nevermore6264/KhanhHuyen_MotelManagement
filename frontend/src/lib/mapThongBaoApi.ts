@@ -4,7 +4,7 @@
  */
 
 export type ThongBaoUi = {
-  id: number;
+  id: string;
   message: string;
   readFlag: boolean;
   sentAt: string;
@@ -38,7 +38,7 @@ export function mapThongBaoFromApi(raw: Record<string, unknown>): ThongBaoUi {
   );
   const sentAt = thoiGianRaChuoi(raw.thoiGianGui ?? raw.sentAt);
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     message: noiDung,
     readFlag,
     sentAt,

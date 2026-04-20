@@ -48,18 +48,18 @@ class TinhTienServiceTest {
 
     @Test
     void phongCoHopDongActiveChoKy_khongCoHopDong_traFalse() {
-        Mockito.when(hopDongRepository.findByPhong_IdAndTrangThai(99L, TrangThaiHopDong.ACTIVE))
+        Mockito.when(hopDongRepository.findByPhong_IdAndTrangThai("99", TrangThaiHopDong.ACTIVE))
                 .thenReturn(Optional.empty());
-        assertFalse(tinhTienService.phongCoHopDongActiveChoKy(99L, 6, 2026));
+        assertFalse(tinhTienService.phongCoHopDongActiveChoKy("99", 6, 2026));
     }
 
     @Test
     void phongCoHopDongActiveChoKy_hopDongSauKy_traFalse() {
         HopDong hd = new HopDong();
         hd.setNgayBatDau(LocalDate.of(2026, 7, 1));
-        Mockito.when(hopDongRepository.findByPhong_IdAndTrangThai(1L, TrangThaiHopDong.ACTIVE))
+        Mockito.when(hopDongRepository.findByPhong_IdAndTrangThai("1", TrangThaiHopDong.ACTIVE))
                 .thenReturn(Optional.of(hd));
-        assertFalse(tinhTienService.phongCoHopDongActiveChoKy(1L, 6, 2026));
+        assertFalse(tinhTienService.phongCoHopDongActiveChoKy("1", 6, 2026));
     }
 
     @Test
@@ -78,14 +78,14 @@ class TinhTienServiceTest {
         chiSo.setThang(6);
 
         var phong = new com.motelmanagement.domain.Phong();
-        phong.setId(1L);
+        phong.setId("1");
         chiSo.setPhong(phong);
 
         ChiSoDienNuoc chiSoTruoc = new ChiSoDienNuoc();
         chiSoTruoc.setDienMoi(150);
 
         Mockito.when(chiSoDienNuocRepository
-                        .findByPhong_IdAndThangAndNam(1L, 5, 2026))
+                        .findByPhong_IdAndThangAndNam("1", 5, 2026))
                 .thenReturn(Optional.of(chiSoTruoc));
 
         int result = tinhTienService.layChiSoDienCuTheoKy(chiSo);
@@ -99,11 +99,11 @@ class TinhTienServiceTest {
         chiSo.setThang(6);
 
         var phong = new com.motelmanagement.domain.Phong();
-        phong.setId(1L);
+        phong.setId("1");
         chiSo.setPhong(phong);
 
         Mockito.when(chiSoDienNuocRepository
-                        .findByPhong_IdAndThangAndNam(1L, 5, 2026))
+                        .findByPhong_IdAndThangAndNam("1", 5, 2026))
                 .thenReturn(Optional.empty());
 
         int result = tinhTienService.layChiSoNuocCuTheoKy(chiSo);
@@ -115,7 +115,7 @@ class TinhTienServiceTest {
         HoaDon hoaDon = new HoaDon();
 
         var phong = new com.motelmanagement.domain.Phong();
-        phong.setId(1L);
+        phong.setId("1");
         phong.setGiaHienTai(new java.math.BigDecimal("2000000"));
         hoaDon.setPhong(phong);
         hoaDon.setThang(6);
@@ -137,11 +137,11 @@ class TinhTienServiceTest {
         bangGia.setGiaNuoc(new java.math.BigDecimal("10000"));
 
         Mockito.when(chiSoDienNuocRepository
-                        .findByPhong_IdAndThangAndNam(1L, 6, 2026))
+                        .findByPhong_IdAndThangAndNam("1", 6, 2026))
                 .thenReturn(Optional.of(chiSo));
 
         Mockito.when(chiSoDienNuocRepository
-                        .findByPhong_IdAndThangAndNam(1L, 5, 2026))
+                        .findByPhong_IdAndThangAndNam("1", 5, 2026))
                 .thenReturn(Optional.of(chiSoTruoc));
 
         Mockito.when(bangGiaDichVuRepository
@@ -158,7 +158,7 @@ class TinhTienServiceTest {
     void sinhHoaDonChoThang_taoMoiHoaDon() {
         HopDong hd = new HopDong();
         var phong = new com.motelmanagement.domain.Phong();
-        phong.setId(1L);
+        phong.setId("1");
         hd.setPhong(phong);
         hd.setTrangThai(TrangThaiHopDong.ACTIVE);
 
@@ -166,7 +166,7 @@ class TinhTienServiceTest {
                 .thenReturn(List.of(hd));
 
         Mockito.when(hoaDonRepository
-                        .findByPhong_IdAndThangAndNam(1L, 6, 2026))
+                        .findByPhong_IdAndThangAndNam("1", 6, 2026))
                 .thenReturn(Optional.empty());
 
         int result = tinhTienService.sinhHoaDonChoThang(6, 2026);

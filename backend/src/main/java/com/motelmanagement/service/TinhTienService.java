@@ -59,7 +59,7 @@ public class TinhTienService {
     /**
      * Phòng có hợp đồng ACTIVE và kỳ tháng/năm giao với hiệu lực hợp đồng (được nhập chỉ số điện nước).
      */
-    public boolean phongCoHopDongActiveChoKy(long maPhong, int thang, int nam) {
+    public boolean phongCoHopDongActiveChoKy(String maPhong, int thang, int nam) {
         return hopDongRepository.findByPhong_IdAndTrangThai(maPhong, TrangThaiHopDong.ACTIVE)
                 .filter(hd -> hopDongCoHieuLucTrongThang(hd, thang, nam))
                 .isPresent();
@@ -192,7 +192,7 @@ public class TinhTienService {
             if (!hopDongCoHieuLucTrongThang(hopDong, thang, nam)) {
                 continue;
             }
-            Long maPhong = hopDong.getPhong().getId();
+            String maPhong = hopDong.getPhong().getId();
             if (hoaDonRepository.findByPhong_IdAndThangAndNam(maPhong, thang, nam).isPresent()) {
                 continue;
             }

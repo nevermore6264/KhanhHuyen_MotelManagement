@@ -9,7 +9,7 @@ import { IconSend, IconEye, IconTimes } from "@/components/Icons";
 import { useToast } from "@/components/NhaCungCapToast";
 
 type YeuCauHang = {
-  id: number;
+  id: string;
   tieuDe: string;
   moTa?: string;
   trangThai: string;
@@ -67,7 +67,7 @@ function chuanHoaYeuCau(raw: unknown): YeuCauHang {
     if (y) ngayStr = new Date(y, m - 1, d, h, mi, s).toISOString();
   }
   return {
-    id: Number(r.id),
+    id: r.id != null ? String(r.id) : "",
     tieuDe: String(r.tieuDe ?? r.title ?? "").trim(),
     moTa:
       r.moTa != null

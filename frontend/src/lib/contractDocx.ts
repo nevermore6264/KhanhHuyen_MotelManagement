@@ -13,7 +13,7 @@ import {
 } from "docx";
 
 export type ContractForDocx = {
-  id: number;
+  id: string | number;
   room?: { code?: string };
   tenant?: {
     fullName?: string;

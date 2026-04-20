@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class DtoNguoiDungChoThongBao {
-    private Long id;
+    private String id;
     private String tenDangNhap;
     private String hoTen;
     private VaiTro vaiTro;

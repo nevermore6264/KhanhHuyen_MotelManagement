@@ -8,7 +8,7 @@ import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
 
 /** Repository thông báo. */
-public interface ThongBaoRepository extends JpaRepository<ThongBao, Long> {
+public interface ThongBaoRepository extends JpaRepository<ThongBao, String> {
     /** Lấy danh sách thông báo theo người dùng. */
     List<ThongBao> findByNguoiDung(NguoiDung nguoiDung);
 }

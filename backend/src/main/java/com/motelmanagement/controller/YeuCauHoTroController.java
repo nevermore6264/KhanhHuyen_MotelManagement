@@ -73,7 +73,7 @@ public class YeuCauHoTroController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<YeuCauHoTro> capNhat(@PathVariable("id") Long ma, @RequestBody YeuCauHoTro yeuCau) {
+    public ResponseEntity<YeuCauHoTro> capNhat(@PathVariable("id") String ma, @RequestBody YeuCauHoTro yeuCau) {
         return yeuCauHoTroRepository.findById(ma)
                 .map(hienTai -> {
                     if (yeuCau.getTrangThai() != null) {

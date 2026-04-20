@@ -4,7 +4,7 @@
  */
 
 export type PaymentRow = {
-  id: number;
+  id: string;
   amount: number;
   method: string;
   paidAt: string;
@@ -46,7 +46,7 @@ function phuongThucRaChuoi(v: unknown): string {
 }
 
 export function chuanHoaThanhToanTuApi(raw: Record<string, unknown>): PaymentRow {
-  const id = Number(raw.id);
+  const id = raw.id != null ? String(raw.id) : "";
   const amount = parseSoTien(raw.soTien ?? raw.amount);
   const method = phuongThucRaChuoi(raw.phuongThuc ?? raw.method);
   const paidAt = thoiGianThanhToanRaChuoiIso(

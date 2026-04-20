@@ -16,5 +16,5 @@ public class YeuCauTaoNguoiDung {
     private VaiTro vaiTro;
     private boolean kichHoat = true;
     /** Khi vaiTro = TENANT: gắn tài khoản với khách thuê có sẵn (chọn khách thuê chưa có tài khoản). */
-    private Long maKhachThue;
+    private String maKhachThue;
 }

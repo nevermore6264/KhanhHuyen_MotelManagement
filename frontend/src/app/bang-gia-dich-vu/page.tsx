@@ -16,7 +16,7 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 
 type ServicePrice = {
-  id: number;
+  id: string;
   giaPhong?: number;
   giaDien?: number;
   giaNuoc?: number;
@@ -138,7 +138,7 @@ export default function TrangBangGiaDichVu() {
     tai();
   };
 
-  const xoaPhanTu = async (id: number) => {
+  const xoaPhanTu = async (id: string) => {
     if (!confirm("Bạn có chắc muốn xóa bảng giá này?")) return;
     await api.delete(`/bang-gia-dich-vu/${id}`);
     notify("Đã xóa bảng giá", "success");

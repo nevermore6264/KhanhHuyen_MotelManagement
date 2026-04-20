@@ -18,7 +18,7 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 
 type Area = {
-  id: number;
+  id: string;
   ten: string;
   diaChi?: string;
   moTa?: string;
@@ -33,7 +33,7 @@ export default function TrangKhuVuc() {
   const [diaChi, setDiaChi] = useState("");
   const [moTa, setMoTa] = useState("");
   const [loi, setLoi] = useState("");
-  const [idXacNhanXoa, setIdXacNhanXoa] = useState<number | null>(null);
+  const [idXacNhanXoa, setIdXacNhanXoa] = useState<string | null>(null);
   const [tenXacNhanXoa, setTenXacNhanXoa] = useState("");
   const [tuKhoa, setTuKhoa] = useState("");
   const [phanTuDangSua, setPhanTuDangSua] = useState<Area | null>(null);

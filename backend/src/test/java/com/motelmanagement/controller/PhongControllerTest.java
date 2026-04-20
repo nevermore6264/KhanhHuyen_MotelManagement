@@ -83,11 +83,11 @@ class PhongControllerTest {
     @WithMockUser(roles = "ADMIN")
     void tao_phong() throws Exception {
         KhuVuc khu = new KhuVuc();
-        khu.setId(1L);
-        when(khuVucRepository.findById(1L)).thenReturn(java.util.Optional.of(khu));
+        khu.setId("1");
+        when(khuVucRepository.findById("1")).thenReturn(java.util.Optional.of(khu));
         when(phongRepository.save(any(Phong.class))).thenAnswer(inv -> {
             Phong p = inv.getArgument(0);
-            p.setId(10L);
+            p.setId("10");
             p.setMaPhong("P01");
             return p;
         });

@@ -9,7 +9,7 @@ import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
 
 type SupportRequest = {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   status: string;

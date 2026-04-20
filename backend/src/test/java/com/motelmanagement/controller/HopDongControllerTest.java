@@ -89,9 +89,9 @@ class HopDongControllerTest {
     @WithMockUser(roles = "TENANT")
     void layHopDongCuaToiTheoMa_khongCoKhach_tra404() throws Exception {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(khachThueRepository.findByNguoiDung_Id(1L)).thenReturn(null);
+        when(khachThueRepository.findByNguoiDung_Id("1")).thenReturn(null);
         mockMvc.perform(get("/api/hop-dong/cua-toi/5"))
                 .andExpect(status().isNotFound());
     }

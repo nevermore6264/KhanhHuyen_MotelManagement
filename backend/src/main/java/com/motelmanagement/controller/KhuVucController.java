@@ -52,7 +52,7 @@ public class KhuVucController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<KhuVuc> capNhat(@PathVariable("id") Long ma, @RequestBody KhuVuc khuVuc) {
+    public ResponseEntity<KhuVuc> capNhat(@PathVariable("id") String ma, @RequestBody KhuVuc khuVuc) {
         return khuVucRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setTen(khuVuc.getTen());
@@ -65,7 +65,7 @@ public class KhuVucController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> xoa(@PathVariable("id") Long ma) {
+    public ResponseEntity<?> xoa(@PathVariable("id") String ma) {
         if (hopDongRepository.countByPhong_KhuVuc_IdAndTrangThai(ma, TrangThaiHopDong.ACTIVE) > 0) {
             return ResponseEntity.badRequest()
                     .body("Không thể xóa khu khi còn phòng đang được thuê. Vui lòng kết thúc hoặc hủy hợp đồng trước.");

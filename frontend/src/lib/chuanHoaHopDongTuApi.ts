@@ -1,17 +1,13 @@
-/**
- * Chuẩn hóa JSON từ Spring (phong, khachThue, thanhVien…) sang kiểu dùng trên UI.
- */
-
 export type RoomHopDong = {
-  id: number;
+  id: string;
   code: string;
   currentPrice?: number;
   status?: string;
-  khuVucId?: number;
+  khuVucId?: string;
 };
 
 export type TenantHopDong = {
-  id: number;
+  id: string;
   fullName: string;
   phone?: string;
   idNumber?: string;
@@ -22,7 +18,7 @@ export type TenantHopDong = {
 export type ThanhVienHopDong = TenantHopDong & { laDaiDien?: boolean };
 
 export type HopDongChuan = {
-  id: number;
+  id: string;
   room?: RoomHopDong;
   tenant?: TenantHopDong;
   coThue?: ThanhVienHopDong[];
@@ -36,7 +32,7 @@ export type HopDongChuan = {
 type RawPhong = Record<string, unknown>;
 
 export function chuanHoaPhongTuApiHopDong(r: RawPhong): RoomHopDong {
-  const khu = r.khuVuc as { id?: number } | undefined;
+  const khu = r.khuVuc as { id?: string | number } | undefined;
   const gia = r.giaHienTai ?? r.currentPrice;
   const giaSo =
     typeof gia === "number"
@@ -45,11 +41,11 @@ export function chuanHoaPhongTuApiHopDong(r: RawPhong): RoomHopDong {
         ? Number(gia)
         : undefined;
   return {
-    id: Number(r.id),
+    id: r.id != null ? String(r.id) : "",
     code: String(r.code ?? r.maPhong ?? ""),
     currentPrice: Number.isFinite(giaSo) ? giaSo : undefined,
     status: String(r.status ?? r.trangThai ?? ""),
-    khuVucId: khu?.id != null ? Number(khu.id) : undefined,
+    khuVucId: khu?.id != null ? String(khu.id) : undefined,
   };
 }
 
@@ -58,7 +54,7 @@ export function chuanHoaKhachThueTuApi(
 ): TenantHopDong | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     fullName: String(raw.fullName ?? raw.hoTen ?? ""),
     phone:
       raw.phone != null
@@ -108,7 +104,7 @@ export function chuanHoaHopDongTuApi(raw: Record<string, unknown>): HopDongChuan
     coThueHienThi = [{ ...tenant, laDaiDien: true }];
   }
   return {
-    id: Number(raw.id),
+    id: raw.id != null ? String(raw.id) : "",
     room,
     tenant,
     coThue: coThueHienThi,

@@ -39,7 +39,7 @@ public class BangGiaController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BangGiaDichVu> capNhat(@PathVariable("id") Long ma, @RequestBody BangGiaDichVu duLieu) {
+    public ResponseEntity<BangGiaDichVu> capNhat(@PathVariable("id") String ma, @RequestBody BangGiaDichVu duLieu) {
         return bangGiaDichVuRepository.findById(ma)
                 .map(hienTai -> {
                     hienTai.setGiaPhong(duLieu.getGiaPhong());
@@ -53,7 +53,7 @@ public class BangGiaController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> xoa(@PathVariable("id") Long ma) {
+    public ResponseEntity<?> xoa(@PathVariable("id") String ma) {
         bangGiaDichVuRepository.deleteById(ma);
         return ResponseEntity.ok().build();
     }

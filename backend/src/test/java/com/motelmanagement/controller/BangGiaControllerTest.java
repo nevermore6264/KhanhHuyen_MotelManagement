@@ -60,7 +60,7 @@ class BangGiaControllerTest {
     void tao_tra200() throws Exception {
         when(bangGiaDichVuRepository.save(any(BangGiaDichVu.class))).thenAnswer(inv -> {
             BangGiaDichVu b = inv.getArgument(0);
-            b.setId(1L);
+            b.setId("1");
             return b;
         });
         mockMvc.perform(post("/api/bang-gia-dich-vu")

@@ -2,10 +2,10 @@ package com.motelmanagement.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -22,8 +22,9 @@ import lombok.Setter;
 @Table(name = "nhat_ky_he_thong")
 public class NhatKyHeThong {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "nguoi_thuc_hien_id")

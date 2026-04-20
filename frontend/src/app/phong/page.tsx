@@ -19,9 +19,9 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 
-type Area = { id: number; ten: string };
+type Area = { id: string; ten: string };
 type Room = {
-  id: number;
+  id: string;
   maPhong: string;
   tang?: string;
   trangThai: string;
@@ -87,7 +87,7 @@ export default function TrangPhong() {
   const [idKhuSua, setIdKhuSua] = useState("");
   const [giaSua, setGiaSua] = useState("");
   const [loiSua, setLoiSua] = useState("");
-  const [idXacNhanXoa, setIdXacNhanXoa] = useState<number | null>(null);
+  const [idXacNhanXoa, setIdXacNhanXoa] = useState<string | null>(null);
   const [tenXacNhanXoa, setTenXacNhanXoa] = useState("");
   const [locTrangThai, setLocTrangThai] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -98,8 +98,7 @@ export default function TrangPhong() {
   const { notify } = useToast();
 
   const areaIdTuUrl = searchParams.get("areaId");
-  const locIdKhu =
-    areaIdTuUrl && !Number.isNaN(Number(areaIdTuUrl)) ? areaIdTuUrl : "";
+  const locIdKhu = areaIdTuUrl?.trim() ? areaIdTuUrl.trim() : "";
 
   const doiLocKhu = (value: string) => {
     if (value === "") {
@@ -146,7 +145,7 @@ export default function TrangPhong() {
         tang: tang.trim() || null,
         trangThai: trangThaiPhong,
         giaHienTai: giaSo,
-        khuVuc: idKhu ? { id: Number(idKhu) } : null,
+        khuVuc: idKhu ? { id: idKhu } : null,
       });
       notify("Thêm phòng thành công", "success");
     } catch (err: unknown) {
@@ -198,7 +197,7 @@ export default function TrangPhong() {
         tang: tangSua.trim() || null,
         trangThai: trangThaiSua,
         giaHienTai: giaSo,
-        khuVuc: idKhuSua ? { id: Number(idKhuSua) } : null,
+        khuVuc: idKhuSua ? { id: idKhuSua } : null,
       });
       notify("Cập nhật phòng thành công", "success");
     } catch (err: unknown) {
@@ -283,16 +282,13 @@ export default function TrangPhong() {
       ? phong.trangThai === locTrangThai
       : true;
     const khopKhu =
-      locIdKhu === "" ? true : phong.khuVuc?.id === Number(locIdKhu);
+      locIdKhu === "" ? true : phong.khuVuc?.id === locIdKhu;
     return khopTuKhoa && khopTrangThai && khopKhu;
   });
 
-  const idKhuLocSo = locIdKhu ? Number(locIdKhu) : null;
-  const tenKhuLoc =
-    idKhuLocSo != null && !Number.isNaN(idKhuLocSo)
-      ? (danhSachKhu.find((a) => a.id === idKhuLocSo)?.ten ??
-        `Khu #${idKhuLocSo}`)
-      : null;
+  const tenKhuLoc = locIdKhu
+    ? danhSachKhu.find((a) => a.id === locIdKhu)?.ten ?? `Khu #${locIdKhu}`
+    : null;
 
   const khoaSua = phanTuDangSua
     ? isLockedStatus(phanTuDangSua.trangThai)

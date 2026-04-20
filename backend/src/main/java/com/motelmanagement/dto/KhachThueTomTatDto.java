@@ -13,7 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KhachThueTomTatDto {
-    private Long id;
+    private String id;
     private String hoTen;
     private String soDienThoai;
     private String email;

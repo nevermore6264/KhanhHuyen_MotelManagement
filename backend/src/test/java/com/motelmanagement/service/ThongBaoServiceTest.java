@@ -45,19 +45,19 @@ class ThongBaoServiceTest {
 
     @Test
     void taoVaDay_tinNhanNull_boQua() {
-        thongBaoService.taoVaDay(null, 1L);
+        thongBaoService.taoVaDay(null, "1");
         verify(thongBaoRepository, never()).save(any());
     }
 
     @Test
     void taoVaDay_guiTatCaUser() {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         nd.setTenDangNhap("tenant1");
         when(nguoiDungRepository.findAll()).thenReturn(List.of(nd));
         when(thongBaoRepository.save(any(ThongBao.class))).thenAnswer(inv -> {
             ThongBao tb = inv.getArgument(0);
-            tb.setId(42L);
+            tb.setId("42");
             return tb;
         });
 
@@ -69,8 +69,8 @@ class ThongBaoServiceTest {
 
     @Test
     void taoVaDay_userId_khongTonTai() {
-        when(nguoiDungRepository.findById(999L)).thenReturn(Optional.empty());
-        thongBaoService.taoVaDay("msg", 999L);
+        when(nguoiDungRepository.findById("999")).thenReturn(Optional.empty());
+        thongBaoService.taoVaDay("msg", "999");
         verify(thongBaoRepository, never()).save(any());
     }
 }

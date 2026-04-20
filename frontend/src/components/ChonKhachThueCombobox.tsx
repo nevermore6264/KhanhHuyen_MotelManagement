@@ -11,10 +11,10 @@ import {
 import { createPortal } from "react-dom";
 
 export type MucKhachThue = {
-  id: number;
+  id: string;
   fullName: string;
   phone?: string | null;
-  user?: { id: number } | null;
+  user?: { id: string } | null;
 };
 
 type Props = {
@@ -24,7 +24,7 @@ type Props = {
   /** Chỉ danh sách khách chưa có tài khoản (dùng khi tạo tài khoản TENANT). */
   chiChuaCoTaiKhoan?: boolean;
   /** ID người dùng đang liên kết — hiện nhãn ✓ đang gắn trên dòng khớp. */
-  idNguoiDungGan?: number | null;
+  idNguoiDungGan?: string | null;
   disabled?: boolean;
   placeholderChuaChon?: string;
   placeholderTim?: string;

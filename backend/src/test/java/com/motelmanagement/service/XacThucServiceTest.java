@@ -146,7 +146,7 @@ class XacThucServiceTest {
     @Test
     void quenMatKhau_taiKhoanCoEmail_nhungKhongCoMailSender_traLink() {
         NguoiDung nd = new NguoiDung();
-        nd.setId(1L);
+        nd.setId("1");
         nd.setHoTen("A");
         nd.setEmail("a@b.com");
         nd.setKichHoat(true);
@@ -187,7 +187,7 @@ class XacThucServiceTest {
     @Test
     void datLaiMatKhau_thanhCong() {
         NguoiDung nd = new NguoiDung();
-        nd.setId(2L);
+        nd.setId("2");
         nd.setTenDangNhap("ok");
         PhieuDatLaiMatKhau p = new PhieuDatLaiMatKhau();
         p.setHetHanLuc(LocalDateTime.now().plusMinutes(10));

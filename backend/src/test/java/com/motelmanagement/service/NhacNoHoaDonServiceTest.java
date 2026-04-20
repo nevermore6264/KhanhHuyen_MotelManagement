@@ -50,12 +50,12 @@ class NhacNoHoaDonServiceTest {
         hoaDon.setNam(2026);
 
         Phong phong = new Phong();
-        phong.setId(1L);
+        phong.setId("1");
         phong.setMaPhong("P101");
         hoaDon.setPhong(phong);
 
         KhachThue khach = new KhachThue();
-        khach.setId(1L);
+        khach.setId("1");
         khach.setHoTen("Nguyen Van A");
         khach.setEmail("test@gmail.com");
 
@@ -94,7 +94,7 @@ class NhacNoHoaDonServiceTest {
 
         when(hoaDonRepository.timTheoIdCoPhong("H2")).thenReturn(Optional.of(hoaDon));
         when(tinhTienService.tinhTienRuntime(hoaDon)).thenReturn(hoaDon);
-        when(hopDongRepository.findByPhong_IdAndTrangThai(anyLong(), any()))
+        when(hopDongRepository.findByPhong_IdAndTrangThai(anyString(), any()))
                 .thenReturn(Optional.empty());
 
         String result = service.guiNhacNo("H2", "email").orElse("");

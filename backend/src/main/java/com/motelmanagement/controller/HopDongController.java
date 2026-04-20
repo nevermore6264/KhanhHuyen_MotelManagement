@@ -63,7 +63,7 @@ public class HopDongController {
 
     @GetMapping("/cua-toi/{id}")
     @PreAuthorize("hasRole('TENANT')")
-    public ResponseEntity<HopDong> layHopDongCuaToiTheoMa(@PathVariable("id") Long ma) {
+    public ResponseEntity<HopDong> layHopDongCuaToiTheoMa(@PathVariable("id") String ma) {
         NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
         if (nguoiDung == null) {
             return ResponseEntity.notFound().build();
@@ -90,7 +90,7 @@ public class HopDongController {
                 || dto.getEndDate() == null) {
             return ResponseEntity.badRequest().build();
         }
-        LinkedHashSet<Long> ids = new LinkedHashSet<>(dto.getKhachThueIds());
+        LinkedHashSet<String> ids = new LinkedHashSet<>(dto.getKhachThueIds());
         if (!ids.contains(dto.getDaiDienKhachThueId())) {
             return ResponseEntity.badRequest().build();
         }
@@ -106,7 +106,7 @@ public class HopDongController {
             return ResponseEntity.badRequest().build();
         }
         List<KhachThue> danhSachKhach = new ArrayList<>();
-        for (Long kid : ids) {
+        for (String kid : ids) {
             KhachThue kt = khachThueRepository.findById(kid).orElse(null);
             if (kt == null) {
                 return ResponseEntity.badRequest().build();
@@ -142,7 +142,7 @@ public class HopDongController {
     @PutMapping("/{id}/gia-han")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<HopDong> giaHan(
-            @PathVariable("id") Long ma, @RequestBody(required = false) HopDongGiaHanDto duLieu) {
+            @PathVariable("id") String ma, @RequestBody(required = false) HopDongGiaHanDto duLieu) {
         LocalDate ngayKetThuc = duLieu != null ? duLieu.layNgayKetThuc() : null;
         if (ngayKetThuc == null) {
             return ResponseEntity.badRequest().build();
@@ -158,7 +158,7 @@ public class HopDongController {
 
     @PutMapping("/{id}/ket-thuc")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<HopDong> ketThuc(@PathVariable("id") Long ma) {
+    public ResponseEntity<HopDong> ketThuc(@PathVariable("id") String ma) {
         return hopDongRepository
                 .findById(ma)
                 .map(hienTai -> {
