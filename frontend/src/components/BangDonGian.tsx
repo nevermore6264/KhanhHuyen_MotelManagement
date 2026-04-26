@@ -16,12 +16,16 @@ export default function BangDonGian<T>({
   data: T[];
   className?: string;
 }) {
+  const cotHienThi = danhSachCot.filter(
+    (cot) => cot.header.trim().toLowerCase() !== "id"
+  );
+
   return (
     <div className={`table-wrap ${lopCss ?? ""}`.trim()}>
       <table className="table">
         <thead>
           <tr>
-            {danhSachCot.map((cot, idx) => (
+            {cotHienThi.map((cot, idx) => (
               <th key={idx}>{cot.header}</th>
             ))}
           </tr>
@@ -29,7 +33,7 @@ export default function BangDonGian<T>({
         <tbody>
           {duLieu.map((dong, idx) => (
             <tr key={idx}>
-              {danhSachCot.map((cot, cIdx) => (
+              {cotHienThi.map((cot, cIdx) => (
                 <td key={cIdx}>{cot.render(dong)}</td>
               ))}
             </tr>
