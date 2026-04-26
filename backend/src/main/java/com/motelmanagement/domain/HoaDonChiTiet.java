@@ -7,7 +7,6 @@ import org.hibernate.annotations.UuidGenerator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -36,7 +35,7 @@ public class HoaDonChiTiet {
     @JoinColumn(
             name = "hoa_don_id",
             nullable = false,
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+            foreignKey = @ForeignKey(name = "fk_hoa_don_chi_tiet_hoa_don"))
     private HoaDon hoaDon;
 
     @Column(name = "ten_khoan", nullable = false, length = 200)

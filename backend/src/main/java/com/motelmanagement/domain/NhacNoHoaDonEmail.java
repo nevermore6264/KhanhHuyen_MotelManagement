@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -36,7 +35,7 @@ public class NhacNoHoaDonEmail {
     @JoinColumn(
             name = "hoa_don_id",
             nullable = false,
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+            foreignKey = @ForeignKey(name = "fk_nhac_no_email_hoa_don"))
     private HoaDon hoaDon;
 
     @Column(name = "gui_luc", nullable = false)

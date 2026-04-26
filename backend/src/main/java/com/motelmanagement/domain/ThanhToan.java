@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.EnumType;
@@ -32,7 +31,7 @@ public class ThanhToan {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "hoa_don_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "hoa_don_id", foreignKey = @ForeignKey(name = "fk_thanh_toan_hoa_don"))
     private HoaDon hoaDon;
 
     @Column(name = "so_tien", precision = 12, scale = 2)
