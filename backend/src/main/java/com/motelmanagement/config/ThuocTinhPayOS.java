@@ -19,6 +19,6 @@ public class ThuocTinhPayOS {
     private String webhookUrl = "";
     /** true: khi khởi động gọi API PayOS confirm-webhook để đăng ký webhookUrl. */
     private boolean autoConfirmWebhook = false;
-    private String returnUrl = "http://localhost:4002/my-invoices?payment=success";
-    private String cancelUrl = "http://localhost:4002/my-invoices?payment=cancel";
+    private String returnUrl = "http://localhost:4002/hoa-don-cua-toi?payment=success";
+    private String cancelUrl = "http://localhost:4002/hoa-don-cua-toi?payment=cancel";
 }

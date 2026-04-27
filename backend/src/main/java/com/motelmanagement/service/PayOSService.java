@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -61,10 +62,17 @@ public class PayOSService {
         int maDonHang = (int) (System.currentTimeMillis() % 2_000_000_000);
         if (maDonHang <= 0) maDonHang = 1;
 
-        String urlQuayLai = thuocTinhPayOS.getReturnUrl() != null ? thuocTinhPayOS.getReturnUrl() : "http://localhost:4002/my-invoices?payment=success";
-        String urlHuy = thuocTinhPayOS.getCancelUrl() != null ? thuocTinhPayOS.getCancelUrl() : "http://localhost:4002/my-invoices?payment=cancel";
-        String moTa = "HD" + hoaDon.getId() + " " + hoaDon.getThang() + "/" + hoaDon.getNam();
-        if (moTa.length() > 250) moTa = moTa.substring(0, 250);
+        String urlQuayLai = thuocTinhPayOS.getReturnUrl() != null
+                ? thuocTinhPayOS.getReturnUrl()
+                : "http://localhost:4002/hoa-don-cua-toi?payment=success";
+        String urlHuy = thuocTinhPayOS.getCancelUrl() != null
+                ? thuocTinhPayOS.getCancelUrl()
+                : "http://localhost:4002/hoa-don-cua-toi?payment=cancel";
+        // PayOS yeu cau description ngan; dung UUID se rat dai va co the bi 400.
+        String moTa = String.format("HD-%02d-%d", hoaDon.getThang(), hoaDon.getNam());
+        if (moTa.length() > 25) {
+            moTa = moTa.substring(0, 25);
+        }
 
         String duLieuKy = "amount=" + soTien + "&cancelUrl=" + urlHuy + "&description=" + moTa
                 + "&orderCode=" + maDonHang + "&returnUrl=" + urlQuayLai;
@@ -103,6 +111,10 @@ public class PayOSService {
                     }
                 }
             }
+        } catch (RestClientResponseException e) {
+            log.warn("PayOS create payment link failed: status={} body={}",
+                    e.getStatusCode().value(),
+                    e.getResponseBodyAsString());
         } catch (Exception e) {
             log.warn("PayOS create payment link failed", e);
         }
