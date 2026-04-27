@@ -23,13 +23,13 @@ DROP TABLE IF EXISTS `bang_gia_dich_vu`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `bang_gia_dich_vu` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `gia_dien` decimal(12,2) DEFAULT NULL,
   `gia_nuoc` decimal(12,2) DEFAULT NULL,
   `gia_phong` decimal(12,2) DEFAULT NULL,
   `hieu_luc_tu` date DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,8 +48,7 @@ CREATE TABLE `chi_so_dien_nuoc` (
   `thang` int(11) DEFAULT NULL,
   `tien_dien` decimal(12,2) DEFAULT NULL,
   `tien_nuoc` decimal(12,2) DEFAULT NULL,
-  `tong_tien` decimal(12,2) DEFAULT NULL,
-  `phong_id` bigint(20) DEFAULT NULL,
+  `phong_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKr0r0cd0eabd14qmklymher8ki` (`phong_id`),
   CONSTRAINT `FKr0r0cd0eabd14qmklymher8ki` FOREIGN KEY (`phong_id`) REFERENCES `phong` (`id`)
@@ -64,7 +63,7 @@ DROP TABLE IF EXISTS `don_hang_payos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `don_hang_payos` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `ma_don_hang` bigint(20) DEFAULT NULL,
   `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   `ngay_tao` datetime(6) DEFAULT NULL,
@@ -81,32 +80,18 @@ DROP TABLE IF EXISTS `hoa_don`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hoa_don` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `nam` int(11) DEFAULT NULL,
   `ngay_tao` datetime(6) DEFAULT NULL,
   `thang` int(11) DEFAULT NULL,
   `trang_thai` enum('PAID','PARTIAL','UNPAID') COLLATE utf8_unicode_ci NOT NULL,
-  `khach_thue_id` bigint(20) DEFAULT NULL,
-  `phong_id` bigint(20) DEFAULT NULL,
+  `khach_thue_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `phong_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKabbyj2m48l5v1l6a451gpf6po` (`khach_thue_id`),
   KEY `FK4pdctcv5ombgobtpyelkyfwl` (`phong_id`),
   CONSTRAINT `FK4pdctcv5ombgobtpyelkyfwl` FOREIGN KEY (`phong_id`) REFERENCES `phong` (`id`),
   CONSTRAINT `FKabbyj2m48l5v1l6a451gpf6po` FOREIGN KEY (`khach_thue_id`) REFERENCES `khach_thue` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-DROP TABLE IF EXISTS `nhac_no_hoa_don_email`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `nhac_no_hoa_don_email` (
-  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
-  `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
-  `gui_luc` datetime(6) NOT NULL,
-  `email_nguoi_nhan` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `noi_dung` varchar(2000) COLLATE utf8_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_nhac_email_hoa_don` (`hoa_don_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -123,7 +108,9 @@ CREATE TABLE `hoa_don_chi_tiet` (
   `ten_khoan` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
   `thu_tu` int(11) NOT NULL,
   `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `fk_hoa_don_chi_tiet_hoa_don` (`hoa_don_id`),
+  CONSTRAINT `fk_hoa_don_chi_tiet_hoa_don` FOREIGN KEY (`hoa_don_id`) REFERENCES `hoa_don` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -135,21 +122,21 @@ DROP TABLE IF EXISTS `hop_dong`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hop_dong` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `ngay_bat_dau` date DEFAULT NULL,
   `ngay_ket_thuc` date DEFAULT NULL,
   `ngay_tao` datetime(6) DEFAULT NULL,
   `tien_coc` decimal(12,2) DEFAULT NULL,
   `tien_thue` decimal(12,2) DEFAULT NULL,
   `trang_thai` enum('ACTIVE','ENDED','TERMINATED') COLLATE utf8_unicode_ci NOT NULL,
-  `khach_thue_id` bigint(20) DEFAULT NULL,
-  `phong_id` bigint(20) DEFAULT NULL,
+  `khach_thue_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `phong_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKtsjl8p84e6mkbaof0ybgqkkh` (`khach_thue_id`),
   KEY `FKri6v014nupcknv2ao8yy9m1l6` (`phong_id`),
   CONSTRAINT `FKri6v014nupcknv2ao8yy9m1l6` FOREIGN KEY (`phong_id`) REFERENCES `phong` (`id`),
   CONSTRAINT `FKtsjl8p84e6mkbaof0ybgqkkh` FOREIGN KEY (`khach_thue_id`) REFERENCES `khach_thue` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -160,16 +147,16 @@ DROP TABLE IF EXISTS `hop_dong_thanh_vien`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hop_dong_thanh_vien` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `la_dai_dien` bit(1) NOT NULL,
-  `hop_dong_id` bigint(20) NOT NULL,
-  `khach_thue_id` bigint(20) NOT NULL,
+  `hop_dong_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
+  `khach_thue_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKd2rvdxxdmke1cwmegr2pyrq9j` (`hop_dong_id`,`khach_thue_id`),
   KEY `FKqocgblt2fnoplkr99d4qyowc4` (`khach_thue_id`),
   CONSTRAINT `FKqocgblt2fnoplkr99d4qyowc4` FOREIGN KEY (`khach_thue_id`) REFERENCES `khach_thue` (`id`),
   CONSTRAINT `FKtvt3c0nbbi11fsttdj9qb6p5` FOREIGN KEY (`hop_dong_id`) REFERENCES `hop_dong` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -180,7 +167,7 @@ DROP TABLE IF EXISTS `khach_thue`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `khach_thue` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `anh_chan_dung` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `anh_giay_to` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `dia_chi` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -188,11 +175,11 @@ CREATE TABLE `khach_thue` (
   `ho_ten` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `so_dien_thoai` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `so_giay_to` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `nguoi_dung_id` bigint(20) DEFAULT NULL,
+  `nguoi_dung_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKl6yifjacsoihw0s2ln4rv6fc7` (`nguoi_dung_id`),
   CONSTRAINT `FKh9pby7q3qdn8orqm5xmtd96bp` FOREIGN KEY (`nguoi_dung_id`) REFERENCES `nguoi_dung` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -203,12 +190,12 @@ DROP TABLE IF EXISTS `khu_vuc`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `khu_vuc` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `dia_chi` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL,
   `mo_ta` varchar(500) COLLATE utf8_unicode_ci DEFAULT NULL,
   `ten` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -219,7 +206,7 @@ DROP TABLE IF EXISTS `nguoi_dung`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `nguoi_dung` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `email` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `ho_ten` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `kich_hoat` bit(1) NOT NULL,
@@ -229,7 +216,26 @@ CREATE TABLE `nguoi_dung` (
   `vai_tro` enum('ADMIN','STAFF','TENANT') COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKo0s268lrp9is6o1e4ek6m1lc6` (`ten_dang_nhap`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `nhac_no_hoa_don_email`
+--
+
+DROP TABLE IF EXISTS `nhac_no_hoa_don_email`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `nhac_no_hoa_don_email` (
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
+  `email_nguoi_nhan` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `gui_luc` datetime(6) NOT NULL,
+  `noi_dung` varchar(2000) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_nhac_no_email_hoa_don` (`hoa_don_id`),
+  CONSTRAINT `fk_nhac_no_email_hoa_don` FOREIGN KEY (`hoa_don_id`) REFERENCES `hoa_don` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -240,17 +246,17 @@ DROP TABLE IF EXISTS `nhat_ky_he_thong`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `nhat_ky_he_thong` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `chi_tiet` varchar(1000) COLLATE utf8_unicode_ci DEFAULT NULL,
   `hanh_dong` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `loai_thuc_the` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `ma_thuc_the` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
   `ngay_tao` datetime(6) DEFAULT NULL,
-  `nguoi_thuc_hien_id` bigint(20) DEFAULT NULL,
+  `nguoi_thuc_hien_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKij7d1jemsg6u18wjxnri282fs` (`nguoi_thuc_hien_id`),
   CONSTRAINT `FKij7d1jemsg6u18wjxnri282fs` FOREIGN KEY (`nguoi_thuc_hien_id`) REFERENCES `nguoi_dung` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=163 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -261,10 +267,10 @@ DROP TABLE IF EXISTS `phieu_dat_lai_mat_khau`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `phieu_dat_lai_mat_khau` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `het_han_luc` datetime(6) NOT NULL,
   `ma_token` varchar(64) COLLATE utf8_unicode_ci NOT NULL,
-  `nguoi_dung_id` bigint(20) NOT NULL,
+  `nguoi_dung_id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKoqe7ot49g1b8xmj0d314qv39s` (`ma_token`),
   KEY `IDXoqe7ot49g1b8xmj0d314qv39s` (`ma_token`),
@@ -281,17 +287,17 @@ DROP TABLE IF EXISTS `phong`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `phong` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `dien_tich` decimal(8,2) DEFAULT NULL,
   `gia_hien_tai` decimal(12,2) DEFAULT NULL,
   `ma_phong` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
   `tang` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
   `trang_thai` enum('AVAILABLE','MAINTENANCE','OCCUPIED') COLLATE utf8_unicode_ci NOT NULL,
-  `khu_vuc_id` bigint(20) DEFAULT NULL,
+  `khu_vuc_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKdbhv1agmswa991vn77j0on6ym` (`khu_vuc_id`),
   CONSTRAINT `FKdbhv1agmswa991vn77j0on6ym` FOREIGN KEY (`khu_vuc_id`) REFERENCES `khu_vuc` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -302,14 +308,15 @@ DROP TABLE IF EXISTS `thanh_toan`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `thanh_toan` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `phuong_thuc` enum('CASH','TRANSFER') COLLATE utf8_unicode_ci NOT NULL,
   `so_tien` decimal(12,2) DEFAULT NULL,
   `thoi_gian_thanh_toan` datetime(6) DEFAULT NULL,
   `hoa_don_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_thanh_toan_hoa_don` (`hoa_don_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  KEY `fk_thanh_toan_hoa_don` (`hoa_don_id`),
+  CONSTRAINT `fk_thanh_toan_hoa_don` FOREIGN KEY (`hoa_don_id`) REFERENCES `hoa_don` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -320,15 +327,15 @@ DROP TABLE IF EXISTS `thong_bao`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `thong_bao` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `da_doc` bit(1) NOT NULL,
   `noi_dung` varchar(500) COLLATE utf8_unicode_ci NOT NULL,
   `thoi_gian_gui` datetime(6) DEFAULT NULL,
-  `nguoi_dung_id` bigint(20) DEFAULT NULL,
+  `nguoi_dung_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK2883elhrppa005tc6cla0sm6y` (`nguoi_dung_id`),
   CONSTRAINT `FK2883elhrppa005tc6cla0sm6y` FOREIGN KEY (`nguoi_dung_id`) REFERENCES `nguoi_dung` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -339,20 +346,20 @@ DROP TABLE IF EXISTS `yeu_cau_ho_tro`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `yeu_cau_ho_tro` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` varchar(36) COLLATE utf8_unicode_ci NOT NULL,
   `mo_ta` varchar(2000) COLLATE utf8_unicode_ci DEFAULT NULL,
   `ngay_cap_nhat` datetime(6) DEFAULT NULL,
   `ngay_tao` datetime(6) DEFAULT NULL,
   `tieu_de` varchar(150) COLLATE utf8_unicode_ci NOT NULL,
   `trang_thai` enum('CLOSED','IN_PROGRESS','OPEN','RESOLVED') COLLATE utf8_unicode_ci NOT NULL,
-  `khach_thue_id` bigint(20) DEFAULT NULL,
-  `phong_id` bigint(20) DEFAULT NULL,
+  `khach_thue_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `phong_id` varchar(36) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKk2h5rgj3nnb1gd98qbhbjl94l` (`khach_thue_id`),
   KEY `FKbinfwlp3o56oqsunjg933qeni` (`phong_id`),
   CONSTRAINT `FKbinfwlp3o56oqsunjg933qeni` FOREIGN KEY (`phong_id`) REFERENCES `phong` (`id`),
   CONSTRAINT `FKk2h5rgj3nnb1gd98qbhbjl94l` FOREIGN KEY (`khach_thue_id`) REFERENCES `khach_thue` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -364,4 +371,4 @@ CREATE TABLE `yeu_cau_ho_tro` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-18 19:03:03
+-- Dump completed on 2026-04-27  7:30:02
