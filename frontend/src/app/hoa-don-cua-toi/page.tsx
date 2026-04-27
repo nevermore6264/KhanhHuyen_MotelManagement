@@ -62,17 +62,46 @@ export default function TrangHoaDonCuaToi() {
     text: string;
   } | null>(null);
 
+  const taiLaiHoaDon = async () => {
+    const res = await api.get("/hoa-don/cua-toi");
+    const arr = Array.isArray(res.data) ? res.data : [];
+    const mapped = arr.map((x) => mapHoaDonFromApi(x as RawJson));
+    setItems(mapped);
+    return mapped;
+  };
+
   useEffect(() => {
-    api.get("/hoa-don/cua-toi").then((res) => {
-      const arr = Array.isArray(res.data) ? res.data : [];
-      setItems(arr.map((x) => mapHoaDonFromApi(x as RawJson)));
+    taiLaiHoaDon().catch(() => {
+      // Bo qua loi tam thoi de giu man hinh hoat dong.
     });
   }, []);
 
   useEffect(() => {
     const payment = searchParams.get("payment");
-    if (payment === "success")
+    if (payment === "success") {
       setMessage({ type: "success", text: "Thanh toán thành công." });
+      const orderCode = searchParams.get("orderCode");
+      const code = searchParams.get("code");
+      const status = searchParams.get("status");
+      const cancel = searchParams.get("cancel");
+      if (orderCode) {
+        api
+          .post("/thanh-toan/payos/xac-nhan-tra-ve", {
+            orderCode,
+            code,
+            status,
+            cancel,
+          })
+          .catch(() => undefined);
+      }
+      // PayOS webhook co the den cham, polling de dong bo trang thai hoa don sau redirect.
+      const timers = [1200, 3500, 7000, 12000].map((ms) =>
+        window.setTimeout(() => {
+          taiLaiHoaDon().catch(() => undefined);
+        }, ms),
+      );
+      return () => timers.forEach((id) => window.clearTimeout(id));
+    }
     if (payment === "cancel")
       setMessage({ type: "cancel", text: "Bạn đã hủy thanh toán." });
   }, [searchParams]);

@@ -65,6 +65,7 @@ public class CauHinhBaoMat {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/xac-thuc/**").permitAll()
                         .requestMatchers("/api/thanh-toan/payos/webhook").permitAll()
+                        .requestMatchers("/api/thanh-toan/payos/xac-nhan-tra-ve").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )

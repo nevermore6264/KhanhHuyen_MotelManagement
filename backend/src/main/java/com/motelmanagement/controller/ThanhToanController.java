@@ -109,6 +109,42 @@ public class ThanhToanController {
         return thanhCong ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 
+    /**
+     * Xác nhận từ return URL (fallback local): dùng khi webhook về chậm/không về được localhost.
+     * Chỉ cho tenant xác nhận đơn PayOS thuộc chính hóa đơn của họ.
+     */
+    @PostMapping("/payos/xac-nhan-tra-ve")
+    public ResponseEntity<Map<String, Object>> xacNhanTraVePayOS(@RequestBody Map<String, Object> body) {
+        String status = body != null && body.get("status") != null ? body.get("status").toString() : "";
+        String code = body != null && body.get("code") != null ? body.get("code").toString() : "";
+        boolean cancel = body != null && body.get("cancel") != null && Boolean.parseBoolean(body.get("cancel").toString());
+        Object orderCodeObj = body != null ? body.get("orderCode") : null;
+        if (orderCodeObj == null) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "message", "Thiếu orderCode."));
+        }
+        long maDonHang;
+        try {
+            maDonHang = Long.parseLong(orderCodeObj.toString());
+        } catch (NumberFormatException ex) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "message", "orderCode không hợp lệ."));
+        }
+        if (cancel || !"PAID".equalsIgnoreCase(status) || !"00".equals(code)) {
+            return ResponseEntity.ok(Map.of("ok", false, "message", "Kết quả cổng thanh toán chưa thành công."));
+        }
+
+        String maHoaDon = payOSService.timMaHoaDonTheoMaDonHang(maDonHang).orElse(null);
+        if (maHoaDon == null) {
+            return ResponseEntity.ok(Map.of("ok", false, "message", "Đơn hàng không còn hiệu lực hoặc đã xử lý."));
+        }
+        HoaDon hoaDon = hoaDonRepository.findById(maHoaDon).orElse(null);
+        if (hoaDon == null) {
+            return ResponseEntity.ok(Map.of("ok", false, "message", "Không tìm thấy hóa đơn tương ứng."));
+        }
+
+        boolean thanhCong = payOSService.xacNhanThanhToanTuReturnUrl(maDonHang);
+        return ResponseEntity.ok(Map.of("ok", thanhCong));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<?> ghiNhanThanhToan(@RequestBody GhiNhanThanhToanRequest yeuCau) {

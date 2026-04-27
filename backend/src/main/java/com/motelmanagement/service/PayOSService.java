@@ -1,6 +1,7 @@
 package com.motelmanagement.service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import javax.crypto.Mac;
@@ -175,33 +176,62 @@ public class PayOSService {
             int soTien = data.path("amount").asInt(0);
             if (maDonHang == 0 || soTien <= 0) return true;
 
-            return donHangPayOSRepository.findByMaDonHang(maDonHang)
-                    .map(donHang -> {
-                        HoaDon hoaDon = hoaDonRepository.findById(donHang.getMaHoaDon()).orElse(null);
-                        hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
-                        if (hoaDon == null) return false;
-                        ThanhToan thanhToan = new ThanhToan();
-                        thanhToan.setHoaDon(hoaDon);
-                        thanhToan.setSoTien(java.math.BigDecimal.valueOf(soTien));
-                        thanhToan.setPhuongThuc(PhuongThucThanhToan.TRANSFER);
-                        thanhToanRepository.save(thanhToan);
-                        java.math.BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDon_Id(hoaDon.getId()).stream()
-                                .map(ThanhToan::getSoTien)
-                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-                        if (tongDaThanhToan.compareTo(hoaDon.getTongTien()) >= 0) {
-                            hoaDon.setTrangThai(TrangThaiHoaDon.PAID);
-                        } else {
-                            hoaDon.setTrangThai(TrangThaiHoaDon.PARTIAL);
-                        }
-                        hoaDonRepository.save(hoaDon);
-                        donHangPayOSRepository.delete(donHang);
-                        return true;
-                    })
-                    .orElse(false);
+            return capNhatThanhToanTheoMaDonHang(maDonHang, soTien);
         } catch (Exception e) {
             log.warn("PayOS webhook parse/verify failed", e);
             return false;
         }
+    }
+
+    /** Dùng cho luồng return-url khi local không nhận được webhook kịp thời. */
+    public boolean xacNhanThanhToanTuReturnUrl(long maDonHang) {
+        return capNhatThanhToanTheoMaDonHang(maDonHang, null);
+    }
+
+    public Optional<String> timMaHoaDonTheoMaDonHang(long maDonHang) {
+        return donHangPayOSRepository.findByMaDonHang(maDonHang).map(DonHangPayOS::getMaHoaDon);
+    }
+
+    private boolean capNhatThanhToanTheoMaDonHang(long maDonHang, Integer soTienWebhook) {
+        return donHangPayOSRepository.findByMaDonHang(maDonHang)
+                .map(donHang -> {
+                    HoaDon hoaDon = hoaDonRepository.findById(donHang.getMaHoaDon()).orElse(null);
+                    hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
+                    if (hoaDon == null || hoaDon.getTongTien() == null) return false;
+
+                    java.math.BigDecimal tongDaThanhToan = thanhToanRepository.findByHoaDon_Id(hoaDon.getId()).stream()
+                            .map(ThanhToan::getSoTien)
+                            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                    java.math.BigDecimal conLai = hoaDon.getTongTien().subtract(tongDaThanhToan);
+                    if (conLai.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                        hoaDon.setTrangThai(TrangThaiHoaDon.PAID);
+                        hoaDonRepository.save(hoaDon);
+                        donHangPayOSRepository.delete(donHang);
+                        return true;
+                    }
+
+                    java.math.BigDecimal soTienGhiNhan = (soTienWebhook != null && soTienWebhook > 0)
+                            ? java.math.BigDecimal.valueOf(soTienWebhook)
+                            : conLai;
+                    if (soTienGhiNhan.compareTo(conLai) > 0) {
+                        soTienGhiNhan = conLai;
+                    }
+
+                    ThanhToan thanhToan = new ThanhToan();
+                    thanhToan.setHoaDon(hoaDon);
+                    thanhToan.setSoTien(soTienGhiNhan);
+                    thanhToan.setPhuongThuc(PhuongThucThanhToan.TRANSFER);
+                    thanhToanRepository.save(thanhToan);
+
+                    java.math.BigDecimal tongSau = tongDaThanhToan.add(soTienGhiNhan);
+                    hoaDon.setTrangThai(tongSau.compareTo(hoaDon.getTongTien()) >= 0
+                            ? TrangThaiHoaDon.PAID
+                            : TrangThaiHoaDon.PARTIAL);
+                    hoaDonRepository.save(hoaDon);
+                    donHangPayOSRepository.delete(donHang);
+                    return true;
+                })
+                .orElse(false);
     }
 
     private String xayChuKyTuData(JsonNode data) {
