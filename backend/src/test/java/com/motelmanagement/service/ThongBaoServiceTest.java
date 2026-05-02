@@ -18,6 +18,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
+import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.ThongBaoRepository;
@@ -71,6 +72,42 @@ class ThongBaoServiceTest {
     void taoVaDay_userId_khongTonTai() {
         when(nguoiDungRepository.findById("999")).thenReturn(Optional.empty());
         thongBaoService.taoVaDay("msg", "999");
+        verify(thongBaoRepository, never()).save(any());
+    }
+
+    @Test
+    void taoVaDay_guiTatCa_khongGuiAdmin() {
+        NguoiDung admin = new NguoiDung();
+        admin.setId("a");
+        admin.setTenDangNhap("admin");
+        admin.setVaiTro(VaiTro.ADMIN);
+        NguoiDung staff = new NguoiDung();
+        staff.setId("s");
+        staff.setTenDangNhap("staff1");
+        staff.setVaiTro(VaiTro.STAFF);
+        when(nguoiDungRepository.findAll()).thenReturn(List.of(admin, staff));
+        when(thongBaoRepository.save(any(ThongBao.class))).thenAnswer(inv -> {
+            ThongBao tb = inv.getArgument(0);
+            tb.setId("42");
+            return tb;
+        });
+
+        thongBaoService.taoVaDay("Chào", null);
+
+        verify(thongBaoRepository).save(any(ThongBao.class));
+        verify(messagingTemplate).convertAndSendToUser(eq("staff1"), eq("/queue/notifications"), any());
+    }
+
+    @Test
+    void taoVaDay_userIdLaAdmin_khongGui() {
+        NguoiDung admin = new NguoiDung();
+        admin.setId("a");
+        admin.setTenDangNhap("admin");
+        admin.setVaiTro(VaiTro.ADMIN);
+        when(nguoiDungRepository.findById("a")).thenReturn(Optional.of(admin));
+
+        thongBaoService.taoVaDay("msg", "a");
+
         verify(thongBaoRepository, never()).save(any());
     }
 }

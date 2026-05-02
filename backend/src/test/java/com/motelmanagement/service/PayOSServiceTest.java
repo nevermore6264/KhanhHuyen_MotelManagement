@@ -2,9 +2,11 @@ package com.motelmanagement.service;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,11 +56,13 @@ class PayOSServiceTest {
     @Test
     void taoLinkThanhToan_soTienKhongDuong_traNull() {
         HoaDon hd = new HoaDon();
+        hd.setId("inv-1");
         hd.setTongTien(BigDecimal.ZERO);
         when(tinhTienService.tinhTienRuntime(hd)).thenReturn(hd);
         when(thuocTinhPayOS.getClientId()).thenReturn("id");
         when(thuocTinhPayOS.getApiKey()).thenReturn("k");
         when(thuocTinhPayOS.getChecksumKey()).thenReturn("c");
+        when(thanhToanRepository.findByHoaDon_Id(anyString())).thenReturn(Collections.emptyList());
         assertNull(payOSService.taoLinkThanhToan(hd));
     }
 

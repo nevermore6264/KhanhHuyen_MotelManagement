@@ -66,8 +66,31 @@ export default function TrangHoaDonCuaToi() {
     const res = await api.get("/hoa-don/cua-toi");
     const arr = Array.isArray(res.data) ? res.data : [];
     const mapped = arr.map((x) => mapHoaDonFromApi(x as RawJson));
-    setItems(mapped);
-    return mapped;
+    const withRemain = await Promise.all(
+      mapped.map(async (inv) => {
+        if (inv.status !== "UNPAID" && inv.status !== "PARTIAL") {
+          return { ...inv, remaining: 0 };
+        }
+        try {
+          const r = await api.get(`/thanh-toan/hoa-don/${inv.id}`);
+          const list = Array.isArray(r.data) ? r.data : [];
+          const paid = list.reduce(
+            (s, row) =>
+              s + Number((row as { soTien?: unknown }).soTien ?? 0),
+            0,
+          );
+          const rem = Math.max(
+            0,
+            Math.round((inv.total ?? 0) - paid),
+          );
+          return { ...inv, remaining: rem };
+        } catch {
+          return { ...inv, remaining: inv.total };
+        }
+      }),
+    );
+    setItems(withRemain);
+    return withRemain;
   };
 
   useEffect(() => {
@@ -170,7 +193,28 @@ export default function TrangHoaDonCuaToi() {
               },
               { header: "Phòng", render: (i) => i.room?.code ?? "—" },
               { header: "Tháng/Năm", render: (i) => `${i.month}/${i.year}` },
-              { header: "Tổng", render: (i) => formatVND(i.total) },
+              {
+                header: "Tổng",
+                render: (i) => (
+                  <div>
+                    <div>{formatVND(i.total)}</div>
+                    {i.remaining != null &&
+                      i.total != null &&
+                      i.remaining < i.total && (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: "#64748b",
+                            marginTop: 4,
+                            fontWeight: 500,
+                          }}
+                        >
+                          Còn lại: {formatVND(i.remaining)}
+                        </div>
+                      )}
+                  </div>
+                ),
+              },
               {
                 header: "Trạng thái",
                 render: (i) => (
@@ -365,6 +409,25 @@ export default function TrangHoaDonCuaToi() {
                   <span>Tổng</span>
                   <strong>{formatMoneyLine(xemChiTiet.total)}</strong>
                 </div>
+                {xemChiTiet.remaining != null &&
+                  xemChiTiet.total != null &&
+                  xemChiTiet.remaining < xemChiTiet.total && (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 0 0",
+                        fontSize: "0.95rem",
+                        color: "#0f172a",
+                      }}
+                    >
+                      <span>Còn thanh toán</span>
+                      <strong style={{ color: "#4f7cff" }}>
+                        {formatMoneyLine(xemChiTiet.remaining)}
+                      </strong>
+                    </div>
+                  )}
               </div>
               <div className="modal-actions" style={{ marginTop: 16 }}>
                 <button

@@ -11,6 +11,7 @@ import com.motelmanagement.domain.HopDong;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.TrangThaiHopDong;
+import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.DtoNguoiDungChoThongBao;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.KhachThueRepository;
@@ -27,6 +28,7 @@ public class NguoiDungChoThongBaoService {
 
     public List<DtoNguoiDungChoThongBao> layDanhSach() {
         return nguoiDungRepository.findAll().stream()
+                .filter(nd -> nd.getVaiTro() != VaiTro.ADMIN)
                 .map(this::sangDto)
                 .collect(Collectors.toList());
     }

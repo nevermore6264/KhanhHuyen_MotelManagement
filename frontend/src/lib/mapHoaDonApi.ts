@@ -32,6 +32,8 @@ export type Invoice = {
   waterNew?: number;
   lineItems?: InvoiceLineItem[];
   total?: number;
+  /** Phần còn lại (tổng − đã thu), gắn ở client khi cần. */
+  remaining?: number;
   status?: string;
   lastReminderEmailAt?: string | null;
   reminderEmailCount?: number;

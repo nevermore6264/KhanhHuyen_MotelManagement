@@ -2,6 +2,7 @@ package com.motelmanagement.controller;
 
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
+import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.NotificationCreateDto;
 import com.motelmanagement.repository.ThongBaoRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
@@ -29,7 +30,11 @@ public class ThongBaoController {
         if (nguoiDung == null) {
             return List.of();
         }
-        return thongBaoRepository.findByNguoiDung(nguoiDung);
+        // Khách/nhân viên chỉ thấy thông báo của mình; quản trị xem toàn bộ bản ghi trong DB.
+        if (nguoiDung.getVaiTro() == VaiTro.ADMIN) {
+            return thongBaoRepository.findAllByOrderByThoiGianGuiDesc();
+        }
+        return thongBaoRepository.findByNguoiDungOrderByThoiGianGuiDesc(nguoiDung);
     }
 
     @PutMapping("/{id}/da-doc")

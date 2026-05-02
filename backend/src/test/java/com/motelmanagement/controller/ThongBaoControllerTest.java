@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
+import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.NotificationCreateDto;
 import com.motelmanagement.repository.ThongBaoRepository;
 import com.motelmanagement.security.TienIchJwt;
@@ -74,7 +75,20 @@ class ThongBaoControllerTest {
         NguoiDung nd = new NguoiDung();
         nd.setId("1");
         when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(nd);
-        when(thongBaoRepository.findByNguoiDung(nd)).thenReturn(Collections.emptyList());
+        when(thongBaoRepository.findByNguoiDungOrderByThoiGianGuiDesc(nd))
+                .thenReturn(Collections.emptyList());
+        mockMvc.perform(get("/api/thong-bao"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void layDanhSach_admin_traToanBo() throws Exception {
+        NguoiDung admin = new NguoiDung();
+        admin.setId("a");
+        admin.setVaiTro(VaiTro.ADMIN);
+        when(nguoiDungHienTaiService.layNguoiDungHienTai()).thenReturn(admin);
+        when(thongBaoRepository.findAllByOrderByThoiGianGuiDesc()).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/thong-bao"))
                 .andExpect(status().isOk());
     }

@@ -3169,6 +3169,128 @@ tbody tr:hover {
   border-radius: 8px;
 }
 
+.nav-bell-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+button.nav-bell {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-family: inherit;
+}
+
+button.nav-bell:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.nav-bell-open {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.nav-thong-bao-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(380px, calc(100vw - 20px));
+  max-height: min(440px, 75vh);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #111;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 40, 80, 0.2);
+  border: 1px solid var(--blue-200, #c8d9ff);
+  z-index: 30;
+  animation: dropdownIn 0.15s ease-out both;
+  overflow: hidden;
+}
+
+.nav-thong-bao-popover-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e8ecf4;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.nav-thong-bao-popover-title {
+  color: #111;
+}
+
+.nav-thong-bao-popover-body {
+  overflow-y: auto;
+  max-height: 320px;
+  min-height: 56px;
+}
+
+.nav-thong-bao-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f2f7;
+  font-size: 13px;
+}
+
+.nav-thong-bao-item-unread {
+  background: #f5f8ff;
+}
+
+.nav-thong-bao-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-thong-bao-item-text {
+  margin: 0 0 4px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.nav-thong-bao-item-time {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.nav-thong-bao-item-action {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.nav-thong-bao-popover-empty {
+  padding: 20px 14px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0;
+}
+
+.nav-thong-bao-popover-foot {
+  padding: 8px 12px 10px;
+  border-top: 1px solid #e8ecf4;
+  text-align: center;
+  flex-shrink: 0;
+  background: #fafbfd;
+}
+
+.nav-thong-bao-popover-link {
+  color: #4f7cff;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.nav-thong-bao-popover-link:hover {
+  text-decoration: underline;
+}
+
 .nav-user {
   font-size: 13px;
   color: #e6efff;

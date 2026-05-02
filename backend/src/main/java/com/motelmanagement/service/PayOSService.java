@@ -1,6 +1,10 @@
 package com.motelmanagement.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
 
@@ -57,7 +61,19 @@ public class PayOSService {
                 || laRong(thuocTinhPayOS.getClientId()) || laRong(thuocTinhPayOS.getApiKey()) || laRong(thuocTinhPayOS.getChecksumKey())) {
             return null;
         }
-        long soTien = hoaDon.getTongTien().longValue();
+        if (hoaDon.getId() == null || hoaDon.getId().isBlank()) {
+            return null;
+        }
+        // Tiền PayOS = phần còn lại (đã trừ tiền mặt/chuyển khoản đã ghi nhận, kể cả thu một phần tại quầy).
+        List<ThanhToan> dsThu = thanhToanRepository.findByHoaDon_Id(hoaDon.getId());
+        BigDecimal daThu = (dsThu == null ? Collections.<ThanhToan>emptyList() : dsThu).stream()
+                .map(ThanhToan::getSoTien)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal conLai = hoaDon.getTongTien().subtract(daThu).setScale(0, RoundingMode.HALF_UP);
+        if (conLai.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+        long soTien = conLai.longValue();
         if (soTien <= 0) return null;
 
         int maDonHang = (int) (System.currentTimeMillis() % 2_000_000_000);

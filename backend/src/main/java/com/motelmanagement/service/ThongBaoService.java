@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,6 +15,7 @@ import com.motelmanagement.domain.HoaDon;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
 import com.motelmanagement.domain.TrangThaiHoaDon;
+import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.ThongBaoRepository;
@@ -57,8 +59,13 @@ public class ThongBaoService {
     public void taoVaDay(String message, String userId) {
         if (message == null || message.isBlank()) return;
         List<NguoiDung> danhSachNhan = userId != null
-                ? nguoiDungRepository.findById(userId).map(List::of).orElse(List.of())
-                : nguoiDungRepository.findAll();
+                ? nguoiDungRepository.findById(userId)
+                        .filter(nd -> nd.getVaiTro() != VaiTro.ADMIN)
+                        .map(List::of)
+                        .orElse(List.of())
+                : nguoiDungRepository.findAll().stream()
+                        .filter(nd -> nd.getVaiTro() != VaiTro.ADMIN)
+                        .collect(Collectors.toList());
         for (NguoiDung nguoiDung : danhSachNhan) {
             ThongBao thongBao = new ThongBao();
             thongBao.setNguoiDung(nguoiDung);

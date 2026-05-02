@@ -89,6 +89,11 @@ function chuoiLocNguoiDung(u: User): string {
     .toLowerCase();
 }
 
+/** Quản trị không nhận thông báo qua luồng này — không hiển thị trong danh sách gửi đến. */
+function duocChonLamNguoiNhanThongBao(u: User): boolean {
+  return String(u.role ?? "").toUpperCase() !== "ADMIN";
+}
+
 export default function TrangThongBao() {
   const [daMount, setDaMount] = useState(false);
   const [danhSach, setDanhSach] = useState<ThongBaoUi[]>([]);
@@ -147,7 +152,8 @@ export default function TrangThongBao() {
         const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
         const mapped = duLieu
           .map((x) => mapNguoiDungChoThongBaoFromApi(x as Record<string, unknown>))
-          .filter((u): u is User => u != null);
+          .filter((u): u is User => u != null)
+          .filter(duocChonLamNguoiNhanThongBao);
         setDanhSachNguoiDung(mapped);
       } catch {
         try {
@@ -155,7 +161,8 @@ export default function TrangThongBao() {
           const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
           const mapped = duLieu
             .map((x) => mapNguoiDungFromApi(x as Record<string, unknown>))
-            .filter((u): u is User => u != null);
+            .filter((u): u is User => u != null)
+            .filter(duocChonLamNguoiNhanThongBao);
           setDanhSachNguoiDung(mapped);
         } catch {
           setDanhSachNguoiDung([]);
@@ -164,6 +171,13 @@ export default function TrangThongBao() {
     };
     taiNguoiDung();
   }, [daMount, laQuanTri]);
+
+  useEffect(() => {
+    if (!idNguoiNhan.trim()) return;
+    if (!danhSachNguoiDung.some((u) => u.id === idNguoiNhan)) {
+      setIdNguoiNhan("");
+    }
+  }, [danhSachNguoiDung, idNguoiNhan]);
 
   const danhSachNguoiDungLoc = useMemo(() => {
     const q = locNguoiNhan.trim().toLowerCase();
@@ -285,21 +299,16 @@ export default function TrangThongBao() {
               },
               {
                 header: "Hành động",
-                render: (n) => (
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={camDanhDauDaDoc}
-                    title={
-                      camDanhDauDaDoc
-                        ? "Chỉ khách thuê mới đánh dấu đã đọc thông báo của mình."
-                        : undefined
-                    }
-                    onClick={() => danhDauDaDoc(n.id)}
-                  >
-                    <IconCheck /> Đánh dấu đã đọc
-                  </button>
-                ),
+                render: (n) =>
+                  n.readFlag || camDanhDauDaDoc ? null : (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => danhDauDaDoc(n.id)}
+                    >
+                      <IconCheck /> Đánh dấu đã đọc
+                    </button>
+                  ),
               },
             ]}
           />

@@ -5,7 +5,7 @@ import { IconLogout } from "@/components/Icons";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
-import { useThongBao } from "./NhaCungCapThongBao";
+import ChuongPopoverThongBao from "./ChuongPopoverThongBao";
 
 /** Một mục menu (nhãn + đường dẫn) */
 type MucMenu = { label: string; href: string };
@@ -96,16 +96,13 @@ export default function ThanhDieuHuong() {
   /** null = chưa đọc localStorage — tránh một khung hình menu ADMIN rồi prefetch link nhân viên (403 với JWT khách). */
   const [vaiTro, setVaiTro] = useState<string | null>(null);
   const [ten, setTen] = useState("User");
-  const contextThongBao = useThongBao();
-
   useEffect(() => {
     setVaiTro(getRole() || "ADMIN");
     setTen(getName() || "User");
   }, []);
 
-  const hienThiChuong =
-    vaiTro === "TENANT" || vaiTro === "STAFF" || vaiTro === "ADMIN";
-  const soChuaDoc = contextThongBao?.unreadCount ?? 0;
+  /** Chuông popover chỉ cho nhân viên và khách; admin vào menu Thông báo. */
+  const hienThiChuong = vaiTro === "TENANT" || vaiTro === "STAFF";
 
   const dangXuat = () => {
     clearAuth();
@@ -145,35 +142,7 @@ export default function ThanhDieuHuong() {
         </div>
 
         <div className="nav-actions">
-          {hienThiChuong && (
-            <Link
-              href="/thong-bao"
-              className="nav-bell"
-              title="Thông báo"
-              aria-label={
-                soChuaDoc > 0 ? `${soChuaDoc} thông báo chưa đọc` : "Thông báo"
-              }
-            >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              {soChuaDoc > 0 && (
-                <span className="nav-bell-badge" aria-hidden="true">
-                  {soChuaDoc > 99 ? "99+" : soChuaDoc}
-                </span>
-              )}
-            </Link>
-          )}
+          {hienThiChuong && <ChuongPopoverThongBao />}
           <span className="nav-user">
             {ten}
             {vaiTro != null ? ` (${vaiTro})` : ""}
