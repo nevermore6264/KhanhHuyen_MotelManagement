@@ -4,7 +4,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -147,6 +149,31 @@ class ThongBaoControllerTest {
         mockMvc.perform(post("/api/thong-bao")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void xoa_thanhCong_tra204() throws Exception {
+        when(thongBaoRepository.existsById("tb-1")).thenReturn(true);
+        mockMvc.perform(delete("/api/thong-bao/tb-1"))
+                .andExpect(status().isNoContent());
+        verify(thongBaoRepository).deleteById("tb-1");
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void xoa_khongTonTai_tra404() throws Exception {
+        when(thongBaoRepository.existsById("missing")).thenReturn(false);
+        mockMvc.perform(delete("/api/thong-bao/missing"))
+                .andExpect(status().isNotFound());
+        verifyNoInteractions(thongBaoService);
+    }
+
+    @Test
+    @WithMockUser(roles = "STAFF")
+    void xoa_staff403() throws Exception {
+        mockMvc.perform(delete("/api/thong-bao/tb-1"))
                 .andExpect(status().isForbidden());
     }
 }

@@ -12,7 +12,13 @@ import {
 } from "@/lib/notificationSocket";
 import { useToast } from "@/components/NhaCungCapToast";
 import { useThongBao } from "@/components/NhaCungCapThongBao";
-import { IconPlus, IconTimes, IconSend, IconCheck } from "@/components/Icons";
+import {
+  IconPlus,
+  IconTimes,
+  IconSend,
+  IconCheck,
+  IconTrash,
+} from "@/components/Icons";
 import type { ThongBaoUi } from "@/lib/mapThongBaoApi";
 import { mapThongBaoFromApi } from "@/lib/mapThongBaoApi";
 type User = {
@@ -104,6 +110,7 @@ export default function TrangThongBao() {
   const [hienThiTaoMoi, setHienThiTaoMoi] = useState(false);
   const [loi, setLoi] = useState("");
   const [dangTao, setDangTao] = useState(false);
+  const [dangXoaId, setDangXoaId] = useState<string | null>(null);
   const vaiTro = daMount ? getRole() : null;
   const laQuanTri = vaiTro === "ADMIN";
   const camDanhDauDaDoc = vaiTro === "ADMIN" || vaiTro === "STAFF";
@@ -230,6 +237,30 @@ export default function TrangThongBao() {
     contextThongBao?.refetchUnread();
   };
 
+  const xoaThongBao = async (id: string) => {
+    if (!laQuanTri) return;
+    if (!window.confirm("Xóa thông báo này? Hành động không hoàn tác.")) return;
+    setDangXoaId(id);
+    try {
+      await api.delete(`/thong-bao/${id}`);
+      notify("Đã xóa thông báo", "success");
+      await tai();
+      contextThongBao?.refetchUnread();
+    } catch (err: unknown) {
+      const ax = err as {
+        response?: { data?: { message?: string }; status?: number };
+      };
+      const msg =
+        ax?.response?.data?.message ||
+        (ax?.response?.status === 403
+          ? "Bạn không có quyền xóa"
+          : "Xóa thông báo thất bại");
+      notify(msg, "error");
+    } finally {
+      setDangXoaId(null);
+    }
+  };
+
   const taoThongBao = async (e: React.FormEvent) => {
     e.preventDefault();
     const nd = noiDung.trim();
@@ -299,16 +330,46 @@ export default function TrangThongBao() {
               },
               {
                 header: "Hành động",
-                render: (n) =>
-                  n.readFlag || camDanhDauDaDoc ? null : (
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => danhDauDaDoc(n.id)}
+                render: (n) => {
+                  const nutXoa =
+                    laQuanTri && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        disabled={dangXoaId === n.id}
+                        title="Xóa thông báo"
+                        onClick={() => void xoaThongBao(n.id)}
+                      >
+                        <IconTrash />{" "}
+                        {dangXoaId === n.id ? "Đang xóa…" : "Xóa"}
+                      </button>
+                    );
+                  const nutDaDoc =
+                    !camDanhDauDaDoc &&
+                    !n.readFlag && (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => danhDauDaDoc(n.id)}
+                      >
+                        <IconCheck /> Đánh dấu đã đọc
+                      </button>
+                    );
+                  if (!nutXoa && !nutDaDoc) return null;
+                  return (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
                     >
-                      <IconCheck /> Đánh dấu đã đọc
-                    </button>
-                  ),
+                      {nutXoa}
+                      {nutDaDoc}
+                    </div>
+                  );
+                },
               },
             ]}
           />

@@ -57,4 +57,14 @@ public class ThongBaoController {
         thongBaoService.taoVaDay(dto.getMessage(), dto.getUserId());
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> xoa(@PathVariable("id") String ma) {
+        if (!thongBaoRepository.existsById(ma)) {
+            return ResponseEntity.notFound().build();
+        }
+        thongBaoRepository.deleteById(ma);
+        return ResponseEntity.noContent().build();
+    }
 }
