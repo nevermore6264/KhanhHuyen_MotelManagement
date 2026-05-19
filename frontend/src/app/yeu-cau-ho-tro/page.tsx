@@ -7,15 +7,7 @@ import BangDonGian from "@/components/BangDonGian";
 import { IconEye, IconCheck, IconSend, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
-
-type SupportRequest = {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  tenant?: { fullName: string; email?: string };
-  room?: { code: string };
-};
+import { chuanHoaYeuCau, type YeuCauHang } from "@/lib/chuanHoaYeuCau";
 
 const statusLabel = (value?: string) => {
   switch (value) {
@@ -48,17 +40,17 @@ const statusClass = (value?: string) => {
 };
 
 export default function TrangYeuCauHoTro() {
-  const [danhSach, setDanhSach] = useState<SupportRequest[]>([]);
+  const [danhSach, setDanhSach] = useState<YeuCauHang[]>([]);
   const [idDangChon, setIdDangChon] = useState("");
   const [trangThai, setTrangThai] = useState("OPEN");
-  const [chiTiet, setChiTiet] = useState<SupportRequest | null>(null);
+  const [chiTiet, setChiTiet] = useState<YeuCauHang | null>(null);
   const { notify } = useToast();
 
   const tai = async () => {
     try {
       const phanHoi = await api.get("/yeu-cau-ho-tro");
       const duLieu = Array.isArray(phanHoi.data) ? phanHoi.data : [];
-      setDanhSach(duLieu);
+      setDanhSach(duLieu.map(chuanHoaYeuCau));
     } catch {
       setDanhSach([]);
       notify("Không tải được danh sách yêu cầu.", "error");
@@ -77,7 +69,7 @@ export default function TrangYeuCauHoTro() {
     }
     try {
       await api.put(`/yeu-cau-ho-tro/${idDangChon.trim()}`, {
-        status: trangThai,
+        trangThai,
       });
       notify("Đã cập nhật trạng thái", "success");
       setIdDangChon("");
@@ -93,27 +85,27 @@ export default function TrangYeuCauHoTro() {
     }
   };
 
-  const danhDauDaXuLy = async (yeuCau: SupportRequest) => {
+  const danhDauDaXuLy = async (yeuCau: YeuCauHang) => {
     await api.put(`/yeu-cau-ho-tro/${yeuCau.id}`, {
-      status: "RESOLVED",
-      title: yeuCau.title,
-      description: yeuCau.description,
+      trangThai: "RESOLVED",
+      tieuDe: yeuCau.tieuDe,
+      moTa: yeuCau.moTa,
     });
     notify("Đã cập nhật trạng thái xử lý", "success");
     tai();
   };
 
-  const guiEmail = (yeuCau: SupportRequest) => {
-    const email = yeuCau.tenant?.email;
+  const guiEmail = (yeuCau: YeuCauHang) => {
+    const email = yeuCau.khachEmail;
     if (!email) {
       notify("Thiếu email khách thuê", "error");
       return;
     }
     const subject = `Phản hồi sự cố #${yeuCau.id}`;
     const body =
-      `Xin chào ${yeuCau.tenant?.fullName || ""},%0D%0A%0D%0A` +
-      `Chúng tôi đã tiếp nhận sự cố: ${yeuCau.title}.%0D%0A` +
-      `Mô tả: ${yeuCau.description || ""}%0D%0A%0D%0A` +
+      `Xin chào ${yeuCau.khachTen || ""},%0D%0A%0D%0A` +
+      `Chúng tôi đã tiếp nhận sự cố: ${yeuCau.tieuDe}.%0D%0A` +
+      `Mô tả: ${yeuCau.moTa || ""}%0D%0A%0D%0A` +
       `Hướng xử lý: ...%0D%0A%0D%0ATrân trọng.`;
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };
@@ -149,14 +141,14 @@ export default function TrangYeuCauHoTro() {
             data={danhSach}
             columns={[
               { header: "ID", render: (r) => r.id },
-              { header: "Tiêu đề", render: (r) => r.title },
-              { header: "Khách", render: (r) => r.tenant?.fullName },
-              { header: "Phòng", render: (r) => r.room?.code },
+              { header: "Tiêu đề", render: (r) => r.tieuDe },
+              { header: "Khách", render: (r) => r.khachTen ?? "—" },
+              { header: "Phòng", render: (r) => r.maPhong ?? "—" },
               {
                 header: "Trạng thái",
                 render: (r) => (
-                  <span className={`status-badge ${statusClass(r.status)}`}>
-                    {statusLabel(r.status)}
+                  <span className={`status-badge ${statusClass(r.trangThai)}`}>
+                    {statusLabel(r.trangThai)}
                   </span>
                 ),
               },
@@ -174,11 +166,11 @@ export default function TrangYeuCauHoTro() {
                       <IconCheck /> Đã xử lý
                     </button>
                     <button
-                      className={`btn btn-secondary ${!r.tenant?.email ? "btn-disabled" : ""}`}
+                      className={`btn btn-secondary ${!r.khachEmail ? "btn-disabled" : ""}`}
                       onClick={() => guiEmail(r)}
-                      aria-disabled={!r.tenant?.email}
+                      aria-disabled={!r.khachEmail}
                       title={
-                        !r.tenant?.email ? "Thiếu email khách thuê" : undefined
+                        !r.khachEmail ? "Thiếu email khách thuê" : undefined
                       }
                     >
                       <IconSend /> Gửi mail
@@ -195,9 +187,9 @@ export default function TrangYeuCauHoTro() {
             <div className="modal-card">
               <h3>Mô tả sự cố</h3>
               <p>
-                <strong>{chiTiet.title}</strong>
+                <strong>{chiTiet.tieuDe}</strong>
               </p>
-              <p>{chiTiet.description || "Không có mô tả."}</p>
+              <p>{chiTiet.moTa || "Không có mô tả."}</p>
               <div className="modal-actions">
                 <button
                   className="btn btn-secondary"

@@ -7,12 +7,12 @@ import { useRouter } from "next/navigation";
 import { clearAuth, getName, getRole } from "@/lib/auth";
 import ChuongPopoverThongBao from "./ChuongPopoverThongBao";
 
-/** Một mục menu (nhãn + đường dẫn) */
+
 type MucMenu = { label: string; href: string };
-/** Nhóm menu (có thể có mục con hoặc link trực tiếp) */
+
 type NhomMenu = { label: string; href?: string; items?: MucMenu[] };
 
-/** Cấu hình menu theo vai trò: ADMIN, STAFF, TENANT */
+
 const menuTheoVaiTro: Record<string, NhomMenu[]> = {
   ADMIN: [
     { label: "Tổng quan", href: "/tong-quan" },
@@ -90,10 +90,10 @@ const menuTheoVaiTro: Record<string, NhomMenu[]> = {
   ],
 };
 
-/** Thanh điều hướng chính: menu theo vai trò, chuông thông báo, đăng xuất. */
+
 export default function ThanhDieuHuong() {
   const router = useRouter();
-  /** null = chưa đọc localStorage — tránh một khung hình menu ADMIN rồi prefetch link nhân viên (403 với JWT khách). */
+
   const [vaiTro, setVaiTro] = useState<string | null>(null);
   const [ten, setTen] = useState("User");
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function ThanhDieuHuong() {
     setTen(getName() || "User");
   }, []);
 
-  /** Chuông popover chỉ cho nhân viên và khách; admin vào menu Thông báo. */
+
   const hienThiChuong = vaiTro === "TENANT" || vaiTro === "STAFF";
 
   const dangXuat = () => {

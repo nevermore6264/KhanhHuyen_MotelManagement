@@ -40,7 +40,7 @@ import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API hóa đơn: danh sách, tạo, cập nhật trạng thái. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hoa-don")
@@ -105,7 +105,7 @@ public class HoaDonController {
         return dto;
     }
 
-    /** Điền nhắc nợ email (từ bảng lịch sử) vào DTO trả về. */
+
     private void ganThongTinNhacNoEmailVaoDto(HoaDonResponseDto dto, String maHoaDon) {
         if (maHoaDon == null || maHoaDon.isBlank()) {
             return;
@@ -126,10 +126,7 @@ public class HoaDonController {
         return d;
     }
 
-    /**
-     * Khách hiển thị trên hóa đơn: đại diện + thành viên hợp đồng ACTIVE của phòng;
-     * nếu không có hợp đồng / không có thành viên thì dùng khách ghi trên hóa đơn.
-     */
+
     private List<KhachThueTomTatDto> layDanhSachKhachTheoPhong(String maPhong, KhachThue fallback) {
         if (maPhong == null) {
             return fallback != null ? List.of(KhachThueTomTatDto.tu(fallback)) : List.of();
@@ -183,7 +180,7 @@ public class HoaDonController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /** Chạy ngay job sinh hóa đơn cho tháng trước và tháng hiện tại (tránh đợi job định kỳ). */
+
     @PostMapping("/sinh")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<Map<String, Object>> sinhHoaDonNgay() {

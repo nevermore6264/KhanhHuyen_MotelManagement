@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Khu vực / tòa nhà chứa các phòng. */
+
 @Getter
 @Setter
 @NoArgsConstructor

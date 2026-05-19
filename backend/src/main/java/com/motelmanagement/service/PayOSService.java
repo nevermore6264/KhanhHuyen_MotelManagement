@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-/** Dịch vụ tích hợp PayOS: tạo link thanh toán, xử lý webhook. */
+
 @RequiredArgsConstructor
 @Slf4j
 public class PayOSService {
@@ -52,9 +52,7 @@ public class PayOSService {
     private final TinhTienService tinhTienService;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * Tạo link thanh toán PayOS cho hóa đơn. Lưu orderCode -> invoiceId để xử lý webhook.
-     */
+
     public String taoLinkThanhToan(HoaDon hoaDon) {
         hoaDon = tinhTienService.tinhTienRuntime(hoaDon);
         if (hoaDon == null || hoaDon.getTongTien() == null
@@ -64,7 +62,7 @@ public class PayOSService {
         if (hoaDon.getId() == null || hoaDon.getId().isBlank()) {
             return null;
         }
-        // Tiền PayOS = phần còn lại (đã trừ tiền mặt/chuyển khoản đã ghi nhận, kể cả thu một phần tại quầy).
+
         List<ThanhToan> dsThu = thanhToanRepository.findByHoaDon_Id(hoaDon.getId());
         BigDecimal daThu = (dsThu == null ? Collections.<ThanhToan>emptyList() : dsThu).stream()
                 .map(ThanhToan::getSoTien)
@@ -85,7 +83,7 @@ public class PayOSService {
         String urlHuy = thuocTinhPayOS.getCancelUrl() != null
                 ? thuocTinhPayOS.getCancelUrl()
                 : "http://localhost:4002/hoa-don-cua-toi?payment=cancel";
-        // PayOS yeu cau description ngan; dung UUID se rat dai va co the bi 400.
+
         String moTa = String.format("HD-%02d-%d", hoaDon.getThang(), hoaDon.getNam());
         if (moTa.length() > 25) {
             moTa = moTa.substring(0, 25);
@@ -138,10 +136,7 @@ public class PayOSService {
         return null;
     }
 
-    /**
-     * Đăng ký webhook với PayOS (API confirm-webhook). PayOS sẽ POST bản tin thanh toán tới URL đã cấu hình.
-     * Không liên quan CORS (gọi server-to-server); nếu URL sai (ví dụ trỏ port frontend) webhook sẽ không tới BE.
-     */
+
     public boolean xacNhanWebhookVoiPayOS() {
         if (laRong(thuocTinhPayOS.getWebhookUrl()) || laRong(thuocTinhPayOS.getClientId())
                 || laRong(thuocTinhPayOS.getApiKey())) {
@@ -170,9 +165,7 @@ public class PayOSService {
         return false;
     }
 
-    /**
-     * Xác thực chữ ký webhook và trả về data nếu hợp lệ. Format webhook: { "code", "desc", "success", "data": { ... }, "signature" }.
-     */
+
     public boolean xacThucVaXuLyWebhook(String noiDungYeuCau) {
         if (laRong(thuocTinhPayOS.getChecksumKey()) || noiDungYeuCau == null) return false;
         try {
@@ -199,7 +192,7 @@ public class PayOSService {
         }
     }
 
-    /** Dùng cho luồng return-url khi local không nhận được webhook kịp thời. */
+
     public boolean xacNhanThanhToanTuReturnUrl(long maDonHang) {
         return capNhatThanhToanTheoMaDonHang(maDonHang, null);
     }

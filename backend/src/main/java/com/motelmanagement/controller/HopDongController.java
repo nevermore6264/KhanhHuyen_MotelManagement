@@ -31,7 +31,7 @@ import com.motelmanagement.service.NguoiDungHienTaiService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API hợp đồng thuê phòng (CRUD, lọc theo phòng/khách). */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hop-dong")

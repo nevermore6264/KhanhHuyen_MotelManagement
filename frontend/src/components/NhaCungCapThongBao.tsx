@@ -32,7 +32,7 @@ export function useThongBao() {
   return ctx;
 }
 
-/** Provider thông báo: đếm chưa đọc, lắng nghe WebSocket, hiển thị toast khi có thông báo mới. */
+
 export default function NhaCungCapThongBao({
   children,
 }: {
@@ -81,7 +81,7 @@ export default function NhaCungCapThongBao({
   useEffect(() => {
     if (!daMount) return;
     const vaiTro = getRole();
-    /** Đếm chưa đọc + WebSocket + toast: TENANT/STAFF. ADMIN không dùng chuông, không cần luồng này. */
+
     if (vaiTro !== "TENANT" && vaiTro !== "STAFF") return;
 
     taiLaiChuaDoc();

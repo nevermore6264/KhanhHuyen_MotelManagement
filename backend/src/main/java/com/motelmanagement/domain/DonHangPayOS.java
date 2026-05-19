@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-/** Đơn PayOS: mã đơn, trạng thái, số tiền, liên kết hóa đơn/thanh toán. */
+
 @Entity
 @Table(name = "don_hang_payos", indexes = @Index(unique = true, columnList = "ma_don_hang"))
 public class DonHangPayOS {
@@ -25,11 +25,11 @@ public class DonHangPayOS {
     @Column(name = "id", length = 36, updatable = false, nullable = false)
     private String id;
 
-    /** Mã đơn hàng gửi lên PayOS (unique) */
+
     @jakarta.persistence.Column(name = "ma_don_hang")
     private long maDonHang;
 
-    /** Hóa đơn tương ứng */
+
     @jakarta.persistence.Column(name = "hoa_don_id", length = 36)
     private String maHoaDon;
 

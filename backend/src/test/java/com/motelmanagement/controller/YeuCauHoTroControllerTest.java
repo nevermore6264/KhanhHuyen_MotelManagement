@@ -31,6 +31,7 @@ import com.motelmanagement.repository.YeuCauHoTroRepository;
 import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhatKyService;
+import com.motelmanagement.service.YeuCauHoTroService;
 import com.motelmanagement.support.KiemThuSliceWebMvc;
 
 @WebMvcTest(controllers = YeuCauHoTroController.class)
@@ -51,6 +52,8 @@ class YeuCauHoTroControllerTest {
     private NguoiDungHienTaiService nguoiDungHienTaiService;
     @MockitoBean
     private NhatKyService nhatKyService;
+    @MockitoBean
+    private YeuCauHoTroService yeuCauHoTroService;
     @MockitoBean
     private TienIchJwt tienIchJwt;
 

@@ -95,7 +95,7 @@ export default function TrangHoaDonCuaToi() {
 
   useEffect(() => {
     taiLaiHoaDon().catch(() => {
-      // Bo qua loi tam thoi de giu man hinh hoat dong.
+
     });
   }, []);
 
@@ -117,7 +117,7 @@ export default function TrangHoaDonCuaToi() {
           })
           .catch(() => undefined);
       }
-      // PayOS webhook co the den cham, polling de dong bo trang thai hoa don sau redirect.
+
       const timers = [1200, 3500, 7000, 12000].map((ms) =>
         window.setTimeout(() => {
           taiLaiHoaDon().catch(() => undefined);

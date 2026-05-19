@@ -20,7 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Hóa đơn theo tháng cho một phòng / khách thuê (tiền phòng, điện, nước). */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -47,19 +47,19 @@ public class HoaDon {
     @Column(name = "nam")
     private int nam;
 
-    /** Tính động khi trả API, không lưu DB. */
+
     @Transient
     private BigDecimal tienPhong;
 
-    /** Tính động khi trả API, không lưu DB. */
+
     @Transient
     private BigDecimal tienDien;
 
-    /** Tính động khi trả API, không lưu DB. */
+
     @Transient
     private BigDecimal tienNuoc;
 
-    /** Tính động khi trả API, không lưu DB. */
+
     @Transient
     private BigDecimal tongTien;
 

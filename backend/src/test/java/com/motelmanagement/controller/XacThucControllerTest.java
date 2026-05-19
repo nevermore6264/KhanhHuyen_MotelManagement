@@ -25,10 +25,7 @@ import com.motelmanagement.service.NhatKyService;
 import com.motelmanagement.service.XacThucService;
 import com.motelmanagement.support.KiemThuSliceWebMvc;
 
-/**
- * Slice MVC: mock phụ thuộc của filter (BoLocJwt & BoLocGhiNhatKyApi).
- * {@code addFilters = false}: tránh Security mặc định (CSRF bật) — app thật đã {@code csrf().disable()} trong CauHinhBaoMat.
- */
+
 @WebMvcTest(controllers = XacThucController.class)
 @Import(KiemThuSliceWebMvc.class)
 @AutoConfigureMockMvc(addFilters = false)

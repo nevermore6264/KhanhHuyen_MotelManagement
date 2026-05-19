@@ -95,7 +95,7 @@ function chuoiLocNguoiDung(u: User): string {
     .toLowerCase();
 }
 
-/** Quản trị không nhận thông báo qua luồng này — không hiển thị trong danh sách gửi đến. */
+
 function duocChonLamNguoiNhanThongBao(u: User): boolean {
   return String(u.role ?? "").toUpperCase() !== "ADMIN";
 }

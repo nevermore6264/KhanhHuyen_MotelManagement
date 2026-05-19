@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import NhaCungCapToast from "./NhaCungCapToast";
 import NhaCungCapThongBao from "./NhaCungCapThongBao";
 
-/** Vỏ ứng dụng: bọc toàn bộ nội dung, ẩn footer trên trang đăng nhập/quên mật khẩu. */
+
 export default function VoUngDung({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const laTrangXacThuc =

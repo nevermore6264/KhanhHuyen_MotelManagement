@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.motelmanagement.domain.ChiSoDienNuoc;
 import com.motelmanagement.domain.Phong;
 
-/** Repository chỉ số điện/nước. */
+
 public interface ChiSoDienNuocRepository extends JpaRepository<ChiSoDienNuoc, String> {
     Optional<ChiSoDienNuoc> findByPhongAndThangAndNam(Phong phong, int thang, int nam);
 

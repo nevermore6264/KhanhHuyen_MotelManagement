@@ -11,13 +11,13 @@ import com.motelmanagement.domain.Phong;
 import com.motelmanagement.domain.TrangThaiHopDong;
 import com.motelmanagement.domain.TrangThaiPhong;
 
-/** Repository phòng. */
+
 public interface PhongRepository extends JpaRepository<Phong, String> {
     List<Phong> findByTrangThai(TrangThaiPhong trangThai);
 
     long countByKhuVuc_Id(String areaId);
 
-    /** Phòng đang có ít nhất một hợp đồng ở trạng thái chỉ định (vd: ACTIVE). */
+
     @EntityGraph(attributePaths = {"khuVuc"})
     @Query("SELECT DISTINCT p FROM HopDong h JOIN h.phong p WHERE h.trangThai = :tt")
     List<Phong> findDistinctByHopDong_TrangThai(@Param("tt") TrangThaiHopDong tt);

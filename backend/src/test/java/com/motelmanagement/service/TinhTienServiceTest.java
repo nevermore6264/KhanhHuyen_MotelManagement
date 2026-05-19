@@ -150,8 +150,8 @@ class TinhTienServiceTest {
 
         HoaDon result = tinhTienService.tinhTienRuntime(hoaDon);
 
-        assert result.getTienDien().intValue() == 300000; // (200-100)*3000
-        assert result.getTienNuoc().intValue() == 300000; // (50-20)*10000
+        assert result.getTienDien().intValue() == 300000;
+        assert result.getTienNuoc().intValue() == 300000;
     }
 
     @Test

@@ -215,7 +215,7 @@ export default function TrangBaoCao() {
           {error && <div className="form-error mt-2">{error}</div>}
         </div>
 
-        {/* Tổng quan */}
+        {}
         <div className="card">
           <h3>Tổng quan</h3>
           <p className="card-subtitle mb-3">
@@ -285,7 +285,7 @@ export default function TrangBaoCao() {
           </div>
         </div>
 
-        {/* Doanh thu theo năm */}
+        {}
         <div className="card">
           <h3>Doanh thu theo từng tháng trong năm</h3>
           <p className="card-subtitle mb-3">
@@ -345,7 +345,7 @@ export default function TrangBaoCao() {
           )}
         </div>
 
-        {/* Chi tiết công nợ */}
+        {}
         <div className="card">
           <h3>Chi tiết công nợ</h3>
           <p className="card-subtitle mb-3">
@@ -377,7 +377,7 @@ export default function TrangBaoCao() {
           />
         </div>
 
-        {/* Danh sách phòng trống */}
+        {}
         <div className="card">
           <h3>Phòng trống</h3>
           <p className="card-subtitle mb-3">
@@ -399,7 +399,7 @@ export default function TrangBaoCao() {
           />
         </div>
 
-        {/* Tình trạng phòng */}
+        {}
         <div className="card">
           <h3>Tình trạng phòng</h3>
           <p className="card-subtitle mb-3">Thống kê theo trạng thái phòng.</p>
@@ -426,7 +426,7 @@ export default function TrangBaoCao() {
           </p>
         </div>
 
-        {/* Báo cáo hóa đơn theo kỳ */}
+        {}
         <div className="card">
           <h3>
             Báo cáo hóa đơn theo kỳ (tháng {invoiceSummary?.month}/

@@ -14,7 +14,7 @@ import com.motelmanagement.domain.TrangThaiHoaDon;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Hóa đơn trả về client + danh sách khách theo hợp đồng (đại diện + thành viên). */
+
 @Getter
 @Setter
 public class HoaDonResponseDto {
@@ -29,7 +29,7 @@ public class HoaDonResponseDto {
     private BigDecimal tongTien;
     private TrangThaiHoaDon trangThai;
     private LocalDateTime ngayTao;
-    /** Tổng hợp từ bảng {@code nhac_no_hoa_don_email}, không lưu trên entity HoaDon. */
+
     private LocalDateTime nhacNoEmailLanCuoi;
     private int soLanNhacNoEmail;
     private String noiDungEmailCuoi;
@@ -37,7 +37,7 @@ public class HoaDonResponseDto {
 
     private List<HoaDonChiTietDongDto> chiTiet = List.of();
 
-    /** Chỉ số công tơ cùng kỳ với hóa đơn (null nếu chưa có bản ghi chỉ số). */
+
     private Integer chiSoDienCu;
     private Integer chiSoDienMoi;
     private Integer chiSoNuocCu;

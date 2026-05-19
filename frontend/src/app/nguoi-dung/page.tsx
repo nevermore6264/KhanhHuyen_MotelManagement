@@ -23,7 +23,7 @@ type User = {
   fullName: string;
   role: string;
   active: boolean;
-  /** SĐT trên tài khoản (nếu API có). */
+
   phone?: string | null;
 };
 type Tenant = {
@@ -36,7 +36,7 @@ type Tenant = {
 
 type RawJson = Record<string, unknown>;
 
-/** Spring trả camelCase tiếng Việt: tenDangNhap, hoTen, vaiTro, kichHoat… */
+
 function chuanHoaNguoiDungTuApi(raw: RawJson): User {
   const r = raw as RawJson;
   const vaiTroRaw = r.vaiTro ?? r.role;

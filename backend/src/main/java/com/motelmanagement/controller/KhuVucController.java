@@ -23,7 +23,7 @@ import com.motelmanagement.repository.PhongRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/** API khu vực (kèm số phòng). */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/khu-vuc")

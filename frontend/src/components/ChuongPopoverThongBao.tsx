@@ -36,7 +36,7 @@ function dinhDangThoiGianGui(iso: string): string {
   }
 }
 
-/** Chuông + popover danh sách thông báo (khách thuê / nhân viên); không điều hướng sang /thong-bao khi bấm chuông. */
+
 export default function ChuongPopoverThongBao() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [mo, setMo] = useState(false);
@@ -69,7 +69,7 @@ export default function ChuongPopoverThongBao() {
     }
   }, [contextThongBao]);
 
-  /** Mở popover hoặc có thông báo WS khi popover đang mở → tải lại danh sách. */
+
   useEffect(() => {
     if (!mo) return;
     taiDanhSach();
@@ -105,7 +105,7 @@ export default function ChuongPopoverThongBao() {
       );
       await contextThongBao?.refetchUnread();
     } catch {
-      /* ignore */
+
     }
   };
 

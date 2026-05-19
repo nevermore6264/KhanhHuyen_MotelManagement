@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Dữ liệu tạo hợp đồng: một phòng, nhiều khách, một người đại diện. */
+
 @Getter
 @Setter
 public class HopDongTaoDto {
@@ -20,7 +20,7 @@ public class HopDongTaoDto {
     @JsonProperty("khachThueIds")
     private List<String> khachThueIds = new ArrayList<>();
 
-    /** Phải nằm trong khachThueIds. */
+
     @JsonProperty("daiDienKhachThueId")
     private String daiDienKhachThueId;
 

@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-/** DTO khu vực kèm số lượng phòng. */
+
 @NoArgsConstructor
 @AllArgsConstructor
 public class AreaWithRoomCountDto {
@@ -16,6 +16,6 @@ public class AreaWithRoomCountDto {
     private String diaChi;
     private String moTa;
     private long soPhong;
-    /** True khi không còn phòng nào đang có hợp đồng thuê (ACTIVE) — cho phép xóa khu. */
+
     private boolean coTheXoa;
 }

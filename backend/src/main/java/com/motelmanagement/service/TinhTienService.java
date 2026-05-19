@@ -24,7 +24,7 @@ import com.motelmanagement.repository.HopDongRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/** Dịch vụ tính tiền: tạo hóa đơn, cập nhật số điện/nước từ chỉ số. */
+
 @Service
 @RequiredArgsConstructor
 public class TinhTienService {
@@ -36,10 +36,7 @@ public class TinhTienService {
     private final BangGiaDichVuRepository bangGiaDichVuRepository;
     private final HoaDonChiTietRepository hoaDonChiTietRepository;
 
-    /**
-     * Hóa đơn kỳ (tháng/năm) chỉ áp dụng khi hợp đồng còn hiệu lực ít nhất một ngày trong tháng đó.
-     * Không có ngày bắt đầu: giữ hành vi cũ (vẫn tính có hiệu lực).
-     */
+
     private static boolean hopDongCoHieuLucTrongThang(HopDong hopDong, int thang, int nam) {
         if (hopDong.getNgayBatDau() == null) {
             return true;
@@ -56,16 +53,14 @@ public class TinhTienService {
         return true;
     }
 
-    /**
-     * Phòng có hợp đồng ACTIVE và kỳ tháng/năm giao với hiệu lực hợp đồng (được nhập chỉ số điện nước).
-     */
+
     public boolean phongCoHopDongActiveChoKy(String maPhong, int thang, int nam) {
         return hopDongRepository.findByPhong_IdAndTrangThai(maPhong, TrangThaiHopDong.ACTIVE)
                 .filter(hd -> hopDongCoHieuLucTrongThang(hd, thang, nam))
                 .isPresent();
     }
 
-    /** Tính động tiền hóa đơn theo phòng + chỉ số cùng kỳ. */
+
     public HoaDon tinhTienRuntime(HoaDon hoaDon) {
         if (hoaDon == null) {
             return null;
@@ -100,7 +95,7 @@ public class TinhTienService {
         return hoaDon;
     }
 
-    /** Số điện đầu kỳ = số mới tháng trước (cùng phòng); không có tháng trước thì 0. */
+
     public int layChiSoDienCuTheoKy(ChiSoDienNuoc chiSo) {
         if (chiSo.getPhong() == null) {
             return 0;
@@ -112,7 +107,7 @@ public class TinhTienService {
                 .orElse(0);
     }
 
-    /** Số nước đầu kỳ = số mới tháng trước. */
+
     public int layChiSoNuocCuTheoKy(ChiSoDienNuoc chiSo) {
         if (chiSo.getPhong() == null) {
             return 0;
@@ -168,10 +163,7 @@ public class TinhTienService {
         return tinhTienRuntime(daLuu);
     }
 
-    /**
-     * Nếu đã có chỉ số điện nước cùng phòng/kỳ, cập nhật tiền điện/nước và tổng trên hóa đơn (tránh hiển thị 0
-     * khi chỉ số nhập sau lúc sinh hóa đơn).
-     */
+
     public HoaDon dongBoHoaDonTheoChiSoNeuCo(HoaDon hoaDon) {
         if (hoaDon.getId() == null || hoaDon.getId().isBlank() || hoaDon.getPhong() == null) {
             return hoaDon;
@@ -179,11 +171,7 @@ public class TinhTienService {
         return tinhTienRuntime(hoaDon);
     }
 
-    /**
-     * Job tự động: sinh hóa đơn cho tất cả phòng có hợp đồng ACTIVE trong tháng/năm chỉ định.
-     * Nếu đã có hóa đơn (room, month, year) thì bỏ qua. Tiền phòng lấy từ Phong.currentPrice,
-     * tiền điện/nước lấy từ ChiSoDienNuoc nếu có, không có thì 0.
-     */
+
     public int sinhHoaDonChoThang(int thang, int nam) {
         List<HopDong> danhSachHopDong = hopDongRepository.findByTrangThai(TrangThaiHopDong.ACTIVE);
         int soTao = 0;

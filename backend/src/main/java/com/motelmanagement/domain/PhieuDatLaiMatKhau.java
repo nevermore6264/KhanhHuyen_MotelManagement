@@ -16,9 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Phiếu đặt lại mật khẩu: token một lần, gắn với người dùng và thời hạn hết hạn.
- */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,7 +28,7 @@ public class PhieuDatLaiMatKhau {
     @Column(name = "id", length = 36, updatable = false, nullable = false)
     private String id;
 
-    /** Token duy nhất gửi qua link/email */
+
     @Column(name = "ma_token", nullable = false, unique = true, length = 64)
     private String maToken;
 
@@ -38,11 +36,11 @@ public class PhieuDatLaiMatKhau {
     @JoinColumn(name = "nguoi_dung_id", nullable = false)
     private NguoiDung nguoiDung;
 
-    /** Thời điểm hết hạn */
+
     @Column(name = "het_han_luc", nullable = false)
     private LocalDateTime hetHanLuc;
 
-    /** Kiểm tra phiếu đã quá hạn chưa */
+
     public boolean daHetHan() {
         return LocalDateTime.now().isAfter(hetHanLuc);
     }

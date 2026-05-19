@@ -17,7 +17,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/** Filter đọc JWT từ header Authorization và đặt thông tin đăng nhập vào SecurityContext. */
+
 @Component
 public class BoLocJwt extends OncePerRequestFilter {
     private final TienIchJwt tienIchJwt;
@@ -26,7 +26,7 @@ public class BoLocJwt extends OncePerRequestFilter {
         this.tienIchJwt = tienIchJwt;
     }
 
-    /** Map claim role (ADMIN / ROLE_ADMIN) thành tên authority cho hasRole('ADMIN'). */
+
     private static String chuyenVaiTroThanhTenQuyen(String vaiTro) {
         if (vaiTro == null || vaiTro.isBlank()) {
             return "ROLE_USER";
@@ -47,8 +47,8 @@ public class BoLocJwt extends OncePerRequestFilter {
                 Claims claims = tienIchJwt.parseClaims(token);
                 String username = claims.getSubject();
                 String vaiTro = claims.get("role", String.class);
-                // Luôn đặt xác thực từ JWT khi parse OK (tránh bỏ qua khi context đã có Anonymous
-                // hoặc filter khác; hasRole('ADMIN') cần ROLE_ADMIN đúng).
+
+
                 if (username != null) {
                     String role = chuyenVaiTroThanhTenQuyen(vaiTro);
                     UsernamePasswordAuthenticationToken xacThuc = new UsernamePasswordAuthenticationToken(
@@ -58,7 +58,7 @@ public class BoLocJwt extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(xacThuc);
                 }
             } catch (Exception ignored) {
-                // Token không hợp lệ: bỏ qua, để Spring Security xử lý 401
+
             }
         }
         filterChain.doFilter(yeuCau, phanHoi);

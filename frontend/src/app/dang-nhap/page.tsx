@@ -6,14 +6,14 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 
-/** Trang đăng nhập: form tài khoản/mật khẩu, gọi API xác thực, lưu token và chuyển dashboard. */
+
 export default function TrangDangNhap() {
   const router = useRouter();
   const [tenDangNhap, setTenDangNhap] = useState("admin");
   const [matKhau, setMatKhau] = useState("admin123");
   const [loi, setLoi] = useState("");
 
-  /** Gửi form đăng nhập: gọi POST xac-thuc/dang-nhap, lưu token/role/fullName, chuyển tong-quan. */
+
   const gui = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoi("");

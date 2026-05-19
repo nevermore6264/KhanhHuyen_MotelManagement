@@ -12,7 +12,7 @@ import com.motelmanagement.domain.HoaDon;
 import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.TrangThaiHoaDon;
 
-/** Repository hóa đơn. */
+
 public interface HoaDonRepository extends JpaRepository<HoaDon, String> {
     @EntityGraph(attributePaths = {"phong", "khachThue", "phong.khuVuc"})
     @Query("SELECT h FROM HoaDon h WHERE h.id = :id")

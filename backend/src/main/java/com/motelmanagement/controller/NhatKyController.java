@@ -12,7 +12,7 @@ import com.motelmanagement.repository.NhatKyHeThongRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/** API nhật ký hệ thống (lọc, phân trang). */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/nhat-ky")

@@ -26,7 +26,7 @@ const formatChiSo = (n?: number) =>
     ? new Intl.NumberFormat("vi-VN").format(n)
     : "—";
 
-/** Nhập số tiền (cùng cách `/phong`, `/thanh-toan`). */
+
 const dinhDangNhapTien = (value: string) => {
   const digits = value.replace(/\D/g, "");
   if (!digits) return "";
@@ -38,7 +38,7 @@ const parseNhapTien = (value: string) => {
   return digits ? Number(digits) : null;
 };
 
-/** Nhãn khách thuê để phân biệt khi trùng tên: "Họ tên — SĐT" hoặc "Họ tên — CCCD" */
+
 const tenantOptionLabel = (t: Tenant) => {
   const name = t.fullName || `Khách ${t.id}`;
   const extra = t.phone || t.idNumber;

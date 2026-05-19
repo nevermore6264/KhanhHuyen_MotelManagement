@@ -29,7 +29,7 @@ import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API chỉ số điện/nước (nhập theo phòng, tháng). Số cũ lấy tự động từ số mới tháng trước. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chi-so-dien-nuoc")
@@ -54,7 +54,7 @@ public class ChiSoDienNuocController {
         c.setNuocCu(tinhTienService.layChiSoNuocCuTheoKy(c));
     }
 
-    /** Chỉ cho phép nhập chỉ số tháng hiện tại hoặc tháng trước đó */
+
     private static boolean choPhepThang(int thang, int nam) {
         YearMonth hienTai = YearMonth.now();
         YearMonth kyChiSo = YearMonth.of(nam, thang);
@@ -90,7 +90,7 @@ public class ChiSoDienNuocController {
         return ResponseEntity.ok(daLuu);
     }
 
-    /** Sửa chỉ số đã nhập (cùng điều kiện tháng như khi tạo). */
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<ChiSoDienNuoc> capNhat(

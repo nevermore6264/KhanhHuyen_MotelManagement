@@ -7,14 +7,7 @@ import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import { IconSend, IconEye, IconTimes } from "@/components/Icons";
 import { useToast } from "@/components/NhaCungCapToast";
-
-type YeuCauHang = {
-  id: string;
-  tieuDe: string;
-  moTa?: string;
-  trangThai: string;
-  ngayTao?: string;
-};
+import { chuanHoaYeuCau, type YeuCauHang } from "@/lib/chuanHoaYeuCau";
 
 const statusLabel = (value?: string) => {
   switch (value) {
@@ -45,40 +38,6 @@ const statusClass = (value?: string) => {
       return "status-unknown";
   }
 };
-
-function chuanHoaYeuCau(raw: unknown): YeuCauHang {
-  const r = raw as Record<string, unknown>;
-  const tt = r.trangThai;
-  let trangThai = "";
-  if (typeof tt === "string") trangThai = tt;
-  else if (tt && typeof tt === "object" && "name" in tt) {
-    trangThai = String((tt as { name?: string }).name ?? "");
-  } else if (tt != null) trangThai = String(tt);
-  let ngayStr: string | undefined;
-  const nt = r.ngayTao;
-  if (typeof nt === "string") ngayStr = nt;
-  else if (Array.isArray(nt) && nt.length >= 3) {
-    const y = Number(nt[0]);
-    const m = Number(nt[1]);
-    const d = Number(nt[2]);
-    const h = nt.length > 3 ? Number(nt[3]) : 0;
-    const mi = nt.length > 4 ? Number(nt[4]) : 0;
-    const s = nt.length > 5 ? Number(nt[5]) : 0;
-    if (y) ngayStr = new Date(y, m - 1, d, h, mi, s).toISOString();
-  }
-  return {
-    id: r.id != null ? String(r.id) : "",
-    tieuDe: String(r.tieuDe ?? r.title ?? "").trim(),
-    moTa:
-      r.moTa != null
-        ? String(r.moTa)
-        : r.description != null
-          ? String(r.description)
-          : undefined,
-    trangThai,
-    ngayTao: ngayStr,
-  };
-}
 
 const formatNgay = (iso?: string) => {
   if (!iso) return "—";

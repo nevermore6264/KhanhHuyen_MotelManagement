@@ -24,7 +24,7 @@ export function useToast() {
   return { notify: ctx.thongBao };
 }
 
-/** Provider toast: hiển thị thông báo nhanh (thành công/lỗi/thông tin). */
+
 export default function NhaCungCapToast({
   children,
 }: {

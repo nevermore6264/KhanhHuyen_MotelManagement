@@ -361,7 +361,7 @@ export default function TrangHopDong() {
     );
   });
 
-  /** Khách thuê đang có hợp đồng ACTIVE thì không cho chọn khi tạo hợp đồng mới */
+
   const tenantIdsWithActiveContract = new Set<string>();
   for (const c of contracts) {
     if (c.status !== "ACTIVE") continue;
@@ -431,7 +431,7 @@ export default function TrangHopDong() {
     });
   };
 
-  /** Bảng tóm tắt khách đã chọn (họ tên / SĐT / CCCD / đại diện). */
+
   const danhSachKhachHienThi = useMemo(() => {
     const rows = selectedTenantIds.map((id) => {
       const t = tenants.find((x) => x.id === id);

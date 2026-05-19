@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Một khách thuê thuộc hợp đồng (có thể nhiều người / một phòng). */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,7 +41,7 @@ public class HopDongThanhVien {
     @JoinColumn(name = "khach_thue_id")
     private KhachThue khachThue;
 
-    /** Người đại diện / chịu trách nhiệm chính (trùng với hop_dong.khach_thue_id). */
+
     @Column(name = "la_dai_dien", nullable = false)
     private boolean laDaiDien = false;
 }

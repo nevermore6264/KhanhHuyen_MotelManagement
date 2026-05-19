@@ -17,7 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/** Cấu hình bảo mật: JWT, CORS, quyền truy cập API. */
+
 @Configuration
 @EnableMethodSecurity
 public class CauHinhBaoMat {
@@ -27,10 +27,7 @@ public class CauHinhBaoMat {
         this.boLocJwt = boLocJwt;
     }
 
-    /**
-     * File ảnh phục vụ qua /tenant-files/ — trình duyệt không gửi header JWT khi tải ảnh.
-     * {@code web.ignoring()} bỏ qua toàn bộ SecurityFilterChain (tránh 403 dù đã permitAll).
-     */
+
     @Bean
     public WebSecurityCustomizer boQuaFileKhachThueTinh() {
         return (web) -> web.ignoring().requestMatchers("/tenant-files/**");
@@ -39,7 +36,7 @@ public class CauHinhBaoMat {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Pattern (không dùng allowedOrigins("*") với credentials). Gồm cổng dev FE phổ biến.
+
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
@@ -54,7 +51,7 @@ public class CauHinhBaoMat {
         return source;
     }
 
-    /** Định nghĩa chuỗi filter: vô hiệu CSRF, CORS, session stateless, JWT filter. */
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -73,7 +70,7 @@ public class CauHinhBaoMat {
         return http.build();
     }
 
-    /** Bean mã hóa mật khẩu BCrypt. */
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

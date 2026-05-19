@@ -16,7 +16,7 @@ const formatMoney = (n?: number | null) => {
   return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
 };
 
-/** JSON thanh toán từ API (soTien có thể là số hoặc chuỗi). */
+
 function soTienThanhToan(v: unknown): number {
   if (v == null) return 0;
   if (typeof v === "number" && !isNaN(v)) return v;

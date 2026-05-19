@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-/** DTO yêu cầu đặt lại mật khẩu (token từ link quên mật khẩu + mật khẩu mới). */
+
 @Getter
 @Setter
 public class YeuCauDatLaiMatKhau {

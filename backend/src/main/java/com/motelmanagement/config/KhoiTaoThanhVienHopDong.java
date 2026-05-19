@@ -14,9 +14,7 @@ import com.motelmanagement.repository.HopDongThanhVienRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Bổ sung bảng thành viên hợp đồng cho dữ liệu cũ (một khách = một dòng đại diện).
- */
+
 @Component
 @Order(Integer.MAX_VALUE)
 @RequiredArgsConstructor

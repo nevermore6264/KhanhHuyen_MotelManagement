@@ -9,7 +9,7 @@ import com.motelmanagement.service.PayOSService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** Nếu bật app.payos.auto-confirm-webhook, đăng ký URL webhook với PayOS khi start (tránh nhập sai URL trên dashboard). */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j

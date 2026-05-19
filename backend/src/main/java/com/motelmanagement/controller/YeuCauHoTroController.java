@@ -20,10 +20,11 @@ import com.motelmanagement.domain.YeuCauHoTro;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.YeuCauHoTroRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
+import com.motelmanagement.service.YeuCauHoTroService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API yêu cầu hỗ trợ từ khách thuê. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/yeu-cau-ho-tro")
@@ -31,6 +32,7 @@ public class YeuCauHoTroController {
     private final YeuCauHoTroRepository yeuCauHoTroRepository;
     private final KhachThueRepository khachThueRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
+    private final YeuCauHoTroService yeuCauHoTroService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
@@ -40,14 +42,19 @@ public class YeuCauHoTroController {
             return Collections.emptyList();
         }
         if (nguoiDung.getVaiTro() == VaiTro.ADMIN || nguoiDung.getVaiTro() == VaiTro.STAFF) {
-            return yeuCauHoTroRepository.findAll();
+            List<YeuCauHoTro> danhSach = yeuCauHoTroRepository.findAll();
+            yeuCauHoTroService.boSungPhongTuHopDong(danhSach);
+            return danhSach;
         }
         if (nguoiDung.getVaiTro() == VaiTro.TENANT) {
             KhachThue khachThue = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());
             if (khachThue == null) {
                 return Collections.emptyList();
             }
-            return yeuCauHoTroRepository.findByKhachThue_IdOrderByNgayTaoDesc(khachThue.getId());
+            List<YeuCauHoTro> danhSach =
+                    yeuCauHoTroRepository.findByKhachThue_IdOrderByNgayTaoDesc(khachThue.getId());
+            yeuCauHoTroService.boSungPhongTuHopDong(danhSach);
+            return danhSach;
         }
         return Collections.emptyList();
     }
@@ -68,6 +75,7 @@ public class YeuCauHoTroController {
             khachThue = khachThueRepository.save(moiTao);
         }
         yeuCau.setKhachThue(khachThue);
+        yeuCauHoTroService.ganPhongNeuThieu(yeuCau);
         return ResponseEntity.ok(yeuCauHoTroRepository.save(yeuCau));
     }
 

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-/** DTO yêu cầu đăng ký tài khoản mới. */
+
 @Getter
 @Setter
 public class YeuCauDangKy {

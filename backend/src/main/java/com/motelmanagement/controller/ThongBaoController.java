@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** API thông báo: lấy danh sách, đánh dấu đã đọc, tạo và đẩy thông báo. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/thong-bao")
@@ -30,7 +30,7 @@ public class ThongBaoController {
         if (nguoiDung == null) {
             return List.of();
         }
-        // Khách/nhân viên chỉ thấy thông báo của mình; quản trị xem toàn bộ bản ghi trong DB.
+
         if (nguoiDung.getVaiTro() == VaiTro.ADMIN) {
             return thongBaoRepository.findAllByOrderByThoiGianGuiDesc();
         }

@@ -22,7 +22,7 @@ import com.motelmanagement.repository.ThongBaoRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/** Dịch vụ thông báo: nhắc thanh toán định kỳ, tạo và đẩy qua WebSocket. */
+
 @Service
 @RequiredArgsConstructor
 public class ThongBaoService {
@@ -51,11 +51,7 @@ public class ThongBaoService {
         }
     }
 
-    /**
-     * Tạo thông báo và đẩy realtime qua WebSocket.
-     * @param message Nội dung thông báo
-     * @param userId Null = gửi cho tất cả user; có giá trị = gửi cho user đó
-     */
+
     public void taoVaDay(String message, String userId) {
         if (message == null || message.isBlank()) return;
         List<NguoiDung> danhSachNhan = userId != null
@@ -86,7 +82,7 @@ public class ThongBaoService {
         return payload;
     }
 
-    /** Đẩy tới subscription /user/queue/notifications (principal = tên đăng nhập). */
+
     private void guiRealtimeDenNguoiDung(ThongBao thongBao, NguoiDung nguoiDung) {
         if (nguoiDung == null || nguoiDung.getTenDangNhap() == null
                 || nguoiDung.getTenDangNhap().isBlank()) {

@@ -21,7 +21,7 @@ export type ContractForDocx = {
     idNumber?: string;
     address?: string;
   };
-  /** Các thành viên cùng thuê (để ghi trong Word). */
+
   coTenants?: {
     fullName?: string;
     idNumber?: string;

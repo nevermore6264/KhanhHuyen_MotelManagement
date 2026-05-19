@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.ThongBao;
 
-/** Repository thông báo. */
+
 public interface ThongBaoRepository extends JpaRepository<ThongBao, String> {
-    /** Lấy danh sách thông báo theo người dùng (mới nhất trước). */
+
     List<ThongBao> findByNguoiDungOrderByThoiGianGuiDesc(NguoiDung nguoiDung);
 
-    /** Toàn bộ thông báo — dùng cho quản trị xem hệ thống (mới nhất trước). */
+
     List<ThongBao> findAllByOrderByThoiGianGuiDesc();
 }

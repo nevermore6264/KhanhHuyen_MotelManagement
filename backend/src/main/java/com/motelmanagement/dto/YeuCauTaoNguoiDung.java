@@ -5,7 +5,7 @@ import com.motelmanagement.domain.VaiTro;
 import lombok.Getter;
 import lombok.Setter;
 
-/** DTO tạo người dùng (tenDangNhap, matKhau, vaiTro, maKhachThue tùy chọn). */
+
 @Getter
 @Setter
 public class YeuCauTaoNguoiDung {
@@ -15,6 +15,6 @@ public class YeuCauTaoNguoiDung {
     private String soDienThoai;
     private VaiTro vaiTro;
     private boolean kichHoat = true;
-    /** Khi vaiTro = TENANT: gắn tài khoản với khách thuê có sẵn (chọn khách thuê chưa có tài khoản). */
+
     private String maKhachThue;
 }

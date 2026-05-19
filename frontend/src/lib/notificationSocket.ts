@@ -23,7 +23,7 @@ export function createNotificationClient(
   if (!token || !WS_URL) return null;
 
   const client = new Client({
-    /** Cross-origin (FE :4002 → BE :8080): không gửi cookie trên XHR SockJS — tránh CORS bắt `Allow-Credentials: true`. JWT vẫn gửi qua header STOMP `connectHeaders`. */
+
     webSocketFactory: () =>
       new SockJS(WS_URL, undefined, {
         withCredentials: false,
@@ -35,7 +35,7 @@ export function createNotificationClient(
           const body = JSON.parse(msg.body) as NotificationPayload;
           onNotification(body);
         } catch {
-          // ignore parse error
+
         }
       });
       onConnect?.();

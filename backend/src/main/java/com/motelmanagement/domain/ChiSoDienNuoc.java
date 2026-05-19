@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Chỉ số điện/nước theo phòng và tháng (dùng tính tiền hóa đơn). */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,7 +38,7 @@ public class ChiSoDienNuoc {
     @Column(name = "nam")
     private int nam;
 
-    /** Chỉ số đầu kỳ (số mới tháng trước) — không cột DB, gán trước khi trả JSON. */
+
     @Transient
     private int dienCu;
 

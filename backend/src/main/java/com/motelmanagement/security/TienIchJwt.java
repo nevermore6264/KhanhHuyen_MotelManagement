@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
-/** Tiện ích tạo và parse JWT (username, role, thời hạn). */
+
 @Component
 public class TienIchJwt {
     @Value("${app.jwt.secret}")
@@ -24,7 +24,7 @@ public class TienIchJwt {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /** Sinh token JWT từ username và role. */
+
     public String generateToken(String username, String vaiTro) {
         Date hienTai = new Date();
         Date hetHan = new Date(hienTai.getTime() + expirationMs);
@@ -37,7 +37,7 @@ public class TienIchJwt {
                 .compact();
     }
 
-    /** Giải mã và lấy claims từ token (ném ngoại lệ nếu hết hạn/sai chữ ký). */
+
     public Claims parseClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())

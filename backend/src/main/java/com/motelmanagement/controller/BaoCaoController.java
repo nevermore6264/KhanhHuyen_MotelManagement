@@ -24,7 +24,7 @@ import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API báo cáo: doanh thu, công nợ. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/bao-cao")

@@ -16,7 +16,7 @@ function NoiDungChuyenHuong() {
   return <div className="container">Đang chuyển hướng…</div>;
 }
 
-/** Chuyển hướng từ link cũ /reset-password sang /dat-lai-mat-khau (giữ query token). */
+
 export default function TrangChuyenHuongDatLaiMatKhau() {
   return (
     <Suspense fallback={<div className="container">Đang tải…</div>}>

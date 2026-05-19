@@ -25,7 +25,7 @@ import com.motelmanagement.service.NguoiDungChoThongBaoService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API quản lý người dùng (chỉ ADMIN): CRUD, khóa/mở, gắn khách thuê. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/nguoi-dung")
@@ -41,7 +41,7 @@ public class NguoiDungController {
         return nguoiDungRepository.findAll();
     }
 
-    /** Danh sách người dùng kèm phòng/khu đang thuê (hợp đồng ACTIVE) để chọn người nhận thông báo. */
+
     @GetMapping("/cho-thong-bao")
     @PreAuthorize("hasRole('ADMIN')")
     public List<DtoNguoiDungChoThongBao> layChoThongBao() {
@@ -107,7 +107,7 @@ public class NguoiDungController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /** Chỉ gắn hoặc bỏ gắn tài khoản với khách thuê. tenantId = null để bỏ gắn. */
+
     @PutMapping("/{id}/khach-thue")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> lienKetKhachThue(@PathVariable("id") String maNguoiDung, @RequestBody DtoLienKetNguoiDungKhachThue dto) {

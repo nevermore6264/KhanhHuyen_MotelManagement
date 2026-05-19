@@ -13,7 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Set;
 
-/** Filter ghi log API (POST/PUT/DELETE) vào SystemLog với người thực hiện. */
+
 @Component
 public class BoLocGhiNhatKyApi extends OncePerRequestFilter {
     private final NhatKyService nhatKyService;

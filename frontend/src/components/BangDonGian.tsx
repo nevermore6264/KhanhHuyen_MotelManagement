@@ -1,12 +1,12 @@
 "use client";
 
-/** Định nghĩa cột: tiêu đề (header) và hàm render ô (dòng) */
+
 type Cot<T> = {
   header: string;
   render: (dong: T) => React.ReactNode;
 };
 
-/** Bảng dữ liệu đơn giản: nhận mảng cột và mảng dữ liệu, render thead + tbody. */
+
 export default function BangDonGian<T>({
   columns: danhSachCot,
   data: duLieu,

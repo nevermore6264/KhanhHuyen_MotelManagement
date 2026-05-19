@@ -18,9 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.motelmanagement.dto.YeuCauXacThuc;
 
-/**
- * Nạp context đầy đủ (H2 + profile test), gọi chuỗi API thật để tăng line coverage (JaCoCo đã loại dto/domain/repository/config/job/logging).
- */
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

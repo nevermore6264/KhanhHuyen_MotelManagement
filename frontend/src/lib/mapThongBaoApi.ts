@@ -1,7 +1,4 @@
-/**
- * REST /api/thong-bao trả entity ThongBao: noiDung, daDoc, thoiGianGui.
- * WebSocket payload dùng message, readFlag, sentAt — hàm này gộp hai kiểu cho UI.
- */
+
 
 export type ThongBaoUi = {
   id: string;

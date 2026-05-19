@@ -1,6 +1,6 @@
 "use client";
 
-/** Tập biểu tượng SVG dùng chung trong ứng dụng. */
+
 const kichThuoc = 18;
 const thuocTinhSvg = {
   width: kichThuoc,
@@ -155,7 +155,7 @@ export function IconChevronRight() {
   );
 }
 
-/** Thu gọn panel (mũi lên) */
+
 export function IconChevronUp() {
   return (
     <svg {...thuocTinhSvg}>
@@ -164,7 +164,7 @@ export function IconChevronUp() {
   );
 }
 
-/** Mở rộng panel (mũi xuống) */
+
 export function IconChevronDown() {
   return (
     <svg {...thuocTinhSvg}>

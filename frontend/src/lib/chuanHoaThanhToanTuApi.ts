@@ -1,7 +1,4 @@
-/**
- * Chuẩn hóa JSON ThanhToan từ Spring (soTien, phuongThuc, thoiGianThanhToan, hoaDon)
- * sang dạng dùng trên UI (amount, method, paidAt, invoice).
- */
+
 
 export type PaymentRow = {
   id: string;
@@ -18,7 +15,7 @@ function parseSoTien(v: unknown): number {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** Jackson có thể trả ISO string hoặc mảng [y,m,d,h,min,sec,nano] nếu bật timestamp. */
+
 function thoiGianThanhToanRaChuoiIso(v: unknown): string {
   if (v == null) return "";
   if (typeof v === "string") return v;

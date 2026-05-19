@@ -14,7 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Nhật ký hành động hệ thống (ai làm gì, với entity nào). */
+
 @Getter
 @Setter
 @NoArgsConstructor

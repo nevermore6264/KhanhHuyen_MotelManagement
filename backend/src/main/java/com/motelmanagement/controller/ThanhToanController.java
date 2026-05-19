@@ -32,7 +32,7 @@ import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
 
-/** API thanh toán: PayOS, lịch sử thanh toán theo khách thuê. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/thanh-toan")
@@ -63,7 +63,7 @@ public class ThanhToanController {
         return thanhToanRepository.findByHoaDon_Id(maHoaDon);
     }
 
-    /** Tạo link thanh toán PayOS (tenant chỉ được tạo cho hóa đơn của mình). */
+
     @PostMapping("/tao-link")
     @PreAuthorize("hasRole('TENANT')")
     public ResponseEntity<Map<String, String>> taoLinkThanhToan(@RequestBody Map<String, Object> body) {
@@ -88,10 +88,7 @@ public class ThanhToanController {
         return ResponseEntity.ok(Map.of("paymentUrl", linkThanhToan));
     }
 
-    /**
-     * Kiểm tra URL webhook (GET trong trình duyệt). PayOS thực tế gửi POST JSON — không gọi từ frontend Next.js.
-     * Nếu cấu hình nhầm port 4002 hoặc thiếu {@code /api} thì webhook không tới backend.
-     */
+
     @GetMapping("/payos/webhook")
     public ResponseEntity<Map<String, String>> webhookPayOSThongTin() {
         return ResponseEntity.ok(Map.of(
@@ -102,17 +99,14 @@ public class ThanhToanController {
                 "ghiChu", "CORS không áp dụng cho POST từ PayOS → BE; lỗi CORS thường do gọi nhầm URL từ trình duyệt."));
     }
 
-    /** Webhook PayOS gửi kết quả thanh toán. Cho phép không đăng nhập. */
+
     @PostMapping("/payos/webhook")
     public ResponseEntity<Void> webhookPayOS(@RequestBody String body) {
         boolean thanhCong = payOSService.xacThucVaXuLyWebhook(body);
         return thanhCong ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 
-    /**
-     * Xác nhận từ return URL (fallback local): dùng khi webhook về chậm/không về được localhost.
-     * Chỉ cho tenant xác nhận đơn PayOS thuộc chính hóa đơn của họ.
-     */
+
     @PostMapping("/payos/xac-nhan-tra-ve")
     public ResponseEntity<Map<String, Object>> xacNhanTraVePayOS(@RequestBody Map<String, Object> body) {
         String status = body != null && body.get("status") != null ? body.get("status").toString() : "";

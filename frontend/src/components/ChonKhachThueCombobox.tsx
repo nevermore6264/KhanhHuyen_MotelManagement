@@ -21,9 +21,9 @@ type Props = {
   danhSach: MucKhachThue[];
   value: string;
   onChange: (idKhach: string) => void;
-  /** Chỉ danh sách khách chưa có tài khoản (dùng khi tạo tài khoản TENANT). */
+
   chiChuaCoTaiKhoan?: boolean;
-  /** ID người dùng đang liên kết — hiện nhãn ✓ đang gắn trên dòng khớp. */
+
   idNguoiDungGan?: string | null;
   disabled?: boolean;
   placeholderChuaChon?: string;

@@ -36,7 +36,7 @@ const toAbsoluteFileUrl = (filePath?: string | null) => {
   if (!filePath) return undefined;
   const path = filePath.trim();
   if (!path) return undefined;
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\
   if (path.startsWith("/")) return `${API_ORIGIN}${path}`;
   return `${API_ORIGIN}/${path}`;
 };
@@ -265,7 +265,7 @@ export default function TrangKhachThue() {
             return;
           }
         } catch {
-          // fall through to error message
+
         }
       }
       const message =
@@ -311,8 +311,8 @@ export default function TrangKhachThue() {
         if (userId) formData.append("userId", userId);
         if (portraitFile) formData.append("portrait", portraitFile);
         if (idCardFile) formData.append("idCard", idCardFile);
-        // Khong set Content-Type: multipart/form-data thu cong — thieu boundary
-        // thi Spring khong doc duoc part; de axios/browser tu gan boundary.
+
+
         await api.post("/khach-thue", formData);
       } else {
         await api.post("/khach-thue", {

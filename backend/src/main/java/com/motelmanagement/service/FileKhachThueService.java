@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-/** Dịch vụ lưu/đọc file ảnh khách thuê (chân dung, CCCD). */
+
 @Service
 public class FileKhachThueService {
 
@@ -21,12 +21,12 @@ public class FileKhachThueService {
     private String uploadDir;
 
     private static final String TENANTS_SUBDIR = "tenants";
-    private static final long MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_SIZE = 5 * 1024 * 1024;
     private static final String[] ALLOWED_CONTENT_TYPES = {
             "image/jpeg", "image/png", "image/gif", "image/webp"
     };
 
-    /** Lưu file ảnh vào thư mục upload/tenants và trả về URL tương đối để FE truy cập. Lỗi ghi đĩa bọc {@link UncheckedIOException}. */
+
     public String luuAnh(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return null;

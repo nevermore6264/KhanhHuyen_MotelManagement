@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Yêu cầu hỗ trợ từ khách thuê (nội dung, trạng thái, người tạo). */
+
 @Getter
 @Setter
 @NoArgsConstructor

@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Khách thuê rút gọn (liệt kê trên hóa đơn). */
+
 @Getter
 @Setter
 @NoArgsConstructor

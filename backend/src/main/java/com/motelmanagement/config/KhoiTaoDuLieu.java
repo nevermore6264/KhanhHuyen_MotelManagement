@@ -8,7 +8,7 @@ import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.repository.NguoiDungRepository;
 
-/** Khoi tao du lieu khi chay ung dung (VD: tai khoan admin mac dinh). */
+
 @Component
 public class KhoiTaoDuLieu implements CommandLineRunner {
     private final NguoiDungRepository nguoiDungRepository;

@@ -5,9 +5,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-/**
- * Cau hinh gui mail (from, host, port, ...).
- */
+
 @Getter
 @Setter
 @Component

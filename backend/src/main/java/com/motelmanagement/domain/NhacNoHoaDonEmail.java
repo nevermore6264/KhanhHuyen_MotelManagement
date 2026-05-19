@@ -16,9 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Lịch sử gửi email nhắc nợ theo hóa đơn (tách khỏi bảng {@code hoa_don}).
- */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,7 +42,7 @@ public class NhacNoHoaDonEmail {
     @Column(name = "email_nguoi_nhan", length = 255)
     private String emailNguoiNhan;
 
-    /** Nội dung plain text đã gửi (khớp phần text trong email). */
+
     @Column(name = "noi_dung", length = 2000)
     private String noiDung;
 }

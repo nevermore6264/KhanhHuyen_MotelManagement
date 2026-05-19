@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Giao dịch thanh toán (gắn hóa đơn, số tiền, phương thức, thời gian). */
+
 @Getter
 @Setter
 @NoArgsConstructor

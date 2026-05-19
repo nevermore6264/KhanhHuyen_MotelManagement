@@ -22,7 +22,7 @@ import com.motelmanagement.repository.PhongRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/** API phòng: CRUD, lọc theo khu vực/trạng thái. */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/phong")
@@ -36,7 +36,7 @@ public class PhongController {
         return phongRepository.findAll();
     }
 
-    /** Phòng đang có hợp đồng hiệu lực (nhập chỉ số điện nước). */
+
     @GetMapping("/co-hop-dong-active")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public List<Phong> layPhongCoHopDongActive() {

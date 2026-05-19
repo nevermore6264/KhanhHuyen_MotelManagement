@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.motelmanagement.domain.HopDong;
 import com.motelmanagement.domain.TrangThaiHopDong;
 
-/** Repository hợp đồng. */
+
 public interface HopDongRepository extends JpaRepository<HopDong, String> {
     @EntityGraph(attributePaths = {"khachThue", "thanhVien", "thanhVien.khachThue"})
     Optional<HopDong> findByPhong_IdAndTrangThai(String phongId, TrangThaiHopDong trangThai);

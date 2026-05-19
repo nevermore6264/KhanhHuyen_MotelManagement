@@ -22,9 +22,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Cấu hình web socket
- */
+
 @Configuration
 @EnableWebSocketMessageBroker
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)

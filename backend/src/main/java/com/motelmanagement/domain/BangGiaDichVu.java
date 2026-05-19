@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Đơn giá dịch vụ (điện/nước) áp dụng từ một thời điểm. */
+
 @Getter
 @Setter
 @NoArgsConstructor

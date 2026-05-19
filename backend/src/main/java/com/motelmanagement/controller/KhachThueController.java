@@ -29,7 +29,7 @@ import com.motelmanagement.service.FileKhachThueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** API quản lý khách thuê (CRUD, gắn tài khoản). */
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -40,10 +40,7 @@ public class KhachThueController {
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final FileKhachThueService fileKhachThueService;
 
-    /**
-     * Một tài khoản chỉ gắn một dòng khách (unique nguoi_dung_id). Trước khi gán user cho
-     * khách này, gỡ user đó khỏi dòng khách khác (nếu có) để tránh lỗi unique constraint.
-     */
+
     private void ganNguoiDungChoKhach(KhachThue khach, NguoiDung nguoiDung) {
         if (nguoiDung != null && nguoiDung.getId() != null) {
             KhachThue daCo = khachThueRepository.findByNguoiDung_Id(nguoiDung.getId());

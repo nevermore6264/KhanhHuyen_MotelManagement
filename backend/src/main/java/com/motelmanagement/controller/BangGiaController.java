@@ -18,7 +18,7 @@ import com.motelmanagement.repository.BangGiaDichVuRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/** API đơn giá dịch vụ (điện, nước theo từng thời điểm). */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/bang-gia-dich-vu")

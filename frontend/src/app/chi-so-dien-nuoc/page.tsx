@@ -32,7 +32,7 @@ type MeterReading = {
 
 type RawJson = Record<string, unknown>;
 
-/** Spring: KhuVuc — ten; Phong — maPhong, khuVuc; ChiSoDienNuoc — phong, thang, nam, dienCu… */
+
 function chuanHoaKhuTuApi(raw: RawJson): Area {
   const r = raw;
   return {
@@ -58,7 +58,7 @@ function chuanHoaPhongTuApi(raw: RawJson): Room {
   };
 }
 
-/** Hiển thị: "Tên khu - Mã phòng" (dễ nhận diện khi nhiều khu). */
+
 function tenKhuVaPhong(room?: Room | null): string {
   if (!room) return "—";
   const tenKhu = (room.area?.name || "").trim();
@@ -102,7 +102,7 @@ const tongTienDienNuoc = (r: MeterReading) => {
   return d + n;
 };
 
-/** Chỉ cho phép tháng hiện tại hoặc tháng trước đó */
+
 const laThangChoPhep = (thang: number, nam: number): boolean => {
   const bayGio = new Date();
   const thangHienTai = bayGio.getMonth() + 1;
@@ -131,7 +131,7 @@ export default function TrangChiSoDienNuoc() {
   const [loi, setLoi] = useState("");
   const [idKhuLoc, setIdKhuLoc] = useState("");
   const [idPhongLoc, setIdPhongLoc] = useState("");
-  /** true = hiện đầy đủ khu + lưới phòng; false = thu gọn tiết kiệm chỗ */
+
   const [moChonKhuPhong, setMoChonKhuPhong] = useState(true);
   const [chiSoSua, setChiSoSua] = useState<MeterReading | null>(null);
   const [suaDienMoi, setSuaDienMoi] = useState("");
@@ -162,7 +162,7 @@ export default function TrangChiSoDienNuoc() {
     return danhSachPhong.filter((r) => String(r.area?.id) === idKhu);
   }, [danhSachPhong, idKhu]);
 
-  /** Gom phòng theo khu; thứ tự khu theo danh sách khu API, cuối là phòng chưa gán khu. */
+
   const phongNhomTheoKhu = useMemo(() => {
     const nhomMap = new Map<string, { ten: string; phong: Room[] }>();
     for (const p of phongTheoKhu) {
@@ -245,7 +245,7 @@ export default function TrangChiSoDienNuoc() {
     return { month: m, year: y };
   }, [phongDangChon, thang, nam]);
 
-  /** Số cũ = số mới tháng trước (cùng phòng), tính trên client để hiển thị. */
+
   const chiSoDauKyHienThi = useMemo(() => {
     if (!phongDangChon || !kyNhapChiSo) {
       return { dienCu: 0, nuocCu: 0 };

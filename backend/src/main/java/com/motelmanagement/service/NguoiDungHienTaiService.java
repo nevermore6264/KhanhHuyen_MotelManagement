@@ -9,19 +9,13 @@ import com.motelmanagement.repository.NguoiDungRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Dịch vụ lấy người dùng hiện tại từ SecurityContext (JWT).
- */
+
 @Service
 @RequiredArgsConstructor
 public class NguoiDungHienTaiService {
     private final NguoiDungRepository nguoiDungRepository;
 
-    /**
-     * Lấy thực thể NguoiDung đang đăng nhập, hoặc null nếu chưa đăng nhập.
-     *
-     * @return NguoiDung
-     */
+
     public NguoiDung layNguoiDungHienTai() {
         Authentication xacThuc = SecurityContextHolder.getContext().getAuthentication();
         if (xacThuc == null || xacThuc.getName() == null) {

@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Một dòng chi tiết trên hóa đơn (giữ xe, wifi, sửa chữa, …). */
+
 @Getter
 @Setter
 @NoArgsConstructor
