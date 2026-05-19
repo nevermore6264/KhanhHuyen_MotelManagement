@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
-import { IconRefresh, IconEye } from "@/components/Icons";
+import { IconRefresh, IconEye, IconDownload } from "@/components/Icons";
 import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
+import { taiFileTuApi } from "@/lib/taiFile";
+import { useToast } from "@/components/NhaCungCapToast";
 
 const formatMoney = (n?: number | null) => {
   if (n == null || isNaN(Number(n))) return "—";
@@ -84,7 +86,9 @@ export default function TrangBaoCao() {
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [exportingDebt, setExportingDebt] = useState(false);
   const [error, setError] = useState("");
+  const { notify } = useToast();
   const [mounted, setMounted] = useState(false);
   const role = mounted ? getRole() : null;
   const canView = role === "ADMIN" || role === "STAFF";
@@ -114,6 +118,19 @@ export default function TrangBaoCao() {
       setError("Không tải được báo cáo. Kiểm tra quyền truy cập.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const xuatCongNoExcel = async () => {
+    setExportingDebt(true);
+    try {
+      const ngay = new Date().toISOString().slice(0, 10);
+      await taiFileTuApi("/bao-cao/xuat-cong-no", `cong-no-${ngay}.xlsx`);
+      notify("Đã tải file Excel công nợ.", "success");
+    } catch {
+      notify("Xuất Excel thất bại.", "error");
+    } finally {
+      setExportingDebt(false);
     }
   };
 
@@ -353,6 +370,15 @@ export default function TrangBaoCao() {
             {formatMoney(debtDetail?.totalDebt)} ({debtDetail?.count ?? 0} hóa
             đơn).
           </p>
+          <button
+            type="button"
+            className="btn btn-secondary mb-3"
+            disabled={exportingDebt}
+            onClick={() => void xuatCongNoExcel()}
+          >
+            <IconDownload />{" "}
+            {exportingDebt ? "Đang xuất…" : "Xuất Excel công nợ"}
+          </button>
           <BangDonGian
             data={debtDetail?.invoices ?? []}
             columns={[

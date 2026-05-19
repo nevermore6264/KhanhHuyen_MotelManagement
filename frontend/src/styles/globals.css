@@ -187,7 +187,6 @@ a {
   grid-column: 1 / -1;
 }
 
-/* Chọn khu: tìm kiếm + danh sách cuộn (thay native select dài) */
 .combobox-khu {
   position: relative;
   width: 100%;
@@ -256,7 +255,6 @@ a {
   padding: 8px;
 }
 
-/* Portal: neo theo viewport, tranh bi grid/card cat hoac day layout */
 .combobox-khu-panel-portal {
   display: flex;
   flex-direction: column;
@@ -432,7 +430,6 @@ a {
   transform: translateY(0);
 }
 
-/* Nút thật sự disabled — khác rõ màu với nút bật (gradient xanh). */
 .btn:disabled,
 .btn[disabled] {
   cursor: not-allowed;
@@ -476,7 +473,6 @@ a.btn {
   background: #64748b;
 }
 
-/* Quản lý người dùng: khóa (nguy hiểm) vs mở khóa (kích hoạt lại) */
 .btn-lock {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
@@ -1809,7 +1805,6 @@ textarea:disabled:focus {
   object-fit: cover;
 }
 
-/* Popup xem một ảnh khách thuê — react-zoom-pan-pinch */
 .tenant-view-modal {
   max-width: 720px;
   max-height: calc(100vh - 96px);
@@ -1852,17 +1847,14 @@ textarea:disabled:focus {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
 }
 
-/* Thu nhỏ — cam */
 .tenant-zoom-toolbar .tenant-zoom-btn.tenant-zoom-out {
   background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
 }
 
-/* Phóng to — xanh brand */
 .tenant-zoom-toolbar .tenant-zoom-btn.tenant-zoom-in {
   background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
 }
 
-/* Gốc — teal */
 .tenant-zoom-toolbar .tenant-zoom-btn.tenant-zoom-reset {
   margin-left: auto;
   min-width: 4rem;
@@ -2020,12 +2012,10 @@ textarea:disabled:focus {
   grid-column: 1 / -1;
 }
 
-/* Khu + Phòng: hai cột cân bằng */
 .contract-create-modal .form-section-fields--khu-phong {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* Thời hạn: bắt đầu | khoảng thời gian | kết thúc một hàng */
 .contract-create-modal .form-section-fields--thoi-han-ba-cot {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -2136,7 +2126,6 @@ textarea:disabled:focus {
   font-weight: 600;
 }
 
-/* Tóm tắt khách đã chọn — modal tạo hợp đồng */
 .hop-dong-khach-preview {
   padding: 12px 14px;
   min-height: 52px;
@@ -2249,7 +2238,6 @@ textarea:disabled:focus {
   white-space: nowrap;
 }
 
-/* Modal chọn khách — checkbox | họ tên | SĐT | CCCD | đại diện */
 .hop-dong-chon-khach-head {
   display: grid;
   grid-template-columns:
@@ -2497,7 +2485,6 @@ table .btn {
   border-color: #cbd5f5;
 }
 
-/* Chọn khu trên trang chỉ số điện nước — combobox gọn, có tìm kiếm */
 .meter-picker-card-header {
   align-items: flex-start;
   gap: 12px;
@@ -2964,7 +2951,6 @@ table {
   white-space: nowrap;
 }
 
-/* Trang quản lý hợp đồng: bảng nhiều cột — full width, cho phép xuống dòng */
 .container.hop-dong-trang-container {
   max-width: 95vw;
   width: 100%;

@@ -29,6 +29,8 @@ import com.motelmanagement.repository.ThanhToanRepository;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.PayOSService;
 import com.motelmanagement.service.TinhTienService;
+import com.motelmanagement.service.XuatPdfService;
+import com.motelmanagement.util.TaiLieuHttp;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +45,14 @@ public class ThanhToanController {
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final PayOSService payOSService;
     private final TinhTienService tinhTienService;
+    private final XuatPdfService xuatPdfService;
+
+    @GetMapping("/{id}/phieu-thu-pdf")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
+    public ResponseEntity<byte[]> phieuThuPdf(@PathVariable("id") String ma) {
+        String tenTep = "phieu-thu-" + ma + ".pdf";
+        return TaiLieuHttp.tep(tenTep, "application/pdf", xuatPdfService.pdfPhieuThu(ma));
+    }
 
     @GetMapping("/cua-toi")
     @PreAuthorize("hasRole('TENANT')")

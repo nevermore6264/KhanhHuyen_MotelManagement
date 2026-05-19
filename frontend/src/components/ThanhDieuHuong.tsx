@@ -78,6 +78,7 @@ const menuTheoVaiTro: Record<string, NhomMenu[]> = {
         { href: "/hop-dong-cua-toi", label: "Hợp đồng" },
         { href: "/hoa-don-cua-toi", label: "Hóa đơn" },
         { href: "/thanh-toan-cua-toi", label: "Thanh toán" },
+        { href: "/tai-khoan", label: "Hồ sơ cá nhân" },
       ],
     },
     {
@@ -143,6 +144,13 @@ export default function ThanhDieuHuong() {
 
         <div className="nav-actions">
           {hienThiChuong && <ChuongPopoverThongBao />}
+          <Link
+            href="/tai-khoan"
+            className="btn btn-secondary btn-sm"
+            style={{ textDecoration: "none" }}
+          >
+            Hồ sơ
+          </Link>
           <span className="nav-user">
             {ten}
             {vaiTro != null ? ` (${vaiTro})` : ""}

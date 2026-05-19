@@ -60,7 +60,10 @@ public class CauHinhBaoMat {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/xac-thuc/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/xac-thuc/dang-nhap").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/xac-thuc/dang-ky").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/xac-thuc/quen-mat-khau").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/xac-thuc/dat-lai-mat-khau").permitAll()
                         .requestMatchers("/api/thanh-toan/payos/webhook").permitAll()
                         .requestMatchers("/api/thanh-toan/payos/xac-nhan-tra-ve").permitAll()
                         .requestMatchers("/ws/**").permitAll()

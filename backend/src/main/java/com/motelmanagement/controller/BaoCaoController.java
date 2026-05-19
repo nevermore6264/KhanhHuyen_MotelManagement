@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,8 @@ import com.motelmanagement.domain.TrangThaiPhong;
 import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.PhongRepository;
 import com.motelmanagement.service.TinhTienService;
+import com.motelmanagement.service.XuatBaoCaoService;
+import com.motelmanagement.util.TaiLieuHttp;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +35,7 @@ public class BaoCaoController {
     private final HoaDonRepository hoaDonRepository;
     private final PhongRepository phongRepository;
     private final TinhTienService tinhTienService;
+    private final XuatBaoCaoService xuatBaoCaoService;
 
     private List<HoaDon> tinhTienDanhSach(List<HoaDon> ds) {
         return ds.stream().map(tinhTienService::tinhTienRuntime).toList();
@@ -111,6 +115,16 @@ public class BaoCaoController {
         ketQua.put("totalDebt", tongNo);
         ketQua.put("count", chuaThanhToan.size());
         return ketQua;
+    }
+
+    @GetMapping("/xuat-cong-no")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<byte[]> xuatCongNoExcel() throws java.io.IOException {
+        String tenTep = "cong-no-" + java.time.LocalDate.now() + ".xlsx";
+        return TaiLieuHttp.tep(
+                tenTep,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                xuatBaoCaoService.xuatExcelCongNo());
     }
 
     @GetMapping("/chi-tiet-cong-no")

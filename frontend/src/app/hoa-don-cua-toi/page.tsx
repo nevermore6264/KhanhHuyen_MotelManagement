@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
-import { IconCheck, IconEye, IconTimes } from "@/components/Icons";
+import { IconCheck, IconEye, IconTimes, IconDownload } from "@/components/Icons";
 import api from "@/lib/api";
+import { taiFileTuApi } from "@/lib/taiFile";
+import { useToast } from "@/components/NhaCungCapToast";
 import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
 import { mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
 
@@ -61,6 +63,7 @@ export default function TrangHoaDonCuaToi() {
     type: "success" | "fail" | "cancel";
     text: string;
   } | null>(null);
+  const { notify } = useToast();
 
   const taiLaiHoaDon = async () => {
     const res = await api.get("/hoa-don/cua-toi");
@@ -242,6 +245,18 @@ export default function TrangHoaDonCuaToi() {
                       onClick={() => setXemChiTiet(i)}
                     >
                       <IconEye /> Chi tiết
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      onClick={() =>
+                        void taiFileTuApi(
+                          `/hoa-don/${i.id}/xuat-pdf`,
+                          `hoa-don-${i.id}.pdf`,
+                        ).catch(() => notify("Tải PDF thất bại.", "error"))
+                      }
+                    >
+                      <IconDownload /> PDF
                     </button>
                     {canPay(i.status) ? (
                       <button
@@ -430,6 +445,18 @@ export default function TrangHoaDonCuaToi() {
                   )}
               </div>
               <div className="modal-actions" style={{ marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() =>
+                    void taiFileTuApi(
+                      `/hoa-don/${xemChiTiet.id}/xuat-pdf`,
+                      `hoa-don-${xemChiTiet.id}.pdf`,
+                    ).catch(() => notify("Tải PDF thất bại.", "error"))
+                  }
+                >
+                  <IconDownload /> Tải PDF
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"

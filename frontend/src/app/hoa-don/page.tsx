@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
-import { IconTimes, IconEye, IconRefresh, IconPlus } from "@/components/Icons";
+import {
+  IconTimes,
+  IconEye,
+  IconRefresh,
+  IconPlus,
+  IconDownload,
+} from "@/components/Icons";
+import { taiFileTuApi } from "@/lib/taiFile";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
@@ -733,6 +740,18 @@ export default function TrangHoaDon() {
                 </div>
               )}
               <div className="modal-actions" style={{ marginTop: 16 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() =>
+                    void taiFileTuApi(
+                      `/hoa-don/${viewDetailInvoice.id}/xuat-pdf`,
+                      `hoa-don-${viewDetailInvoice.id}.pdf`,
+                    ).catch(() => notify("Tải PDF thất bại.", "error"))
+                  }
+                >
+                  <IconDownload /> Tải PDF hóa đơn
+                </button>
                 {canSuaChiTiet && (
                   <button
                     type="button"

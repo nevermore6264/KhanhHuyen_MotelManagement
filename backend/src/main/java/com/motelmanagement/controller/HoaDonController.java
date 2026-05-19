@@ -37,6 +37,8 @@ import com.motelmanagement.service.HoaDonChiTietService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.NhacNoHoaDonService;
 import com.motelmanagement.service.TinhTienService;
+import com.motelmanagement.service.XuatPdfService;
+import com.motelmanagement.util.TaiLieuHttp;
 
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +57,14 @@ public class HoaDonController {
     private final NhacNoHoaDonEmailRepository nhacNoHoaDonEmailRepository;
     private final TinhTienService tinhTienService;
     private final HoaDonChiTietService hoaDonChiTietService;
+    private final XuatPdfService xuatPdfService;
+
+    @GetMapping("/{id}/xuat-pdf")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
+    public ResponseEntity<byte[]> xuatPdf(@PathVariable("id") String ma) {
+        String tenTep = "hoa-don-" + ma + ".pdf";
+        return TaiLieuHttp.tep(tenTep, "application/pdf", xuatPdfService.pdfHoaDon(ma));
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

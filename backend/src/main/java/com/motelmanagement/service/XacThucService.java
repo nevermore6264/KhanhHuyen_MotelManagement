@@ -18,6 +18,7 @@ import com.motelmanagement.dto.PhanHoiQuenMatKhau;
 import com.motelmanagement.dto.PhanHoiXacThuc;
 import com.motelmanagement.dto.YeuCauDangKy;
 import com.motelmanagement.dto.YeuCauDatLaiMatKhau;
+import com.motelmanagement.dto.YeuCauDoiMatKhau;
 import com.motelmanagement.dto.YeuCauQuenMatKhau;
 import com.motelmanagement.dto.YeuCauXacThuc;
 import com.motelmanagement.repository.NguoiDungRepository;
@@ -42,6 +43,7 @@ public class XacThucService {
     private final PasswordEncoder passwordEncoder;
     private final TienIchJwt tienIchJwt;
     private final ThuocTinhMail thuocTinhMail;
+    private final NguoiDungHienTaiService nguoiDungHienTaiService;
 
     @Autowired(required = false)
     private JavaMailSender javaMailSender;
@@ -133,5 +135,25 @@ public class XacThucService {
         nguoiDungRepository.save(nguoiDung);
         phieuDatLaiMatKhauRepository.delete(phieu);
         log.info("Password reset for user {}", nguoiDung.getTenDangNhap());
+    }
+
+    @Transactional
+    public void doiMatKhau(YeuCauDoiMatKhau yeuCau) {
+        NguoiDung nguoiDung = nguoiDungHienTaiService.layNguoiDungHienTai();
+        if (nguoiDung == null) {
+            throw new IllegalArgumentException("Chưa đăng nhập.");
+        }
+        if (!nguoiDung.isKichHoat()) {
+            throw new IllegalArgumentException("Tài khoản đã bị khóa.");
+        }
+        if (!passwordEncoder.matches(yeuCau.getMatKhauCu(), nguoiDung.getMatKhau())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng.");
+        }
+        if (passwordEncoder.matches(yeuCau.getMatKhauMoi(), nguoiDung.getMatKhau())) {
+            throw new IllegalArgumentException("Mật khẩu mới phải khác mật khẩu hiện tại.");
+        }
+        nguoiDung.setMatKhau(passwordEncoder.encode(yeuCau.getMatKhauMoi()));
+        nguoiDungRepository.save(nguoiDung);
+        log.info("Password changed for user {}", nguoiDung.getTenDangNhap());
     }
 }
