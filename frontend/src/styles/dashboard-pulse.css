@@ -629,8 +629,8 @@
   justify-content: center;
   font-weight: 700;
   font-size: 0.75rem;
-  background: #eef2ff;
-  color: var(--dx-primary);
+  background: var(--dx-soft);
+  color: var(--dx-primary-deep);
 }
 
 [data-page="dashboard"] .dash-x-debt-item strong {
@@ -713,8 +713,15 @@
   opacity: 0.5;
 }
 
+[data-theme="dark"] [data-page="dashboard"] .page-dashboard--pulse {
+  --dx-primary: #38bdf8;
+  --dx-primary-deep: #7dd3fc;
+  --dx-soft: rgba(14, 165, 233, 0.15);
+  --dx-glow: rgba(56, 189, 248, 0.25);
+}
+
 [data-theme="dark"] [data-page="dashboard"] .dash-x-kpi--revenue {
-  background: linear-gradient(145deg, #1e293b, #312e81);
+  background: linear-gradient(145deg, #1e293b, #0c4a6e);
 }
 
 [data-theme="dark"] [data-page="dashboard"] .dash-x-ticker .dashboard-slogan-marquee {
