@@ -21,7 +21,11 @@ import com.motelmanagement.dto.DtoNguoiDungChoThongBao;
 import com.motelmanagement.dto.YeuCauTaoNguoiDung;
 import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
+import com.motelmanagement.dto.DtoNguoiDungChat;
+import com.motelmanagement.service.NguoiDungChoChatService;
 import com.motelmanagement.service.NguoiDungChoThongBaoService;
+
+import org.springframework.web.bind.annotation.RequestParam;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +38,7 @@ public class NguoiDungController {
     private final KhachThueRepository khachThueRepository;
     private final PasswordEncoder passwordEncoder;
     private final NguoiDungChoThongBaoService nguoiDungChoThongBaoService;
+    private final NguoiDungChoChatService nguoiDungChoChatService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -46,6 +51,12 @@ public class NguoiDungController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<DtoNguoiDungChoThongBao> layChoThongBao() {
         return nguoiDungChoThongBaoService.layDanhSach();
+    }
+
+    @GetMapping("/cho-chat")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")
+    public List<DtoNguoiDungChat> layChoChat(@RequestParam(value = "q", required = false) String q) {
+        return nguoiDungChoChatService.timKiem(q);
     }
 
     @PostMapping

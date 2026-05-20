@@ -2,8 +2,10 @@
 import axios from "axios";
 import { getToken } from "./auth";
 
+export const API_ORIGIN = "http://localhost:8080";
+
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: `${API_ORIGIN}/api`,
 });
 
 api.interceptors.request.use((config) => {

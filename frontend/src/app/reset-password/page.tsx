@@ -13,13 +13,13 @@ function NoiDungChuyenHuong() {
     router.replace(`/dat-lai-mat-khau${query}`);
   }, [router, searchParams]);
 
-  return <div className="container">Đang chuyển hướng…</div>;
+  return <div className="page-shell page-table">Đang chuyển hướng…</div>;
 }
 
 
 export default function TrangChuyenHuongDatLaiMatKhau() {
   return (
-    <Suspense fallback={<div className="container">Đang tải…</div>}>
+    <Suspense fallback={<div className="page-shell page-table">Đang tải…</div>}>
       <NoiDungChuyenHuong />
     </Suspense>
   );

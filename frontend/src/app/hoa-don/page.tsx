@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconTimes,
@@ -262,8 +261,7 @@ export default function TrangHoaDon() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-table">
         <h2>Hóa đơn</h2>
         <div className="card">
           <div>

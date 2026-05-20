@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import { IconRefresh, IconEye, IconDownload } from "@/components/Icons";
 import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
@@ -87,6 +86,14 @@ export default function TrangBaoCao() {
   );
   const [loading, setLoading] = useState(false);
   const [exportingDebt, setExportingDebt] = useState(false);
+  const [exportingThuChi, setExportingThuChi] = useState(false);
+  const [tuNgay, setTuNgay] = useState(
+    () =>
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`,
+  );
+  const [denNgay, setDenNgay] = useState(
+    () => now.toISOString().slice(0, 10),
+  );
   const [error, setError] = useState("");
   const { notify } = useToast();
   const [mounted, setMounted] = useState(false);
@@ -134,6 +141,33 @@ export default function TrangBaoCao() {
     }
   };
 
+  const xuatThuChi = async (dinhDang: "excel" | "pdf") => {
+    if (!tuNgay || !denNgay || denNgay < tuNgay) {
+      notify("Khoảng ngày không hợp lệ.", "error");
+      return;
+    }
+    setExportingThuChi(true);
+    try {
+      const q = `tuNgay=${tuNgay}&denNgay=${denNgay}`;
+      if (dinhDang === "excel") {
+        await taiFileTuApi(
+          `/bao-cao/xuat-thu-chi?${q}`,
+          `thu-chi-${tuNgay}_${denNgay}.xlsx`,
+        );
+      } else {
+        await taiFileTuApi(
+          `/bao-cao/xuat-thu-chi-pdf?${q}`,
+          `thu-chi-${tuNgay}_${denNgay}.pdf`,
+        );
+      }
+      notify("Đã tải báo cáo thu–chi.", "success");
+    } catch {
+      notify("Xuất báo cáo thất bại.", "error");
+    } finally {
+      setExportingThuChi(false);
+    }
+  };
+
   const loadRevenueYear = async () => {
     if (!canView || !yearRevenue) return;
     try {
@@ -163,8 +197,7 @@ export default function TrangBaoCao() {
   if (!canView) {
     return (
       <TrangBaoVe>
-        <ThanhDieuHuong />
-        <div className="container">
+      <div className="page-shell page-report">
           <h2>Báo cáo</h2>
           <div className="card">
             <p className="form-error">Bạn không có quyền xem báo cáo.</p>
@@ -176,9 +209,13 @@ export default function TrangBaoCao() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Báo cáo &amp; thống kê</h2>
+      <div className="page-shell page-report">
+        <header className="page-top">
+          <div className="page-top-text">
+            <h1 className="page-heading">Báo cáo &amp; thống kê</h1>
+            <p className="page-lead">Doanh thu, công nợ, lấp đầy phòng và xuất file theo kỳ.</p>
+          </div>
+        </header>
 
         <div className="card">
           <div className="grid grid-2">
@@ -362,7 +399,56 @@ export default function TrangBaoCao() {
           )}
         </div>
 
-        {}
+        <div className="card">
+          <h3>Xuất báo cáo thu–chi theo ngày</h3>
+          <p className="card-subtitle mb-3">
+            Tổng hợp các khoản thanh toán đã ghi nhận trong khoảng thời gian.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              alignItems: "flex-end",
+              marginBottom: 12,
+            }}
+          >
+            <div>
+              <label className="field-label">Từ ngày</label>
+              <input
+                type="date"
+                value={tuNgay}
+                onChange={(e) => setTuNgay(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label">Đến ngày</label>
+              <input
+                type="date"
+                value={denNgay}
+                onChange={(e) => setDenNgay(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={exportingThuChi}
+              onClick={() => void xuatThuChi("excel")}
+            >
+              <IconDownload />{" "}
+              {exportingThuChi ? "Đang xuất…" : "Excel thu–chi"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={exportingThuChi}
+              onClick={() => void xuatThuChi("pdf")}
+            >
+              <IconDownload /> PDF thu–chi
+            </button>
+          </div>
+        </div>
+
         <div className="card">
           <h3>Chi tiết công nợ</h3>
           <p className="card-subtitle mb-3">

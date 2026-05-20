@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
@@ -147,8 +146,7 @@ export default function TrangBangGiaDichVu() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-table">
         <h2>Bảng giá dịch vụ</h2>
         <div className="card service-price-intro">
           <p className="service-price-intro-title">

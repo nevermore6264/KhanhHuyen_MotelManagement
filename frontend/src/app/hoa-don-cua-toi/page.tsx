@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import { IconCheck, IconEye, IconTimes, IconDownload } from "@/components/Icons";
 import api from "@/lib/api";
@@ -157,8 +156,7 @@ export default function TrangHoaDonCuaToi() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-table">
         <h2>Hóa đơn của tôi</h2>
         {message && (
           <div

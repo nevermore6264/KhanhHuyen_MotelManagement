@@ -59,4 +59,7 @@ public class ChiSoDienNuoc {
 
     @Column(name = "ngay_tao")
     private LocalDateTime ngayTao = LocalDateTime.now();
+
+    @Column(name = "anh_dong_ho", length = 255)
+    private String anhDongHo;
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconCheck,
@@ -11,7 +10,7 @@ import {
   IconPencil,
   IconTimes,
 } from "@/components/Icons";
-import api from "@/lib/api";
+import api, { API_ORIGIN } from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 
@@ -28,6 +27,7 @@ type MeterReading = {
   newWater: number;
   tienDien?: number;
   tienNuoc?: number;
+  anhDongHo?: string;
 };
 
 type RawJson = Record<string, unknown>;
@@ -87,7 +87,17 @@ function chuanHoaChiSoTuApi(raw: RawJson): MeterReading {
       r.tienDien != null ? Number(r.tienDien) : undefined,
     tienNuoc:
       r.tienNuoc != null ? Number(r.tienNuoc) : undefined,
+    anhDongHo:
+      r.anhDongHo != null ? String(r.anhDongHo) : undefined,
   };
+}
+
+async function taiAnhChiSo(id: string, file: File) {
+  const fd = new FormData();
+  fd.append("file", file);
+  await api.post(`/chi-so-dien-nuoc/${id}/anh`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 }
 
 const dinhDangTien = (n?: number | null) => {
@@ -128,6 +138,7 @@ export default function TrangChiSoDienNuoc() {
   const [nam, setNam] = useState("");
   const [dienMoi, setDienMoi] = useState("");
   const [nuocMoi, setNuocMoi] = useState("");
+  const [fileAnh, setFileAnh] = useState<File | null>(null);
   const [loi, setLoi] = useState("");
   const [idKhuLoc, setIdKhuLoc] = useState("");
   const [idPhongLoc, setIdPhongLoc] = useState("");
@@ -286,19 +297,24 @@ export default function TrangChiSoDienNuoc() {
     }
     setLoi("");
     try {
-      await api.post("/chi-so-dien-nuoc", {
+      const res = await api.post("/chi-so-dien-nuoc", {
         phong: { id: idPhong },
         thang: m,
         nam: y,
         dienMoi: Number(dienMoi || 0),
         nuocMoi: Number(nuocMoi || 0),
       });
+      const idMoi = (res.data as { id?: string })?.id;
+      if (fileAnh && idMoi) {
+        await taiAnhChiSo(idMoi, fileAnh);
+      }
       notify("Lưu chỉ số thành công", "success");
       setIdPhong("");
       setThang("");
       setNam("");
       setDienMoi("");
       setNuocMoi("");
+      setFileAnh(null);
       setPhongDangChon(null);
       tai();
     } catch (err: unknown) {
@@ -362,8 +378,7 @@ export default function TrangChiSoDienNuoc() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-table">
         <h2>Nhập chỉ số điện nước</h2>
         <div className="card meter-picker-card">
           <div className="card-header meter-picker-card-header">
@@ -522,6 +537,16 @@ export default function TrangChiSoDienNuoc() {
                     value={nuocMoi}
                     onChange={(e) => setNuocMoi(e.target.value)}
                     inputMode="numeric"
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Ảnh đồng hồ (tùy chọn)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setFileAnh(e.target.files?.[0] ?? null)
+                    }
                   />
                 </div>
                 {loi && <div className="form-error">{loi}</div>}

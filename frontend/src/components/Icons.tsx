@@ -9,8 +9,8 @@ const thuocTinhSvg = {
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 2,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
   "aria-hidden": true,
 };
 

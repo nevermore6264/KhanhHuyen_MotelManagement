@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
-import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import {
@@ -21,6 +19,13 @@ import {
 } from "@/components/Icons";
 import type { ThongBaoUi } from "@/lib/mapThongBaoApi";
 import { mapThongBaoFromApi } from "@/lib/mapThongBaoApi";
+import {
+  type BoLocThongBao,
+  dinhDangThoiGian,
+  locThongBao,
+  nhomTheoNgay,
+  thoiGianTuongDoi,
+} from "@/lib/thongBaoHienThi";
 type User = {
   id: string;
   username: string;
@@ -111,6 +116,12 @@ export default function TrangThongBao() {
   const [loi, setLoi] = useState("");
   const [dangTao, setDangTao] = useState(false);
   const [dangXoaId, setDangXoaId] = useState<string | null>(null);
+  const [danhSachMau, setDanhSachMau] = useState<
+    { id: string; tieuDe: string; noiDung: string }[]
+  >([]);
+  const [mauId, setMauId] = useState("");
+  const [boLoc, setBoLoc] = useState<BoLocThongBao>("all");
+  const [dangDanhDauTatCa, setDangDanhDauTatCa] = useState(false);
   const vaiTro = daMount ? getRole() : null;
   const laQuanTri = vaiTro === "ADMIN";
   const camDanhDauDaDoc = vaiTro === "ADMIN" || vaiTro === "STAFF";
@@ -121,6 +132,26 @@ export default function TrangThongBao() {
   useEffect(() => {
     setDaMount(true);
   }, []);
+
+  useEffect(() => {
+    if (!daMount || !laQuanTri) return;
+    api
+      .get("/thong-bao/mau")
+      .then((res) => {
+        const arr = Array.isArray(res.data) ? res.data : [];
+        setDanhSachMau(
+          arr.map((x) => {
+            const r = x as { id?: string; tieuDe?: string; noiDung?: string };
+            return {
+              id: String(r.id ?? ""),
+              tieuDe: String(r.tieuDe ?? ""),
+              noiDung: String(r.noiDung ?? ""),
+            };
+          }),
+        );
+      })
+      .catch(() => setDanhSachMau([]));
+  }, [daMount, laQuanTri]);
 
   const tai = async () => {
     const phanHoi = await api.get("/thong-bao");
@@ -185,6 +216,47 @@ export default function TrangThongBao() {
       setIdNguoiNhan("");
     }
   }, [danhSachNguoiDung, idNguoiNhan]);
+
+  const danhSachSapXep = useMemo(
+    () =>
+      [...danhSach].sort(
+        (a, b) =>
+          new Date(b.sentAt || 0).getTime() - new Date(a.sentAt || 0).getTime(),
+      ),
+    [danhSach],
+  );
+
+  const soChuaDoc = useMemo(
+    () => danhSachSapXep.filter((n) => !n.readFlag).length,
+    [danhSachSapXep],
+  );
+  const soDaDoc = useMemo(
+    () => danhSachSapXep.filter((n) => n.readFlag).length,
+    [danhSachSapXep],
+  );
+  const danhSachLoc = useMemo(
+    () => locThongBao(danhSachSapXep, boLoc),
+    [danhSachSapXep, boLoc],
+  );
+  const nhomNgay = useMemo(() => nhomTheoNgay(danhSachLoc), [danhSachLoc]);
+
+  const danhDauTatCaDaDoc = async () => {
+    const chuaDoc = danhSach.filter((n) => !n.readFlag);
+    if (chuaDoc.length === 0) return;
+    setDangDanhDauTatCa(true);
+    try {
+      await Promise.all(
+        chuaDoc.map((n) => api.put(`/thong-bao/${n.id}/da-doc`)),
+      );
+      notify("Đã đánh dấu tất cả là đã đọc", "success");
+      await tai();
+      contextThongBao?.refetchUnread();
+    } catch {
+      notify("Không cập nhật được trạng thái", "error");
+    } finally {
+      setDangDanhDauTatCa(false);
+    }
+  };
 
   const danhSachNguoiDungLoc = useMemo(() => {
     const q = locNguoiNhan.trim().toLowerCase();
@@ -298,12 +370,29 @@ export default function TrangThongBao() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Thông báo</h2>
-        {daMount && laQuanTri && (
-          <div className="card">
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="page-shell page-thong-bao">
+        <header className="tb-page-header">
+          <div>
+            <h2>Thông báo</h2>
+            <p>
+              {laQuanTri
+                ? "Gửi thông báo tới người dùng và theo dõi trạng thái đã đọc."
+                : "Cập nhật từ ban quản lý — đánh dấu đã đọc khi bạn đã xem."}
+            </p>
+          </div>
+          <div className="tb-header-actions">
+            {!camDanhDauDaDoc && soChuaDoc > 0 && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={dangDanhDauTatCa}
+                onClick={() => void danhDauTatCaDaDoc()}
+              >
+                <IconCheck />{" "}
+                {dangDanhDauTatCa ? "Đang cập nhật…" : "Đọc tất cả"}
+              </button>
+            )}
+            {daMount && laQuanTri && (
               <button
                 type="button"
                 className="btn"
@@ -315,69 +404,132 @@ export default function TrangThongBao() {
               >
                 <IconPlus /> Tạo thông báo
               </button>
-            </div>
+            )}
           </div>
-        )}
-        <div className="card">
-          <BangDonGian
-            data={danhSach}
-            columns={[
-              { header: "ID", render: (n) => n.id },
-              { header: "Nội dung", render: (n) => n.message },
-              {
-                header: "Trạng thái",
-                render: (n) => (n.readFlag ? "Đã đọc" : "Chưa đọc"),
-              },
-              {
-                header: "Hành động",
-                render: (n) => {
-                  const nutXoa =
-                    laQuanTri && (
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        disabled={dangXoaId === n.id}
-                        title="Xóa thông báo"
-                        onClick={() => void xoaThongBao(n.id)}
-                      >
-                        <IconTrash />{" "}
-                        {dangXoaId === n.id ? "Đang xóa…" : "Xóa"}
-                      </button>
-                    );
-                  const nutDaDoc =
-                    !camDanhDauDaDoc &&
-                    !n.readFlag && (
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => danhDauDaDoc(n.id)}
-                      >
-                        <IconCheck /> Đánh dấu đã đọc
-                      </button>
-                    );
-                  if (!nutXoa && !nutDaDoc) return null;
-                  return (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 8,
-                        alignItems: "center",
-                      }}
+        </header>
+
+        <div className="tb-stats">
+          <div className="tb-stat">
+            <strong>{danhSachSapXep.length}</strong>
+            <span>Tổng số</span>
+          </div>
+          <div className="tb-stat unread">
+            <strong>{soChuaDoc}</strong>
+            <span>Chưa đọc</span>
+          </div>
+          <div className="tb-stat">
+            <strong>{soDaDoc}</strong>
+            <span>Đã đọc</span>
+          </div>
+        </div>
+
+        <div className="tb-filters" role="tablist" aria-label="Lọc thông báo">
+          {(
+            [
+              { key: "all" as const, label: "Tất cả", count: danhSachSapXep.length },
+              { key: "unread" as const, label: "Chưa đọc", count: soChuaDoc },
+              { key: "read" as const, label: "Đã đọc", count: soDaDoc },
+            ] as const
+          ).map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              role="tab"
+              aria-selected={boLoc === f.key}
+              className={`tb-filter${boLoc === f.key ? " active" : ""}`}
+              onClick={() => setBoLoc(f.key)}
+            >
+              {f.label}
+              <span className="tb-filter-count">({f.count})</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="tb-feed">
+          {danhSachLoc.length === 0 ? (
+            <div className="tb-empty">
+              <div className="tb-empty-icon" aria-hidden>
+                🔔
+              </div>
+              <h3>
+                {boLoc === "unread"
+                  ? "Không còn thông báo chưa đọc"
+                  : boLoc === "read"
+                    ? "Chưa có thông báo đã đọc"
+                    : "Chưa có thông báo"}
+              </h3>
+              <p>
+                {laQuanTri
+                  ? "Bấm «Tạo thông báo» để gửi tin tới người dùng."
+                  : "Khi có cập nhật mới, bạn sẽ thấy tại đây."}
+              </p>
+            </div>
+          ) : (
+            nhomNgay.map((nhom) => (
+              <section key={nhom.nhan}>
+                <h3 className="tb-group-label">{nhom.nhan}</h3>
+                <div className="tb-list">
+                  {nhom.items.map((n) => (
+                    <article
+                      key={n.id}
+                      className={`tb-card${n.readFlag ? "" : " unread"}`}
                     >
-                      {nutXoa}
-                      {nutDaDoc}
-                    </div>
-                  );
-                },
-              },
-            ]}
-          />
+                      <div className="tb-card-icon" aria-hidden>
+                        {n.readFlag ? "📬" : "🔔"}
+                      </div>
+                      <div className="tb-card-body">
+                        <div className="tb-card-top">
+                          <span
+                            className={`tb-badge${n.readFlag ? " read" : " unread"}`}
+                          >
+                            {n.readFlag ? "Đã đọc" : "Mới"}
+                          </span>
+                          {n.sentAt && (
+                            <time
+                              className="tb-card-time"
+                              dateTime={n.sentAt}
+                              title={dinhDangThoiGian(n.sentAt)}
+                            >
+                              <abbr>{thoiGianTuongDoi(n.sentAt)}</abbr>
+                            </time>
+                          )}
+                        </div>
+                        <p className="tb-card-message">{n.message}</p>
+                      </div>
+                      <div className="tb-card-actions">
+                        {!camDanhDauDaDoc && !n.readFlag && (
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => void danhDauDaDoc(n.id)}
+                          >
+                            <IconCheck /> Đã đọc
+                          </button>
+                        )}
+                        {laQuanTri && (
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            disabled={dangXoaId === n.id}
+                            title="Xóa thông báo"
+                            onClick={() => void xoaThongBao(n.id)}
+                          >
+                            <IconTrash />{" "}
+                            {dangXoaId === n.id ? "…" : "Xóa"}
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))
+          )}
         </div>
 
         {daMount && hienThiTaoMoi && laQuanTri && (
           <div className="modal-backdrop">
-            <div className="modal-card form-card">
+            <div className="modal-card form-card tb-compose-modal">
               <div className="card-header">
                 <div>
                   <h3>Tạo thông báo</h3>
@@ -388,6 +540,27 @@ export default function TrangThongBao() {
                 </div>
               </div>
               <form onSubmit={taoThongBao} className="form-grid">
+                {danhSachMau.length > 0 && (
+                  <div className="form-span-2">
+                    <label className="field-label">Mẫu thông báo</label>
+                    <select
+                      value={mauId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setMauId(id);
+                        const m = danhSachMau.find((x) => x.id === id);
+                        if (m) setNoiDung(m.noiDung);
+                      }}
+                    >
+                      <option value="">— Chọn mẫu —</option>
+                      {danhSachMau.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.tieuDe}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="form-span-2">
                   <label className="field-label">
                     Nội dung <span className="required">*</span>

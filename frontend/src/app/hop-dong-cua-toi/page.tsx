@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import { IconEye, IconDownload, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
@@ -155,8 +154,7 @@ export default function TrangHopDongCuaToi() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-table">
         <h2>Hợp đồng của tôi</h2>
         <div className="card">
           <BangDonGian

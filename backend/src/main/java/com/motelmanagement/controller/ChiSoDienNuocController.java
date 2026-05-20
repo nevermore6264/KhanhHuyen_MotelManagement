@@ -9,13 +9,16 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.motelmanagement.domain.BangGiaDichVu;
@@ -25,6 +28,7 @@ import com.motelmanagement.dto.YeuCauCapNhatChiSoDienNuoc;
 import com.motelmanagement.repository.BangGiaDichVuRepository;
 import com.motelmanagement.repository.ChiSoDienNuocRepository;
 import com.motelmanagement.repository.PhongRepository;
+import com.motelmanagement.service.FileLuuTruService;
 import com.motelmanagement.service.TinhTienService;
 
 import lombok.RequiredArgsConstructor;
@@ -38,6 +42,7 @@ public class ChiSoDienNuocController {
     private final PhongRepository phongRepository;
     private final BangGiaDichVuRepository bangGiaDichVuRepository;
     private final TinhTienService tinhTienService;
+    private final FileLuuTruService fileLuuTruService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
@@ -90,6 +95,22 @@ public class ChiSoDienNuocController {
         return ResponseEntity.ok(daLuu);
     }
 
+
+    @PostMapping(value = "/{id}/anh", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<ChiSoDienNuoc> taiAnhDongHo(
+            @PathVariable("id") String id,
+            @RequestParam("file") MultipartFile file) {
+        return chiSoDienNuocRepository.findById(id)
+                .map(hienTai -> {
+                    String duongDan = fileLuuTruService.luuAnh(file, "meters");
+                    hienTai.setAnhDongHo(duongDan);
+                    ChiSoDienNuoc daLuu = chiSoDienNuocRepository.save(hienTai);
+                    ganChiSoCuHienThi(daLuu);
+                    return ResponseEntity.ok(daLuu);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")

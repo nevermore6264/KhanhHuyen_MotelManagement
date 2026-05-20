@@ -15,7 +15,6 @@ import {
 } from "chart.js";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import { IconReceipt, IconFile, IconHome, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
@@ -154,6 +153,16 @@ export default function TrangTongQuan() {
   const [vacant, setVacant] = useState(0);
   const [debt, setDebt] = useState(0);
   const [revenue, setRevenue] = useState(0);
+  const [occupancy, setOccupancy] = useState({
+    totalRooms: 0,
+    available: 0,
+    occupied: 0,
+    maintenance: 0,
+    occupancyRatePercent: 0,
+  });
+  const [revenueByMonth, setRevenueByMonth] = useState<
+    { month: number; revenue: number }[]
+  >([]);
   const [myContracts, setMyContracts] = useState<Contract[]>([]);
   const [myPayments, setMyPayments] = useState<PaymentRow[]>([]);
 
@@ -193,21 +202,51 @@ export default function TrangTongQuan() {
       return;
     }
     const load = async () => {
+      const now = new Date();
+      const thang = now.getMonth() + 1;
+      const nam = now.getFullYear();
       try {
-        const vacantRes = await api.get("/bao-cao/phong-trong");
-        setVacant(vacantRes.data.vacantRooms || 0);
-      } catch {}
-      try {
-        const debtRes = await api.get("/bao-cao/cong-no");
-        setDebt(Number(debtRes.data.totalDebt || 0));
-      } catch {}
-      try {
-        const now = new Date();
-        const revRes = await api.get(
-          `/bao-cao/doanh-thu?month=${now.getMonth() + 1}&year=${now.getFullYear()}`,
+        const [tomTatRes, occRes, revYearRes] = await Promise.all([
+          api.get(`/bao-cao/tom-tat?month=${thang}&year=${nam}`),
+          api.get("/bao-cao/ty-le-lap-day"),
+          api.get(`/bao-cao/doanh-thu-theo-nam?year=${nam}`),
+        ]);
+        const tom = tomTatRes.data;
+        setVacant(Number(tom.vacantRooms || 0));
+        setDebt(Number(tom.totalDebt || 0));
+        setRevenue(Number(tom.revenueMonth || 0));
+        setOccupancy({
+          totalRooms: Number(occRes.data.totalRooms || 0),
+          available: Number(occRes.data.available || 0),
+          occupied: Number(occRes.data.occupied || 0),
+          maintenance: Number(occRes.data.maintenance || 0),
+          occupancyRatePercent: Number(occRes.data.occupancyRatePercent || 0),
+        });
+        const months = Array.isArray(revYearRes.data.months)
+          ? revYearRes.data.months
+          : [];
+        setRevenueByMonth(
+          months.map((m: { month?: number; revenue?: number }) => ({
+            month: Number(m.month || 0),
+            revenue: Number(m.revenue || 0),
+          })),
         );
-        setRevenue(Number(revRes.data.revenue || 0));
-      } catch {}
+      } catch {
+        try {
+          const vacantRes = await api.get("/bao-cao/phong-trong");
+          setVacant(vacantRes.data.vacantRooms || 0);
+        } catch {}
+        try {
+          const debtRes = await api.get("/bao-cao/cong-no");
+          setDebt(Number(debtRes.data.totalDebt || 0));
+        } catch {}
+        try {
+          const revRes = await api.get(
+            `/bao-cao/doanh-thu?month=${thang}&year=${nam}`,
+          );
+          setRevenue(Number(revRes.data.revenue || 0));
+        } catch {}
+      }
     };
     load();
   }, [mounted, isTenant]);
@@ -233,28 +272,33 @@ export default function TrangTongQuan() {
 
   const doughnutData = useMemo(
     () => ({
-      labels: ["Phòng trống", "Đang thuê"],
+      labels: ["Phòng trống", "Đang thuê", "Bảo trì"],
       datasets: [
         {
-          data: [vacant, Math.max(0, 100 - vacant)],
-          backgroundColor: ["#7aa6ff", "#dbe7ff"],
+          data: [
+            occupancy.available,
+            occupancy.occupied,
+            occupancy.maintenance,
+          ],
+          backgroundColor: ["#7aa6ff", "#4f7cff", "#cbd5e1"],
           borderWidth: 0,
         },
       ],
     }),
-    [vacant],
+    [occupancy],
   );
 
   const lineData = useMemo(() => {
     const now = new Date();
-    const labels = Array.from({ length: 6 }, (_, idx) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
-      return `${d.getMonth() + 1}/${d.getFullYear()}`;
-    });
-    const base = revenue || 0;
-    const series = labels.map((_, i) =>
-      Math.max(0, Math.round(base * (0.6 + i * 0.08))),
-    );
+    const labels: string[] = [];
+    const series: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const thang = d.getMonth() + 1;
+      labels.push(`${thang}/${d.getFullYear()}`);
+      const muc = revenueByMonth.find((m) => m.month === thang);
+      series.push(Math.round(muc?.revenue ?? 0));
+    }
     return {
       labels,
       datasets: [
@@ -269,7 +313,7 @@ export default function TrangTongQuan() {
         },
       ],
     };
-  }, [revenue]);
+  }, [revenueByMonth]);
 
   const chartOptions = useMemo(
     () => ({
@@ -329,8 +373,7 @@ export default function TrangTongQuan() {
   if (mounted && isTenant) {
     return (
       <TrangBaoVe>
-        <ThanhDieuHuong />
-        <div className="container">
+      <div className="page-shell page-dashboard">
           <div className="dashboard-hero">
             <div>
               <h2>Tổng quan của tôi</h2>
@@ -422,8 +465,7 @@ export default function TrangTongQuan() {
                 Bên cho thuê
               </h3>
               <p className="text-muted" style={{ marginBottom: 8 }}>
-                Chủ nhà trọ / Quản lý. Liên hệ khi cần hỗ trợ về hợp đồng hoặc
-                thanh toán.
+                Đội ngũ nhà trọ luôn sẵn sàng hỗ trợ bạn về hợp đồng hoặc thanh toán.
               </p>
               <div className="dashboard-tenant-card-actions">
                 <Link href="/yeu-cau" className="btn btn-secondary btn-sm">
@@ -495,15 +537,16 @@ export default function TrangTongQuan() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-dashboard">
         <div className="dashboard-hero">
           <div>
-            <h2>Tổng quan iTro</h2>
-            <p>Cập nhật nhanh tình hình vận hành nhà trọ hôm nay.</p>
+            <h2 className="page-heading">Chào bạn 👋</h2>
+            <p className="page-lead">
+              Tổng quan nhà trọ hôm nay — xem nhanh phòng, hợp đồng và doanh thu trong một chỗ.
+            </p>
             <div className="hero-actions">
               <Link className="btn" href="/phong">
-                <IconHome /> Quản lý phòng
+                <IconHome /> Xem phòng
               </Link>
               <Link className="btn btn-secondary" href="/hop-dong">
                 <IconPlus /> Tạo hợp đồng
@@ -528,15 +571,15 @@ export default function TrangTongQuan() {
         <div className="dashboard-slogan-marquee" aria-hidden>
           <div className="dashboard-slogan-track">
             <span>
-              iTro — Quản lý nhà trọ thông minh · Minh bạch · Chuyên nghiệp
+              iTro — Nhà trọ gọn gàng · Thuê an tâm · Thanh toán dễ dàng
               ·{" "}
             </span>
             <span>
-              iTro — Quản lý nhà trọ thông minh · Minh bạch · Chuyên nghiệp
+              iTro — Nhà trọ gọn gàng · Thuê an tâm · Thanh toán dễ dàng
               ·{" "}
             </span>
             <span>
-              iTro — Quản lý nhà trọ thông minh · Minh bạch · Chuyên nghiệp
+              iTro — Nhà trọ gọn gàng · Thuê an tâm · Thanh toán dễ dàng
               ·{" "}
             </span>
           </div>
@@ -603,7 +646,7 @@ export default function TrangTongQuan() {
             </div>
           </div>
           <div className="card chart-card">
-            <div className="chart-title">Tỷ lệ phòng trống</div>
+            <div className="chart-title">Tình trạng phòng</div>
             <div className="chart-canvas">
               <Doughnut data={doughnutData} options={doughnutOptions} />
             </div>

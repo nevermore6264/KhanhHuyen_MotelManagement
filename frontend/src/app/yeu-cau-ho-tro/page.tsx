@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import { IconEye, IconCheck, IconSend, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
@@ -112,9 +111,8 @@ export default function TrangYeuCauHoTro() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Quản lý sự cố</h2>
+      <div className="page-shell page-table">
+        <h2>Yêu cầu hỗ trợ</h2>
         <div className="card">
           <form onSubmit={capNhatTrangThai} className="grid grid-3">
             <input

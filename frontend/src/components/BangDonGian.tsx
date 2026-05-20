@@ -31,13 +31,21 @@ export default function BangDonGian<T>({
           </tr>
         </thead>
         <tbody>
-          {duLieu.map((dong, idx) => (
-            <tr key={idx}>
-              {cotHienThi.map((cot, cIdx) => (
-                <td key={cIdx}>{cot.render(dong)}</td>
-              ))}
+          {duLieu.length === 0 ? (
+            <tr>
+              <td colSpan={cotHienThi.length} className="table-empty">
+                Không có dữ liệu
+              </td>
             </tr>
-          ))}
+          ) : (
+            duLieu.map((dong, idx) => (
+              <tr key={idx}>
+                {cotHienThi.map((cot, cIdx) => (
+                  <td key={cIdx}>{cot.render(dong)}</td>
+                ))}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

@@ -2,7 +2,6 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
@@ -535,9 +534,8 @@ export default function TrangHopDong() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
       <div className="container hop-dong-trang-container">
-        <h2>Quản lý hợp đồng</h2>
+        <h2>Hợp đồng thuê</h2>
         <div className="card">
           <div className="grid grid-2">
             <input

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import api from "@/lib/api";
 import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
@@ -64,8 +63,7 @@ export default function TrangThanhToanCuaToi() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-table">
         <h2>Lịch sử thanh toán</h2>
         <div className="card">
           <select

@@ -1,0 +1,575 @@
+/* iTro Landing v2 — xanh da trời nhạt + ảnh người + motion */
+
+.landing {
+  --lp-hero-bg: #f0f9ff;
+  --lp-sky-50: #f0f9ff;
+  --lp-sky-100: #e0f2fe;
+  --lp-sky-200: #bae6fd;
+  --lp-sky-400: #38bdf8;
+  --lp-sky-500: #0ea5e9;
+  --lp-sky-600: #0284c7;
+  --lp-sky-700: #0369a1;
+  --lp-ink: #0c4a6e;
+  --lp-muted: #64748b;
+  --lp-border: #bae6fd;
+  --lp-accent: #0ea5e9;
+  --lp-accent-deep: #0284c7;
+  --lp-surface: #ffffff;
+}
+
+body.landing-body {
+  background: #f0f9ff !important;
+}
+
+.landing {
+  background: var(--lp-hero-bg);
+  color: var(--lp-ink);
+}
+
+/* Sky ambient */
+.lp-sky-mesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lp-sky-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  animation: lp-sky-drift 20s ease-in-out infinite;
+}
+
+.lp-sky-blob-1 {
+  width: 50%;
+  height: 45%;
+  background: #7dd3fc;
+  top: -10%;
+  right: 5%;
+}
+
+.lp-sky-blob-2 {
+  width: 40%;
+  height: 40%;
+  background: #bae6fd;
+  bottom: 0;
+  left: -5%;
+  animation-delay: -8s;
+}
+
+@keyframes lp-sky-drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, -15px); }
+}
+
+.lp-nav.scrolled {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom-color: var(--lp-border);
+  box-shadow: 0 4px 24px rgba(14, 165, 233, 0.08);
+}
+
+.lp-brand span {
+  color: var(--lp-sky-700);
+}
+
+.lp-nav-links a:hover {
+  color: var(--lp-sky-600);
+  background: var(--lp-sky-100);
+}
+
+.lp-btn-ghost {
+  color: var(--lp-sky-700);
+  border-color: var(--lp-border);
+}
+
+.lp-btn-ghost:hover {
+  background: var(--lp-sky-100);
+  border-color: var(--lp-sky-400);
+}
+
+.lp-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
+  border-radius: 10px;
+}
+
+.lp-btn-primary:hover {
+  box-shadow: 0 8px 28px rgba(14, 165, 233, 0.45);
+  transform: translateY(-2px);
+}
+
+.lp-hero-badge-dot {
+  background: var(--lp-sky-500);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+}
+
+.lp-hero h1 .lp-gradient-text {
+  color: var(--lp-sky-600);
+}
+
+.lp-hero-trust-item strong {
+  color: var(--lp-sky-700);
+}
+
+/* Hero visual — mock + ảnh người */
+.lp-hero-visual {
+  position: relative;
+  min-height: 420px;
+}
+
+.lp-hero-photos {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.lp-photo-card {
+  position: absolute;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(14, 165, 233, 0.2);
+  border: 3px solid #fff;
+}
+
+.lp-photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lp-photo-card-1 {
+  width: 140px;
+  height: 180px;
+  top: 8%;
+  right: 8%;
+  z-index: 2;
+}
+
+.lp-photo-card-2 {
+  width: 120px;
+  height: 150px;
+  bottom: 18%;
+  right: 28%;
+  z-index: 1;
+}
+
+.lp-photo-card-3 {
+  width: 100px;
+  height: 130px;
+  top: 35%;
+  right: 0;
+  z-index: 3;
+}
+
+.lp-photo-card-1 {
+  animation: lp-photo-float 6s ease-in-out infinite;
+}
+
+.lp-photo-card-2 {
+  animation: lp-photo-float 7s ease-in-out infinite -2s;
+}
+
+.lp-photo-card-3 {
+  animation: lp-photo-float 5.5s ease-in-out infinite -1s;
+}
+
+@keyframes lp-photo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.lp-hero-visual .lp-mock-wrap {
+  position: relative;
+  z-index: 4;
+  max-width: 92%;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+
+.lp-mock-premium {
+  border-color: var(--lp-border);
+  box-shadow: 0 24px 60px rgba(14, 165, 233, 0.15);
+}
+
+.lp-mock-premium .lp-mock-bar-col:nth-child(2) {
+  background: linear-gradient(180deg, #38bdf8, #0ea5e9) !important;
+}
+
+.lp-mock-premium .lp-mock-bar-col:nth-child(5) {
+  background: linear-gradient(180deg, #7dd3fc, #38bdf8) !important;
+}
+
+/* Stats band */
+.lp-stats-band {
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  padding: 48px 28px;
+  color: #fff;
+}
+
+.lp-stats-band-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+
+.lp-stats-band strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.lp-stats-band span {
+  font-size: 0.88rem;
+  opacity: 0.9;
+}
+
+/* People strip — cuộn ngang */
+.lp-people-section {
+  padding: 80px 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.lp-people-header {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  padding: 0 28px;
+}
+
+.lp-people-scroll {
+  display: flex;
+  gap: 20px;
+  padding: 8px 28px 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.lp-people-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-people-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 3/4;
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.12);
+}
+
+.lp-people-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.lp-people-card:hover img {
+  transform: scale(1.05);
+}
+
+.lp-people-card-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 16px 16px;
+  background: linear-gradient(transparent, rgba(12, 74, 110, 0.85));
+  color: #fff;
+}
+
+.lp-people-card-caption strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.lp-people-card-caption span {
+  font-size: 0.78rem;
+  opacity: 0.9;
+}
+
+/* Feature rows — xen kẽ ảnh */
+.lp-feature-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  margin-top: 48px;
+}
+
+.lp-feature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.lp-feature-row.reverse {
+  direction: rtl;
+}
+
+.lp-feature-row.reverse > * {
+  direction: ltr;
+}
+
+.lp-feature-row-visual {
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  box-shadow: 0 20px 50px rgba(14, 165, 233, 0.15);
+  position: relative;
+}
+
+.lp-feature-row-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lp-feature-row-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--lp-sky-700);
+}
+
+.lp-feature-row-text h3 {
+  font-size: 1.5rem;
+  margin: 0 0 12px;
+  color: var(--lp-ink);
+}
+
+.lp-feature-row-text p {
+  color: var(--lp-muted);
+  line-height: 1.65;
+  margin: 0 0 20px;
+}
+
+.lp-section-label {
+  color: var(--lp-sky-600);
+}
+
+.lp-section.alt {
+  background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+}
+
+.lp-bento-card::before {
+  background: var(--lp-sky-500);
+}
+
+.lp-bento-icon.army,
+.lp-bento-icon.mint,
+.lp-bento-icon.peach,
+.lp-bento-icon.sky {
+  background: var(--lp-sky-100);
+  color: var(--lp-sky-700);
+}
+
+.lp-feature-num {
+  color: var(--lp-sky-600);
+}
+
+.lp-step-num {
+  background: linear-gradient(135deg, #0ea5e9, #7dd3fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Roles with photo */
+.lp-role-card {
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  border-color: var(--lp-border);
+}
+
+.lp-role-photo {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.lp-role-body {
+  padding: 24px;
+}
+
+.lp-role-tag {
+  color: var(--lp-sky-600);
+  border-color: var(--lp-border);
+  background: var(--lp-sky-50);
+}
+
+.lp-role-card.admin { border-top: 3px solid #0ea5e9; }
+.lp-role-card.staff { border-top: 3px solid #38bdf8; }
+.lp-role-card.tenant { border-top: 3px solid #7dd3fc; }
+
+/* Testimonials with faces */
+.lp-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lp-quote-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.lp-quote-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--lp-sky-200);
+  flex-shrink: 0;
+}
+
+.lp-quote-author {
+  font-weight: 700;
+  color: var(--lp-ink);
+}
+
+.lp-quote-role {
+  font-size: 0.82rem;
+  color: var(--lp-muted);
+}
+
+/* CTA with image */
+.lp-cta {
+  position: relative;
+  padding: 0;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lp-cta-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.lp-cta-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.lp-cta-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lp-cta-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.92) 0%,
+    rgba(2, 132, 199, 0.88) 100%
+  );
+}
+
+.lp-cta-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 48px 28px;
+  max-width: 560px;
+}
+
+.lp-cta h2 {
+  color: #fff !important;
+}
+
+.lp-cta p {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.lp-cta .lp-btn-primary {
+  background: #fff;
+  color: var(--lp-sky-700);
+}
+
+.lp-cta .lp-btn-ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.lp-cta .lp-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.lp-footer {
+  background: #fff;
+  border-top: 1px solid var(--lp-border);
+}
+
+.lp-footer-brand,
+.lp-footer-links a {
+  color: var(--lp-sky-700);
+}
+
+.lp-marquee-section {
+  background: var(--lp-sky-100);
+  border-color: var(--lp-border);
+}
+
+.lp-marquee-track span {
+  color: var(--lp-sky-600) !important;
+}
+
+.lp-scroll-line {
+  background: linear-gradient(180deg, var(--lp-sky-400), transparent);
+}
+
+.lp-check {
+  background: var(--lp-sky-500);
+}
+
+@media (max-width: 960px) {
+  .lp-hero-inner {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lp-hero-visual {
+    min-height: 360px;
+    margin-top: 32px;
+  }
+
+  .lp-photo-card-1 { width: 110px; height: 140px; }
+  .lp-photo-card-2 { width: 95px; height: 120px; }
+  .lp-photo-card-3 { display: none; }
+
+  .lp-stats-band-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lp-feature-row,
+  .lp-feature-row.reverse {
+    grid-template-columns: 1fr;
+    direction: ltr;
+  }
+
+  .lp-people-card {
+    flex: 0 0 240px;
+  }
+}

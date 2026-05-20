@@ -5,6 +5,8 @@ import com.motelmanagement.domain.ThongBao;
 import com.motelmanagement.domain.VaiTro;
 import com.motelmanagement.dto.NotificationCreateDto;
 import com.motelmanagement.repository.ThongBaoRepository;
+import com.motelmanagement.dto.MauThongBaoDto;
+import com.motelmanagement.service.MauThongBaoService;
 import com.motelmanagement.service.NguoiDungHienTaiService;
 import com.motelmanagement.service.ThongBaoService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,13 @@ public class ThongBaoController {
     private final ThongBaoRepository thongBaoRepository;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
     private final ThongBaoService thongBaoService;
+    private final MauThongBaoService mauThongBaoService;
+
+    @GetMapping("/mau")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<MauThongBaoDto> layMau() {
+        return mauThongBaoService.layDanhSach();
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STAFF','TENANT')")

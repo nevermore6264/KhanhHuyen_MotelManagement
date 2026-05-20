@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import { IconPencil, IconTimes, IconCheck, IconDownload } from "@/components/Icons";
 import api from "@/lib/api";
@@ -13,10 +12,9 @@ import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
 import { khachCuaHoaDon, mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
 
 const formatMoney = (n?: number | null) => {
-  if (n == null || isNaN(Number(n))) return "â€”";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNÄ`;
+  if (n == null || isNaN(Number(n))) return "—";
+  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
 };
-
 
 function soTienThanhToan(v: unknown): number {
   if (v == null) return 0;
@@ -28,11 +26,11 @@ function soTienThanhToan(v: unknown): number {
 const invoiceStatusLabel = (value?: string) => {
   switch (value) {
     case "UNPAID":
-      return "ChÆ°a thanh toÃ¡n";
+      return "Chưa thanh toán";
     case "PARTIAL":
-      return "Thanh toÃ¡n má»™t pháº§n";
+      return "Thanh toán một phần";
     case "PAID":
-      return "ÄÃ£ thanh toÃ¡n";
+      return "Đã thanh toán";
     default:
       return value || "-";
   }
@@ -148,12 +146,12 @@ export default function TrangThanhToan() {
     const num = amount.replace(/\D/g, "");
     const value = Number(num);
     if (!num || value <= 0) {
-      setError("Vui lÃ²ng nháº­p sá»‘ tiá»n há»£p lá»‡");
+      setError("Vui lòng nhập số tiền hợp lệ");
       return;
     }
     if (conLai > 0 && value > conLai) {
       setError(
-        `Sá»‘ tiá»n khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ pháº§n cÃ²n láº¡i (${formatMoney(conLai)}).`,
+        `Số tiền không được vượt quá phần còn lại (${formatMoney(conLai)}).`,
       );
       return;
     }
@@ -166,7 +164,7 @@ export default function TrangThanhToan() {
         method,
       });
       const saved = res.data as { id?: string };
-      notify("ÄÃ£ ghi nháº­n thanh toÃ¡n.", "success");
+      notify("Đã ghi nhận thanh toán.", "success");
       if (saved?.id) {
         try {
           await taiFileTuApi(
@@ -174,7 +172,7 @@ export default function TrangThanhToan() {
             `phieu-thu-${saved.id}.pdf`,
           );
         } catch {
-          notify("ÄÃ£ ghi nháº­n; táº£i phiáº¿u thu tháº¥t báº¡i.", "error");
+          notify("Đã ghi nhận; tải phiếu thu thất bại.", "error");
         }
       }
       setUpdatingInvoice(null);
@@ -186,8 +184,8 @@ export default function TrangThanhToan() {
       const message =
         ax?.response?.data?.message ||
         (ax?.response?.status === 403
-          ? "Báº¡n khÃ´ng cÃ³ quyá»n ghi nháº­n thanh toÃ¡n"
-          : "Ghi nháº­n tháº¥t báº¡i");
+          ? "Bạn không có quyền ghi nhận thanh toán"
+          : "Ghi nhận thất bại");
       setError(message);
       notify(message, "error");
     } finally {
@@ -200,37 +198,36 @@ export default function TrangThanhToan() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Ghi nháº­n thanh toÃ¡n</h2>
+      <div className="page-shell page-table">
+        <h2>Ghi nhận thanh toán</h2>
         <div className="card">
           <p className="text-muted mb-3" style={{ fontSize: "0.9rem" }}>
-            Danh sÃ¡ch hÃ³a Ä‘Æ¡n theo ká»³ (thÃ¡ng/nÄƒm). CÃ³ thá»ƒ ghi nháº­n{" "}
-            <strong>má»™t pháº§n</strong> hoáº·c <strong>Ä‘á»§ sá»‘ cÃ²n láº¡i</strong> má»—i láº§n.
+            Danh sách hóa đơn theo kỳ (tháng/năm). Có thể ghi nhận{" "}
+            <strong>một phần</strong> hoặc <strong>đủ số còn lại</strong> mỗi lần.
           </p>
           <BangDonGian
             data={invoices}
             columns={[
               {
-                header: "PhÃ²ng",
-                render: (i: Invoice) => i.room?.code ?? "â€”",
+                header: "Phòng",
+                render: (i: Invoice) => i.room?.code ?? "—",
               },
               {
-                header: "KhÃ¡ch thuÃª",
+                header: "Khách thuê",
                 render: (i: Invoice) => {
                   const list = khachCuaHoaDon(i);
                   if (!list.length) {
                     return (
                       <span
                         className="text-muted"
-                        title="ChÆ°a gáº¯n khÃ¡ch theo há»£p Ä‘á»“ng trong ká»³."
+                        title="Chưa gắn khách theo hợp đồng trong kỳ."
                       >
-                        â€”
+                        —
                       </span>
                     );
                   }
                   if (list.length === 1) {
-                    return list[0].fullName?.trim() || "â€”";
+                    return list[0].fullName?.trim() || "—";
                   }
                   return (
                     <ul
@@ -242,7 +239,7 @@ export default function TrangThanhToan() {
                     >
                       {list.map((t) => (
                         <li key={t.id}>
-                          {t.fullName?.trim() || `KhÃ¡ch ${t.id}`}
+                          {t.fullName?.trim() || `Khách ${t.id}`}
                         </li>
                       ))}
                     </ul>
@@ -250,15 +247,15 @@ export default function TrangThanhToan() {
                 },
               },
               {
-                header: "Ká»³",
+                header: "Kỳ",
                 render: (i: Invoice) => `${i.month}/${i.year}`,
               },
               {
-                header: "Tá»•ng",
+                header: "Tổng",
                 render: (i: Invoice) => formatMoney(i.total),
               },
               {
-                header: "Tráº¡ng thÃ¡i",
+                header: "Trạng thái",
                 render: (i: Invoice) => (
                   <span
                     className={`status-badge ${invoiceStatusBadge(i.status)}`}
@@ -268,7 +265,7 @@ export default function TrangThanhToan() {
                 ),
               },
               {
-                header: "Thao tÃ¡c",
+                header: "Thao tác",
                 render: (i: Invoice) => {
                   const enabled = coTheThu(i);
                   return (
@@ -279,12 +276,12 @@ export default function TrangThanhToan() {
                       aria-disabled={!enabled}
                       title={
                         !enabled
-                          ? "HÃ³a Ä‘Æ¡n Ä‘Ã£ thanh toÃ¡n Ä‘á»§"
-                          : "Ghi nháº­n thanh toÃ¡n thá»§ cÃ´ng"
+                          ? "Hóa đơn đã thanh toán đủ"
+                          : "Ghi nhận thanh toán thủ công"
                       }
                       onClick={enabled ? () => openUpdate(i) : undefined}
                     >
-                      <IconPencil /> Cáº­p nháº­t thá»§ cÃ´ng
+                      <IconPencil /> Cập nhật thủ công
                     </button>
                   );
                 },
@@ -298,20 +295,20 @@ export default function TrangThanhToan() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Ghi nháº­n thanh toÃ¡n thá»§ cÃ´ng</h3>
+                  <h3>Ghi nhận thanh toán thủ công</h3>
                   <p className="card-subtitle">
-                    HÃ³a Ä‘Æ¡n #{updatingInvoice.id} â€” PhÃ²ng{" "}
-                    {updatingInvoice.room?.code} â€” Ká»³ {updatingInvoice.month}/
+                    Hóa đơn #{updatingInvoice.id} — Phòng{" "}
+                    {updatingInvoice.room?.code} — Kỳ {updatingInvoice.month}/
                     {updatingInvoice.year}
                   </p>
                   <p className="card-subtitle" style={{ marginTop: 8 }}>
-                    Tá»•ng hÃ³a Ä‘Æ¡n: {formatMoney(updatingInvoice.total)}
+                    Tổng hóa đơn: {formatMoney(updatingInvoice.total)}
                     {loadingModal ? (
-                      " â€” Äang táº£i lá»‹ch sá»­ thuâ€¦"
+                      " — Đang tải lịch sử thu…"
                     ) : (
                       <>
                         {" "}
-                        â€” ÄÃ£ thu: {formatMoney(daThu)} â€” CÃ²n láº¡i:{" "}
+                        — Đã thu: {formatMoney(daThu)} — Còn lại:{" "}
                         <strong>{formatMoney(conLai)}</strong>
                       </>
                     )}
@@ -320,7 +317,7 @@ export default function TrangThanhToan() {
               </div>
               <form onSubmit={submitPayment} className="form-grid">
                 <div className="form-span-2">
-                  <label className="field-label">Sá»‘ tiá»n láº§n nÃ y (VNÄ)</label>
+                  <label className="field-label">Số tiền lần này (VNĐ)</label>
                   <div className="input-suffix">
                     <input
                       placeholder="VD: 1.500.000"
@@ -331,11 +328,11 @@ export default function TrangThanhToan() {
                       }
                       disabled={conLai <= 0 || loadingModal}
                     />
-                    <span>VNÄ</span>
+                    <span>VNĐ</span>
                   </div>
                   <p className="text-muted" style={{ fontSize: "0.85rem", marginTop: 6 }}>
-                    Nháº­p má»™t pháº§n hoáº·c Ä‘á»§ sá»‘ cÃ²n láº¡i. KhÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ pháº§n
-                    cÃ²n láº¡i.
+                    Nhập một phần hoặc đủ số còn lại. Không được vượt quá phần
+                    còn lại.
                   </p>
                 </div>
                 <div className="form-span-2">
@@ -345,18 +342,18 @@ export default function TrangThanhToan() {
                     disabled={conLai <= 0 || loadingModal}
                     onClick={fillFullRemain}
                   >
-                    Äiá»n Ä‘á»§ sá»‘ cÃ²n láº¡i
+                    Điền đủ số còn lại
                   </button>
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">HÃ¬nh thá»©c</label>
+                  <label className="field-label">Hình thức</label>
                   <select
                     value={method}
                     onChange={(e) => setMethod(e.target.value)}
                     disabled={conLai <= 0 || loadingModal}
                   >
-                    <option value="CASH">Tiá»n máº·t</option>
-                    <option value="TRANSFER">Chuyá»ƒn khoáº£n</option>
+                    <option value="CASH">Tiền mặt</option>
+                    <option value="TRANSFER">Chuyển khoản</option>
                   </select>
                 </div>
                 {lichSuThu.length > 0 && (
@@ -385,7 +382,7 @@ export default function TrangThanhToan() {
                       ))}
                     </ul>
                   </div>
-                )},
+                )}
                 {error && <div className="form-error form-span-2">{error}</div>}
                 <div className="form-actions form-span-2">
                   <button
@@ -396,7 +393,7 @@ export default function TrangThanhToan() {
                       setError("");
                     }}
                   >
-                    <IconTimes /> Há»§y
+                    <IconTimes /> Hủy
                   </button>
                   <button
                     type="submit"
@@ -404,10 +401,10 @@ export default function TrangThanhToan() {
                     disabled={submitting || conLai <= 0 || loadingModal}
                   >
                     {submitting ? (
-                      "Äang ghi..."
+                      "Đang ghi..."
                     ) : (
                       <>
-                        <IconCheck /> Ghi nháº­n
+                        <IconCheck /> Ghi nhận
                       </>
                     )}
                   </button>

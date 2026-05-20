@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
@@ -36,7 +35,7 @@ const toAbsoluteFileUrl = (filePath?: string | null) => {
   if (!filePath) return undefined;
   const path = filePath.trim();
   if (!path) return undefined;
-  if (/^https?:\/\
+  if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith("/")) return `${API_ORIGIN}${path}`;
   return `${API_ORIGIN}/${path}`;
 };
@@ -633,9 +632,8 @@ export default function TrangKhachThue() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Quản lý khách thuê</h2>
+      <div className="page-shell page-table">
+        <h2>Khách thuê</h2>
         <div className="card">
           <div className="grid grid-2">
             <input

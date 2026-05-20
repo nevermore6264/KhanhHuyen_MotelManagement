@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
@@ -296,9 +295,13 @@ export default function TrangPhong() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Quản lý phòng</h2>
+      <div className="page-shell page-table">
+        <header className="page-top">
+          <div className="page-top-text">
+            <h1 className="page-heading">Phòng trọ</h1>
+            <p className="page-lead">Xem và cập nhật phòng theo khu, trạng thái và giá thuê.</p>
+          </div>
+        </header>
         {tenKhuLoc && (
           <div className="card card-inline" style={{ marginBottom: 12 }}>
             <span>

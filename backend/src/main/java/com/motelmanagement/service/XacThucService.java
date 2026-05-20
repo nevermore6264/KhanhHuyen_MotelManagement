@@ -56,7 +56,11 @@ public class XacThucService {
             throw new IllegalArgumentException("Invalid credentials");
         }
         String token = tienIchJwt.generateToken(nguoiDung.getTenDangNhap(), nguoiDung.getVaiTro().name());
-        return new PhanHoiXacThuc(token, nguoiDung.getVaiTro().name(), nguoiDung.getHoTen());
+        return new PhanHoiXacThuc(
+                token,
+                nguoiDung.getVaiTro().name(),
+                nguoiDung.getHoTen(),
+                nguoiDung.getId());
     }
 
 

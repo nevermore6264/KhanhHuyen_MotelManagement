@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import BangDonGian from "@/components/BangDonGian";
 import {
   IconPlus,
@@ -459,9 +458,8 @@ export default function TrangNguoiDung() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
-        <h2>Quản lý người dùng</h2>
+      <div className="page-shell page-table">
+        <h2>Người dùng</h2>
         <div className="card">
           <div className="grid grid-3">
             <input

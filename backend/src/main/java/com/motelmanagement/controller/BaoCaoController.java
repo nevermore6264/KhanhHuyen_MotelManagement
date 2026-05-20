@@ -1,6 +1,7 @@
 package com.motelmanagement.controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +25,7 @@ import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.PhongRepository;
 import com.motelmanagement.service.TinhTienService;
 import com.motelmanagement.service.XuatBaoCaoService;
+import com.motelmanagement.service.XuatPdfService;
 import com.motelmanagement.util.TaiLieuHttp;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,7 @@ public class BaoCaoController {
     private final PhongRepository phongRepository;
     private final TinhTienService tinhTienService;
     private final XuatBaoCaoService xuatBaoCaoService;
+    private final XuatPdfService xuatPdfService;
 
     private List<HoaDon> tinhTienDanhSach(List<HoaDon> ds) {
         return ds.stream().map(tinhTienService::tinhTienRuntime).toList();
@@ -125,6 +129,34 @@ public class BaoCaoController {
                 tenTep,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 xuatBaoCaoService.xuatExcelCongNo());
+    }
+
+    @GetMapping("/xuat-thu-chi")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<byte[]> xuatThuChiExcel(
+            @RequestParam("tuNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam("denNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay)
+            throws java.io.IOException {
+        if (denNgay.isBefore(tuNgay)) {
+            return ResponseEntity.badRequest().build();
+        }
+        String tenTep = "thu-chi-" + tuNgay + "_" + denNgay + ".xlsx";
+        return TaiLieuHttp.tep(
+                tenTep,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                xuatBaoCaoService.xuatExcelThuChi(tuNgay, denNgay));
+    }
+
+    @GetMapping("/xuat-thu-chi-pdf")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<byte[]> xuatThuChiPdf(
+            @RequestParam("tuNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam("denNgay") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay) {
+        if (denNgay.isBefore(tuNgay)) {
+            return ResponseEntity.badRequest().build();
+        }
+        String tenTep = "thu-chi-" + tuNgay + "_" + denNgay + ".pdf";
+        return TaiLieuHttp.tep(tenTep, "application/pdf", xuatPdfService.pdfBaoCaoThuChi(tuNgay, denNgay));
     }
 
     @GetMapping("/chi-tiet-cong-no")

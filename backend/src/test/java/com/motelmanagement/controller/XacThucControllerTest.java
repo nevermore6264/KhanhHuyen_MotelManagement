@@ -50,7 +50,7 @@ class XacThucControllerTest {
     @Test
     void dangNhap_tra200() throws Exception {
         when(xacThucService.dangNhap(any(YeuCauXacThuc.class)))
-                .thenReturn(new PhanHoiXacThuc("tok", "ADMIN", "Admin"));
+                .thenReturn(new PhanHoiXacThuc("tok", "ADMIN", "Admin", "uid-admin"));
 
         YeuCauXacThuc body = new YeuCauXacThuc();
         body.setTenDangNhap("admin");

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
-import ThanhDieuHuong from "@/components/ThanhDieuHuong";
 import api from "@/lib/api";
 import { getRole, getToken, setAuth } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
@@ -141,8 +140,7 @@ export default function TrangHoSoCaNhan() {
 
   return (
     <TrangBaoVe>
-      <ThanhDieuHuong />
-      <div className="container">
+      <div className="page-shell page-account">
         <h2>Hồ sơ cá nhân</h2>
         <p className="text-muted" style={{ marginTop: -8, marginBottom: 20 }}>
           Xem và cập nhật thông tin tài khoản của bạn.

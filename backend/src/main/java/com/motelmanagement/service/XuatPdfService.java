@@ -2,6 +2,8 @@ package com.motelmanagement.service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +37,45 @@ public class XuatPdfService {
     private final KhachThueRepository khachThueRepository;
     private final TinhTienService tinhTienService;
     private final NguoiDungHienTaiService nguoiDungHienTaiService;
+
+    public byte[] pdfBaoCaoThuChi(LocalDate tuNgay, LocalDate denNgay) {
+        LocalDateTime tu = tuNgay.atStartOfDay();
+        LocalDateTime den = denNgay.plusDays(1).atStartOfDay();
+        List<ThanhToan> danhSach = thanhToanRepository.findTrongKhoangThoiGian(tu, den);
+        BigDecimal tong = BigDecimal.ZERO;
+        StringBuilder rows = new StringBuilder();
+        for (ThanhToan tt : danhSach) {
+            BigDecimal soTien = tt.getSoTien() != null ? tt.getSoTien() : BigDecimal.ZERO;
+            tong = tong.add(soTien);
+            String phong = tt.getHoaDon() != null && tt.getHoaDon().getPhong() != null
+                    ? tt.getHoaDon().getPhong().getMaPhong()
+                    : "";
+            String khach = tt.getHoaDon() != null && tt.getHoaDon().getKhachThue() != null
+                    ? tt.getHoaDon().getKhachThue().getHoTen()
+                    : "";
+            rows.append("<tr><td>").append(tt.getThoiGianThanhToan() != null ? DTF.format(tt.getThoiGianThanhToan()) : "")
+                    .append("</td><td>").append(escape(phong))
+                    .append("</td><td>").append(escape(khach))
+                    .append("</td><td class='r'>").append(formatTien(soTien))
+                    .append("</td><td>").append(escape(labelPhuongThuc(tt.getPhuongThuc())))
+                    .append("</td></tr>");
+        }
+        String html = """
+                <html><head><meta charset="UTF-8"/><style>
+                body{font-family:sans-serif;font-size:12px;}
+                h1{font-size:16px;} table{width:100%%;border-collapse:collapse;}
+                th,td{border:1px solid #ccc;padding:6px;} th{background:#eee;}
+                .r{text-align:right;} .t{font-weight:bold;margin-top:12px;}
+                </style></head><body>
+                <h1>Bao cao thu chi iTro</h1>
+                <p>Tu %s den %s</p>
+                <table><thead><tr><th>Thoi gian</th><th>Phong</th><th>Khach</th><th>So tien</th><th>Hinh thuc</th></tr></thead>
+                <tbody>%s</tbody></table>
+                <p class="t">Tong thu: %s VND (%d giao dich)</p>
+                </body></html>
+                """.formatted(tuNgay, denNgay, rows, formatTien(tong), danhSach.size());
+        return renderPdf(html);
+    }
 
     public byte[] pdfHoaDon(String maHoaDon) {
         HoaDon hd = hoaDonRepository.timTheoIdCoPhong(maHoaDon)

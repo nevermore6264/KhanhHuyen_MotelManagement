@@ -78,12 +78,12 @@ export default function TrangQuenMatKhau() {
                     Link đặt lại mật khẩu (sao chép hoặc nhấn để mở):
                   </label>
                   <a
-                    href={success.resetLink}
+                    href={thanhCong.resetLink}
                     className="login-reset-link"
                     target="_self"
                     rel="noopener noreferrer"
                   >
-                    {success.resetLink}
+                    {thanhCong.resetLink}
                   </a>
                 </div>
               )}
