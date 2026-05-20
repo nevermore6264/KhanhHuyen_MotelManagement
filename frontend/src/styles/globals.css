@@ -2,6 +2,7 @@
 @import "./itro-redesign.css";
 @import "./login-page.css";
 @import "./footer.css";
+@import "./navbar-app.css";
 @import "./dashboard-page.css";
 
 * {
@@ -1964,6 +1965,71 @@ textarea:disabled:focus {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 12px;
+}
+
+.modal-backdrop--contract-preview {
+  z-index: 1100;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 72px 20px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.contract-preview-modal {
+  position: relative;
+  width: min(800px, 92vw) !important;
+  max-width: min(800px, 92vw) !important;
+  max-height: none !important;
+  margin: 0 auto 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px 24px 24px !important;
+  flex-shrink: 0;
+}
+
+.contract-preview-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.contract-preview-modal__head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.contract-preview-modal__scroll {
+  flex: 1 1 auto;
+  min-height: min(360px, 45vh);
+  max-height: calc(100dvh - 200px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px 16px 32px;
+  background: var(--bg-secondary, #f1f5f9);
+  border-radius: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.contract-preview-modal__scroll .docx-wrapper > section.docx {
+  margin-bottom: 12px;
+}
+
+.contract-preview-modal__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: inherit;
+  font-weight: 600;
+  color: #475569;
+  z-index: 2;
 }
 
 .contract-create-modal {

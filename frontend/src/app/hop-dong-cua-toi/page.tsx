@@ -12,6 +12,7 @@ import {
 import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import { useToast } from "@/components/NhaCungCapToast";
+import HopDongXemModal from "@/components/HopDongXemModal";
 
 type Room = { id: string; code: string; currentPrice?: number };
 type Tenant = {
@@ -201,73 +202,21 @@ export default function TrangHopDongCuaToi() {
           />
         </div>
 
-        {previewContract && (
-          <div className="modal-backdrop">
-            <div
-              className="modal-card"
-              style={{
-                position: "relative",
-                maxWidth: "90vw",
-                width: 800,
-                maxHeight: "calc(90vh - 48px)",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 16,
-                  flexShrink: 0,
-                  paddingRight: 8,
-                }}
-              >
-                <h3 style={{ margin: 0 }}>
-                  Xem hợp đồng — Phòng {previewContract.room?.code}
-                </h3>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setPreviewContract(null);
-                    setPreviewLoading(false);
-                  }}
-                  style={{ flexShrink: 0 }}
-                >
-                  <IconTimes /> Đóng
-                </button>
-              </div>
-              <div
-                ref={previewContainerRef}
-                style={{
-                  flex: 1,
-                  overflow: "auto",
-                  minHeight: 400,
-                  padding: 16,
-                  backgroundColor: "var(--bg-secondary)",
-                  borderRadius: 8,
-                }}
-              />
-              {previewLoading && (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "rgba(255,255,255,0.8)",
-                    borderRadius: 8,
-                  }}
-                >
-                  Đang tải…
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <HopDongXemModal
+          open={!!previewContract}
+          roomCode={previewContract?.room?.code}
+          loading={previewLoading}
+          previewContainerRef={previewContainerRef}
+          onClose={() => {
+            setPreviewContract(null);
+            setPreviewLoading(false);
+          }}
+          closeLabel={
+            <>
+              <IconTimes /> Đóng
+            </>
+          }
+        />
       </div>
     </TrangBaoVe>
   );

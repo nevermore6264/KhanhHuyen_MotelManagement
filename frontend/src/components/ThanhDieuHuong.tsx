@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { clearAuth, getName, getRole } from "@/lib/auth";
+import { dangXuatApp, getName, getRole } from "@/lib/auth";
 import ChuongPopoverThongBao from "./ChuongPopoverThongBao";
-import { IconLogout } from "./Icons";
+import { IconLogout, IconSettings } from "./Icons";
 
 type MucMenu = { label: string; href: string };
 
@@ -92,9 +93,19 @@ const menuTheoVaiTro: Record<string, NhomMenu[]> = {
   ],
 };
 
+const TEN_VAI_TRO: Record<string, string> = {
+  ADMIN: "Quản trị",
+  STAFF: "Nhân viên",
+  TENANT: "Khách thuê",
+};
+
+function layChuCai(ten: string) {
+  const p = ten.trim().charAt(0);
+  return p ? p.toUpperCase() : "U";
+}
+
 export default function ThanhDieuHuong() {
   const pathname = usePathname();
-  const router = useRouter();
   const [vaiTro, setVaiTro] = useState<string | null>(null);
   const [ten, setTen] = useState("User");
 
@@ -106,36 +117,51 @@ export default function ThanhDieuHuong() {
   const hienThiChuong = vaiTro === "TENANT" || vaiTro === "STAFF";
   const menu = vaiTro != null ? menuTheoVaiTro[vaiTro] : [];
 
-  const dangXuat = () => {
-    clearAuth();
-    router.replace("/dang-nhap");
-  };
-
   const active = (href: string) =>
     pathname === href || (href !== "/tong-quan" && pathname.startsWith(href));
 
-  const navClass = (href: string) =>
-    `nav-link${active(href) ? " nav-link-active" : ""}`;
+  const nhomActive = (nhom: NhomMenu) => {
+    if (nhom.href) return active(nhom.href);
+    return nhom.items?.some((m) => active(m.href)) ?? false;
+  };
+
+  const linkClass = (href: string, extra = "") =>
+    `app-navbar__link${active(href) ? " app-navbar__link--active" : ""}${extra ? ` ${extra}` : ""}`;
 
   return (
-    <nav className="navbar">
-      <div className="container navbar-inner">
-        <Link href="/tong-quan" className="navbar-brand">
-          <img className="nav-logo" src="/logo.svg" alt="iTro" />
-          <span>iTro</span>
+    <header className="app-navbar">
+      <div className="app-navbar__inner">
+        <Link href="/tong-quan" className="app-navbar__brand">
+          <Image
+            className="app-navbar__logo"
+            src="/logo.svg"
+            alt="iTro"
+            width={36}
+            height={36}
+            priority
+          />
+          <span className="app-navbar__brand-text">
+            <strong>iTro</strong>
+            <small>Quản lý nhà trọ</small>
+          </span>
         </Link>
 
-        <div className="nav-menu">
+        <nav className="app-navbar__menu" aria-label="Menu chính">
           {menu.map((nhom) => (
-            <div key={nhom.label} className="nav-item">
+            <div key={nhom.label} className="app-navbar__item">
               {nhom.href ? (
-                <Link className={navClass(nhom.href)} href={nhom.href}>
+                <Link href={nhom.href} className={linkClass(nhom.href)}>
                   {nhom.label}
                 </Link>
               ) : (
                 <>
-                  <span className="nav-link nav-link-group">{nhom.label}</span>
-                  <div className="nav-dropdown">
+                  <span
+                    className={`app-navbar__link app-navbar__link--group${nhomActive(nhom) ? " app-navbar__link--active" : ""}`}
+                    tabIndex={0}
+                  >
+                    {nhom.label}
+                  </span>
+                  <div className="app-navbar__dropdown">
                     {nhom.items?.map((muc) => (
                       <Link
                         key={muc.href}
@@ -150,25 +176,39 @@ export default function ThanhDieuHuong() {
               )}
             </div>
           ))}
-        </div>
+        </nav>
 
-        <div className="nav-actions">
-          {hienThiChuong && <ChuongPopoverThongBao />}
-          <Link href="/cai-dat" className="btn btn-nav btn-nav-ghost">
-            Cài đặt
+        <div className="app-navbar__actions">
+          {hienThiChuong ? <ChuongPopoverThongBao /> : null}
+
+          <span className="app-navbar__divider" aria-hidden />
+
+          <Link href="/cai-dat" className="app-navbar__ghost">
+            <IconSettings />
+            <span>Cài đặt</span>
           </Link>
-          <Link href="/tai-khoan" className="btn btn-nav btn-nav-ghost">
-            Hồ sơ
+
+          <Link href="/tai-khoan" className="app-navbar__user">
+            <span className="app-navbar__avatar" aria-hidden>
+              {layChuCai(ten)}
+            </span>
+            <span className="app-navbar__user-meta">
+              <strong>{ten}</strong>
+              <small>{vaiTro ? TEN_VAI_TRO[vaiTro] ?? vaiTro : ""}</small>
+            </span>
           </Link>
-          <span className="nav-user">
-            {ten}
-            {vaiTro != null ? ` · ${vaiTro}` : ""}
-          </span>
-          <button type="button" className="btn btn-nav" onClick={dangXuat}>
-            <IconLogout /> Đăng xuất
+
+          <button
+            type="button"
+            className="app-navbar__logout"
+            onClick={() => dangXuatApp()}
+            aria-label="Đăng xuất khỏi hệ thống"
+          >
+            <IconLogout />
+            <span>Đăng xuất</span>
           </button>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

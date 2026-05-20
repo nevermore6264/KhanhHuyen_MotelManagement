@@ -92,7 +92,7 @@ h2 {
   flex: 1;
 }
 
-.navbar {
+.navbar:not(.app-navbar) {
   display: block !important;
   background: var(--nav-bg) !important;
   backdrop-filter: blur(12px) !important;
@@ -179,6 +179,36 @@ h2 {
   background: var(--primary-soft) !important;
   border-color: var(--primary) !important;
   color: var(--primary-dark) !important;
+}
+
+.navbar .btn-logout {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+  border: none !important;
+}
+
+.navbar .btn-logout span {
+  color: #ffffff !important;
+}
+
+.navbar .btn-logout svg {
+  flex-shrink: 0;
+  color: #ffffff !important;
+}
+
+.navbar .btn-logout:hover {
+  color: #ffffff !important;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 .nav-user {

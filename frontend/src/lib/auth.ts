@@ -30,10 +30,28 @@ export function setAuth(
 
 
 export function clearAuth() {
+  if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(NAME_KEY);
   localStorage.removeItem(USER_ID_KEY);
+}
+
+let ngatKetNoiRealtime: (() => void) | null = null;
+
+export function dangKyNgatKetNoiRealtime(ham: () => void) {
+  ngatKetNoiRealtime = ham;
+}
+
+export function dangXuatApp() {
+  if (typeof window === "undefined") return;
+  try {
+    ngatKetNoiRealtime?.();
+  } catch {
+    /* ignore */
+  }
+  clearAuth();
+  window.location.replace("/dang-nhap");
 }
 
 export function getUserId(): string | null {

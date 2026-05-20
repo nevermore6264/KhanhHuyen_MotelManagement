@@ -10,7 +10,7 @@ import React, {
   useState,
 } from "react";
 import api from "@/lib/api";
-import { getRole } from "@/lib/auth";
+import { dangKyNgatKetNoiRealtime, getRole } from "@/lib/auth";
 import {
   createNotificationClient,
   type NotificationPayload,
@@ -102,9 +102,14 @@ export default function NhaCungCapThongBao({
       client.activate();
       refClient.current = client;
     }
-    return () => {
+    const ngat = () => {
       refClient.current?.deactivate?.();
       refClient.current = null;
+    };
+    dangKyNgatKetNoiRealtime(ngat);
+    return () => {
+      ngat();
+      dangKyNgatKetNoiRealtime(() => {});
     };
   }, [daMount, notify, taiLaiChuaDoc]);
 
