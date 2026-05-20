@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
+import { IconHome } from "@/components/Icons";
 
 export default function TrangDangNhap() {
   const router = useRouter();
@@ -43,6 +44,11 @@ export default function TrangDangNhap() {
         <div className="login-page__blob login-page__blob--1" />
         <div className="login-page__blob login-page__blob--2" />
       </div>
+
+      <Link href="/" className="login-back-home">
+        <IconHome />
+        Quay về trang chủ
+      </Link>
 
       <div className="login-layout">
         <section className="login-panel-hero">

@@ -2,6 +2,9 @@
 
 @import "./landing-effects.css";
 @import "./landing-v2.css";
+@import "./landing-hero.css";
+@import "./landing-people.css";
+@import "./landing-features.css";
 
 body.landing-body {
   overflow-x: hidden;
@@ -18,16 +21,9 @@ body.landing-body .main-content {
 
 .landing {
   --lp-font: "Plus Jakarta Sans", system-ui, sans-serif;
-  --lp-hero-bg: #fafaf9;
   --lp-surface: #ffffff;
-  --lp-ink: #1c1917;
-  --lp-muted: #78716c;
-  --lp-border: #e7e5e4;
-  --lp-accent: #9a6b3f;
-  --lp-accent-deep: #7c5a2a;
-  --lp-stone: #a8a29e;
   --lp-text: var(--lp-ink);
-  --lp-glass: rgba(255, 255, 255, 0.85);
+  --lp-glass: rgba(255, 255, 255, 0.88);
   font-family: var(--lp-font);
   color: var(--lp-text);
   background: var(--lp-hero-bg);
@@ -148,17 +144,27 @@ body.landing-body .main-content {
   font-weight: 600;
   font-size: 0.9rem;
   padding: 12px 22px;
-  border-radius: 8px;
-  color: #fafaf9;
-  background: #292524;
-  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.08);
-  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--lp-sky-600) 0%, var(--lp-sky-400) 100%);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .lp-btn-primary:hover {
-  background: #1c1917;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.12);
+  color: #fff;
+  background: linear-gradient(135deg, var(--lp-sky-500) 0%, var(--lp-sky-300) 100%);
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(14, 165, 233, 0.45);
+}
+
+.lp-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.32);
 }
 
 /* ─── Hero ─── */
@@ -380,7 +386,7 @@ body.landing-body .main-content {
   color: var(--lp-text);
 }
 
-.lp-mock-stat-val.army { color: #0f766e; }
+.lp-mock-stat-val.army { color: var(--lp-sky-600); }
 .lp-mock-stat-val.mint { color: #2a9d8f; }
 
 .lp-mock-chart {
@@ -432,7 +438,7 @@ body.landing-body .main-content {
 .lp-scroll-line {
   width: 1px;
   height: 40px;
-  background: linear-gradient(180deg, var(--lp-teal), transparent);
+  background: linear-gradient(180deg, var(--lp-sky-400), transparent);
   animation: lp-scroll-bounce 2s ease infinite;
 }
 
@@ -731,43 +737,7 @@ body.landing-body .main-content {
   color: var(--lp-muted);
 }
 
-/* CTA dark */
-.lp-cta {
-  background: #f5f5f4;
-  padding: 100px 28px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.lp-cta .lp-orb {
-  opacity: 0.35;
-}
-
-.lp-cta h2 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
-  color: var(--lp-text) !important;
-  margin: 0 0 16px;
-  letter-spacing: -0.03em;
-  position: relative;
-}
-
-.lp-cta p {
-  color: var(--lp-muted);
-  font-size: 1.1rem;
-  margin: 0 auto 36px;
-  max-width: 40ch;
-  position: relative;
-}
-
-.lp-cta-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 14px;
-  position: relative;
-}
+/* CTA — see landing-v2.css */
 
 /* Footer */
 .lp-footer {

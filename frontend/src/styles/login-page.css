@@ -14,12 +14,46 @@ body.login-body .main-content {
 .login-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px 20px 32px;
   position: relative;
   background: linear-gradient(145deg, #e0f2fe 0%, #f0f9ff 40%, #ffffff 100%);
   overflow: hidden;
+}
+
+.login-back-home {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0284c7 !important;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.1);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.login-back-home:hover {
+  background: #fff;
+  border-color: #0ea5e9;
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.login-back-home svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .login-page__bg {

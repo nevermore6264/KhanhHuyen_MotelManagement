@@ -6,6 +6,7 @@ import NhaCungCapToast from "./NhaCungCapToast";
 import NhaCungCapThongBao from "./NhaCungCapThongBao";
 import NhaCungCapCaiDat from "./NhaCungCapCaiDat";
 import ThanhDieuHuong from "./ThanhDieuHuong";
+import FooterHienDai from "./FooterHienDai";
 
 function loaiTrang(pathname: string): string {
   if (pathname === "/tong-quan") return "dashboard";
@@ -62,9 +63,7 @@ export default function VoUngDung({ children }: { children: React.ReactNode }) {
               <div className="app-shell-content" data-page={pageKind}>
                 {children}
               </div>
-              <footer className="main-footer">
-                © 2026 iTro · Chúc bạn một ngày làm việc nhẹ nhàng ✨
-              </footer>
+              <FooterHienDai variant="app" />
             </div>
           )}
         </NhaCungCapThongBao>
