@@ -87,9 +87,7 @@ function MarqueeSloganDashboard({ slogans }: { slogans: readonly string[] }) {
           <span key={i} className="dashboard-slogan-item">
             <span className="dashboard-slogan-text">{text}</span>
             <span className="dashboard-slogan-sep" aria-hidden>
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l2.09 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.91-1.01L12 2z" />
-              </svg>
+              ★
             </span>
           </span>
         ))}
@@ -383,7 +381,7 @@ export default function TrangTongQuan() {
         {
           label: dp.quickOverview,
           data: [vacant, debt, revenue],
-          backgroundColor: ["#fcd34d", "#ea580c", "#059669"],
+          backgroundColor: ["#bae6fd", "#0ea5e9", "#059669"],
           borderRadius: 8,
           maxBarThickness: 52,
         },
@@ -432,7 +430,7 @@ export default function TrangTongQuan() {
             occupancy.occupied,
             occupancy.maintenance,
           ],
-          backgroundColor: ["#fcd34d", "#7c3aed", "#a8a29e"],
+          backgroundColor: ["#c7d2fe", "#6366f1", "#94a3b8"],
           borderWidth: 0,
         },
       ],
@@ -457,13 +455,13 @@ export default function TrangTongQuan() {
         {
           label: dp.revenueChartLabel,
           data: series,
-          borderColor: "#ea580c",
-          backgroundColor: "rgba(234, 88, 12, 0.08)",
+          borderColor: "#6366f1",
+          backgroundColor: "rgba(99, 102, 241, 0.1)",
           tension: 0.35,
           fill: true,
           pointRadius: 4,
           pointBackgroundColor: "#ffffff",
-          pointBorderColor: "#ea580c",
+          pointBorderColor: "#6366f1",
           pointBorderWidth: 2,
           pointHoverRadius: 5,
           borderWidth: 2,
@@ -609,13 +607,7 @@ export default function TrangTongQuan() {
             </div>
           </div>
 
-          <div className="dashboard-slogan-marquee" aria-hidden>
-            <div className="dashboard-slogan-track">
-              <span>{td.marquee}</span>
-              <span>{td.marquee}</span>
-              <span>{td.marquee}</span>
-            </div>
-          </div>
+          <MarqueeSloganDashboard slogans={[td.marquee]} />
 
           <div className="dashboard-tenant-grid">
             <div className="card">
@@ -742,24 +734,26 @@ export default function TrangTongQuan() {
 
   return (
     <TrangBaoVe>
-      <div className="page-shell page-dashboard page-dashboard--studio">
-        <header className="dash-studio-bar">
-          <div className="dash-studio-bar__main">
-            <span className="dash-studio-bar__period">
+      <div
+        className={`page-shell page-dashboard page-dashboard--pulse${dangTai ? " page-dashboard--loading" : ""}`}
+      >
+        <header className="dash-x-hero">
+          <div className="dash-x-hero__text">
+            <p className="dash-x-hero__period">
               {dp.monthLabel} {kyBaoCao.thang} · {kyBaoCao.nam}
-            </span>
-            <h2 className="dash-studio-bar__title">
+            </p>
+            <h1 className="dash-x-hero__title">
               {dp.greeting}
               {tenNguoiDung?.trim() ? `, ${tenNguoiDung.trim()}` : ""}
-            </h2>
-            <p className="dash-studio-bar__lead">{dp.lead}</p>
+            </h1>
+            <p className="dash-x-hero__lead">{dp.lead}</p>
           </div>
-          <aside className="dash-studio-bar__aside">
-            <div className="dash-studio-bar__clock">
-              <span className="dash-studio-bar__date">
+          <div className="dash-x-hero__meta">
+            <div className="dash-x-clock">
+              <span className="dash-x-clock__date">
                 {mounted ? now.toLocaleDateString(localeTag) : "—"}
               </span>
-              <span className="dash-studio-bar__time" suppressHydrationWarning>
+              <span className="dash-x-clock__time" suppressHydrationWarning>
                 {mounted
                   ? now.toLocaleTimeString(localeTag, {
                       hour: "2-digit",
@@ -771,15 +765,15 @@ export default function TrangTongQuan() {
               </span>
             </div>
             <div
-              className="dash-studio-bar__health"
+              className="dash-x-score"
               style={
                 { "--health-pct": diemVanHanh } as import("react").CSSProperties
               }
             >
-              <div className="dash-studio-bar__health-ring">
+              <div className="dash-x-score__ring">
                 <span>{diemVanHanh}</span>
               </div>
-              <div className="dash-studio-bar__health-text">
+              <div className="dash-x-score__text">
                 <strong>{dp.opsScore}</strong>
                 <span>
                   {diemVanHanh >= 80
@@ -790,8 +784,8 @@ export default function TrangTongQuan() {
                 </span>
               </div>
             </div>
-          </aside>
-          <div className="dash-studio-bar__actions">
+          </div>
+          <nav className="dash-x-hero__nav">
             <Link className="btn" href="/phong">
               <IconHome /> {dp.manageRooms}
             </Link>
@@ -804,212 +798,139 @@ export default function TrangTongQuan() {
             <Link className="btn btn-secondary" href="/bao-cao">
               <IconChart /> {dp.reports}
             </Link>
-          </div>
+          </nav>
         </header>
 
-        <MarqueeSloganDashboard slogans={dp.slogans} />
-
-        <div className={`stat-grid stat-grid--studio${dangTai ? " stat-grid--loading" : ""}`}>
-          <div className="card stat-card accent-rose">
-            <div className="stat-icon">
-              <IconHome />
-            </div>
-            <div>
-              <div className="stat-label">{db.vacant}</div>
-              <div className="stat-value">{formatNumber(vacant)}</div>
-              <div className="stat-note">{dp.vacantNote}</div>
-            </div>
-          </div>
-          <div className="card stat-card accent-pink">
-            <div className="stat-icon">
-              <IconWallet />
-            </div>
-            <div>
-              <div className="stat-label">{db.debt}</div>
-              <div className="stat-value">{formatMoney(debt)}</div>
-              <div className="stat-note">{dp.debtNote}</div>
-            </div>
-          </div>
-          <div className="card stat-card accent-peach">
-            <div className="stat-icon">
-              <IconChart />
-            </div>
-            <div>
-              <div className="stat-label">{db.revenue}</div>
-              <div className="stat-value">{formatMoney(revenue)}</div>
-              <div className="stat-note">{dp.revenueNote}</div>
-            </div>
-          </div>
-          <div className="card stat-card accent-sky">
-            <div className="stat-icon">
-              <IconChart />
-            </div>
-            <div>
-              <div className="stat-label">{db.occupancy}</div>
-              <div className="stat-value">{occupancy.occupancyRatePercent}%</div>
-              <div className="stat-note">
-                {formatNumber(occupancy.occupied)}/{formatNumber(occupancy.totalRooms)}{" "}
-                {dp.roomsRented}
-              </div>
-            </div>
-          </div>
+        <div className="dash-x-ticker">
+          <MarqueeSloganDashboard slogans={dp.slogans} />
         </div>
 
-        <section
-          className={`dash-studio-bento${dangTai ? " dash-spotlight--loading" : ""}`}
-        >
-        <div className={`dash-spotlight${dangTai ? " dash-spotlight--loading" : ""}`}>
-          <article className="dash-spotlight__card dash-spotlight__card--revenue">
-            <span className="dash-spotlight__eyebrow">{dp.revenueMonth}</span>
-            <p className="dash-spotlight__value">
-              {formatNumber(revenue)}
-              <small>đ</small>
-            </p>
-            <p className="dash-spotlight__meta">
+        <section className="dash-x-kpis">
+          <div className="dash-x-kpi dash-x-kpi--revenue">
+            <span className="dash-x-kpi__label">{dp.revenueMonth}</span>
+            <span className="dash-x-kpi__value">
+              {formatMoney(revenue)}
+            </span>
+            <span className="dash-x-kpi__meta">
               {xuHuongDoanhThu != null ? (
                 <span
                   className={
                     xuHuongDoanhThu >= 0
-                      ? "dash-trend dash-trend--up"
-                      : "dash-trend dash-trend--down"
+                      ? "dash-x-trend--up"
+                      : "dash-x-trend--down"
                   }
                 >
                   {xuHuongDoanhThu >= 0 ? "+" : "−"}
                   {Math.abs(xuHuongDoanhThu)}% {dp.vsLastMonth}
                 </span>
               ) : (
-                <span>
-                  {dinhDangThangNam(kyBaoCao.thang, kyBaoCao.nam, lang)}
-                </span>
+                dinhDangThangNam(kyBaoCao.thang, kyBaoCao.nam, lang)
               )}
-            </p>
-            <p className="dash-spotlight__sub">
-              {dp.yearTotal} {kyBaoCao.nam}: <strong>{formatMoney(revenueYearTotal)}</strong>
-            </p>
-          </article>
-          <article className="dash-spotlight__card dash-spotlight__card--collect">
-            <span className="dash-spotlight__eyebrow">{dp.collectionRate}</span>
-            <p className="dash-spotlight__value">
+              {" · "}
+              {dp.yearTotal}: {formatMoney(revenueYearTotal)}
+            </span>
+          </div>
+          <div className="dash-x-kpi dash-x-kpi--collect">
+            <span className="dash-x-kpi__label">{dp.collectionRate}</span>
+            <span className="dash-x-kpi__value">
               {tyLeThuTien}
               <small>%</small>
-            </p>
-            <p className="dash-spotlight__meta">
+            </span>
+            <span className="dash-x-kpi__meta">
               {invoiceSummary
                 ? `${formatNumber(invoiceSummary.countPaid)}/${formatNumber(invoiceSummary.countTotal)} ${dp.invoicesPaid}`
                 : "—"}
-            </p>
-            <div className="dash-spotlight__bar">
+            </span>
+            <div className="dash-x-kpi__bar">
               <span style={{ width: `${tyLeThuTien}%` }} />
             </div>
-          </article>
-          <article className="dash-spotlight__card dash-spotlight__card--occ">
-            <span className="dash-spotlight__eyebrow">{dp.occupancyAvg}</span>
-            <p className="dash-spotlight__value">
+          </div>
+          <div className="dash-x-kpi dash-x-kpi--occ">
+            <span className="dash-x-kpi__label">{dp.occupancyAvg}</span>
+            <span className="dash-x-kpi__value">
               {occupancy.occupancyRatePercent}
               <small>%</small>
-            </p>
-            <p className="dash-spotlight__meta">
-              {formatNumber(occupancy.occupied)} / {formatNumber(occupancy.totalRooms)} {dp.roomsRented}
-            </p>
-            <p className="dash-spotlight__sub">
-              {dp.avgPerRoom}: <strong>{formatMoney(doanhThuBinhQuanPhong)}</strong>
-            </p>
-          </article>
-        </div>
-
-        <div
-          className={`dash-kpi-grid${dangTai ? " dash-kpi-grid--loading" : ""}`}
-        >
-          {[
-            {
-              href: "/phong",
-              accent: "blue",
-              icon: <IconHome />,
-              label: dp.totalRooms,
-              value: formatNumber(occupancy.totalRooms),
-              note: `${formatNumber(vacant)} ${dp.vacant} · ${formatNumber(occupancy.maintenance)} ${dp.maintenance}`,
-            },
-            {
-              href: "/phong",
-              accent: "sky",
-              icon: <IconUser />,
-              label: dp.occupied,
-              value: formatNumber(occupancy.occupied),
-              note: `${occupancy.occupancyRatePercent}% ${dp.fillRate}`,
-            },
-            {
-              href: "/hoa-don",
-              accent: "green",
-              icon: <IconReceipt />,
-              label: dp.collectedMonth,
-              value: invoiceSummary
-                ? formatMoney(invoiceSummary.sumPaid)
-                : "—",
-              note: invoiceSummary
-                ? `${formatNumber(invoiceSummary.countPaid)} ${dp.invoices}`
-                : "—",
-            },
-            {
-              href: "/hoa-don",
-              accent: "amber",
-              icon: <IconWallet />,
-              label: t.dashboard.debt,
-              value: formatMoney(debt),
-              note: `${formatNumber(unpaidCount)} ${dp.unpaidInvoices}`,
-            },
-            {
-              href: "/hop-dong",
-              accent: "violet",
-              icon: <IconFile />,
-              label: dp.vacant,
-              value: formatNumber(vacant),
-              note: dp.vacantReady,
-            },
-            {
-              href: "/chi-so-dien-nuoc",
-              accent: "slate",
-              icon: <IconChart />,
-              label: dp.utilities,
-              value: dp.enter,
-              note: dp.utilitiesHint,
-            },
-          ].map((kpi) => (
-            <Link
-              key={kpi.label}
-              href={kpi.href}
-              className={`dash-kpi dash-kpi--${kpi.accent}`}
-            >
-              <div className="dash-kpi__icon">{kpi.icon}</div>
-              <div className="dash-kpi__body">
-                <span className="dash-kpi__label">{kpi.label}</span>
-                <span className="dash-kpi__value">{kpi.value}</span>
-                <span className="dash-kpi__note">{kpi.note}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+            </span>
+            <span className="dash-x-kpi__meta">
+              {formatNumber(occupancy.occupied)} / {formatNumber(occupancy.totalRooms)}{" "}
+              {dp.roomsRented} · {dp.avgPerRoom}: {formatMoney(doanhThuBinhQuanPhong)}
+            </span>
+          </div>
+          <Link href="/hoa-don" className="dash-x-kpi dash-x-kpi--debt">
+            <span className="dash-x-kpi__label">{db.debt}</span>
+            <span className="dash-x-kpi__value">{formatMoney(debt)}</span>
+            <span className="dash-x-kpi__meta">
+              {formatNumber(unpaidCount)} {dp.unpaidInvoices}
+            </span>
+          </Link>
         </section>
 
-        <div className="dashboard-mid">
-          <section className="card dash-panel dash-panel--invoice">
-            <div className="dash-panel__head">
-              <div>
-                <h3 className="dash-panel__title">{dp.invoiceMonth}</h3>
-                <p className="dash-panel__sub">
-                  {invoiceSummary
-                    ? dinhDangThangNam(
-                        invoiceSummary.month,
-                        invoiceSummary.year,
-                        lang,
-                      )
-                    : dinhDangThangNam(kyBaoCao.thang, kyBaoCao.nam, lang)}
-                </p>
+        <nav className="dash-x-links" aria-label={dp.quickTasks}>
+          {TAC_VU_NHANH.map((task) => (
+            <Link key={task.href} href={task.href} className="dash-x-link">
+              <strong>{task.label}</strong>
+              <span>{task.desc}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="dash-x-layout">
+          <div className="dash-x-col-main">
+            <article className="dash-x-card dash-x-card--chart">
+              <div className="dash-x-card__head">
+                <div>
+                  <h3 className="dash-x-card__title">{dp.revenue6m}</h3>
+                  <p className="dash-x-card__sub">{dp.revenueTrend}</p>
+                </div>
+                <span className="dash-x-card__badge">
+                  {dp.year} {kyBaoCao.nam}
+                </span>
               </div>
-              <Link href="/hoa-don" className="dash-panel__link">
-                {dp.viewAll} →
-              </Link>
+              <div className="dash-x-chart-box dash-x-chart-box--tall">
+                <Line data={lineData} options={lineOptions} />
+              </div>
+            </article>
+            <div className="dash-x-charts-row">
+              <article className="dash-x-card">
+                <h3 className="dash-x-card__title">{dp.quickOverview}</h3>
+                <div className="dash-x-chart-box">
+                  <Bar data={barChartData} options={barChartOptions} />
+                </div>
+              </article>
+              <article className="dash-x-card">
+                <h3 className="dash-x-card__title">{db.occupancyChart}</h3>
+                <div className="dash-x-chart-box dash-x-chart-box--donut">
+                  <Doughnut data={doughnutData} options={doughnutOptions} />
+                </div>
+              </article>
             </div>
-            {invoiceSummary ? (
+          </div>
+
+          <aside className="dash-x-col-side">
+            <div className="dash-x-ytd">
+              <span>{dp.yearRevenue}</span>
+              <strong>{formatMoney(revenueYearTotal)}</strong>
+            </div>
+
+            <section className="dash-x-card">
+              <div className="dash-x-card__head">
+                <div>
+                  <h3 className="dash-x-card__title">{dp.invoiceMonth}</h3>
+                  <p className="dash-x-card__sub">
+                    {invoiceSummary
+                      ? dinhDangThangNam(
+                          invoiceSummary.month,
+                          invoiceSummary.year,
+                          lang,
+                        )
+                      : dinhDangThangNam(kyBaoCao.thang, kyBaoCao.nam, lang)}
+                  </p>
+                </div>
+                <Link href="/hoa-don" className="dash-x-card__link">
+                  {dp.viewAll} →
+                </Link>
+              </div>
+              {invoiceSummary ? (
               <>
                 <div className="dash-invoice-metrics">
                   <div className="dash-metric">
@@ -1095,20 +1016,20 @@ export default function TrangTongQuan() {
                 </div>
               </>
             ) : (
-              <p className="dash-empty">{dp.noInvoiceData}</p>
+              <p className="dash-x-empty">{dp.noInvoiceData}</p>
             )}
-          </section>
+            </section>
 
-          <section className="card dash-panel dash-panel--rooms">
-            <div className="dash-panel__head">
-              <div>
-                <h3 className="dash-panel__title">{dp.roomStatus}</h3>
-                <p className="dash-panel__sub">{dp.byStatus}</p>
+            <section className="dash-x-card">
+              <div className="dash-x-card__head">
+                <div>
+                  <h3 className="dash-x-card__title">{dp.roomStatus}</h3>
+                  <p className="dash-x-card__sub">{dp.byStatus}</p>
+                </div>
+                <Link href="/phong" className="dash-x-card__link">
+                  {dp.roomList} →
+                </Link>
               </div>
-              <Link href="/phong" className="dash-panel__link">
-                {dp.roomList} →
-              </Link>
-            </div>
             <div className="dash-occupancy">
               <div
                 className="dash-occupancy__ring"
@@ -1187,33 +1108,29 @@ export default function TrangTongQuan() {
                 </div>
               ))}
             </div>
-          </section>
+            </section>
+          </aside>
         </div>
 
-        <div className="quick-grid quick-grid--studio">
-          <div className="card quick-card">
-            <div className="quick-title">{dp.quickTasks}</div>
-            <div className="quick-actions quick-actions--grid">
-              <Link href="/khu-vuc">{dp.quickActions.addZone}</Link>
-              <Link href="/phong">{dp.quickActions.addRoom}</Link>
-              <Link href="/khach-thue">{dp.quickActions.addTenant}</Link>
-              <Link href="/chi-so-dien-nuoc">{dp.quickActions.addUtilities}</Link>
+        <div className="dash-x-bottom">
+          <section className="dash-x-card">
+            <div className="dash-x-card__head">
+              <h3 className="dash-x-card__title">{dp.todayTips}</h3>
+              <span className="dash-x-card__badge">{goiYHomNay.length}</span>
             </div>
-          </div>
-          <div className="card quick-card">
-            <div className="quick-title">{dp.todayTips}</div>
-            <ul className="dash-studio-quick-tips">
+            <ul className="dash-x-tips">
               {goiYHomNay.map((item, i) => (
                 <li
                   key={i}
                   className={
                     item.uuTien === "warn"
-                      ? "dash-studio-quick-tips__item--warn"
+                      ? "dash-x-tips--warn"
                       : item.uuTien === "ok"
-                        ? "dash-studio-quick-tips__item--ok"
+                        ? "dash-x-tips--ok"
                         : undefined
                   }
                 >
+                  <span className="dash-x-tips__num">{i + 1}</span>
                   {item.href ? (
                     <Link href={item.href}>{item.text}</Link>
                   ) : (
@@ -1222,136 +1139,49 @@ export default function TrangTongQuan() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
+          </section>
 
-        <div className="overview-grid overview-grid--studio">
-          <div className="card chart-card">
-            <div className="chart-title">{dp.quickOverview}</div>
-            <div className="chart-canvas">
-              <Bar data={barChartData} options={barChartOptions} />
-            </div>
-          </div>
-          <div className="card chart-card">
-            <div className="chart-title">{db.occupancyChart}</div>
-            <div className="chart-canvas chart-canvas--donut">
-              <Doughnut data={doughnutData} options={doughnutOptions} />
-            </div>
-          </div>
-        </div>
-
-        <div className="chart-grid chart-grid--studio">
-          <div className="card chart-card wide-chart dash-chart-main">
-            <div className="dash-chart-head">
+          <section className="dash-x-card">
+            <div className="dash-x-card__head">
               <div>
-                <h3 className="chart-title">{dp.revenue6m}</h3>
-                <p className="chart-sub">{dp.revenueTrend}</p>
+                <h3 className="dash-x-card__title">{dp.debtTitle}</h3>
+                <p className="dash-x-card__sub">
+                  {unpaidCount > 0
+                    ? `${formatNumber(unpaidCount)} ${dp.debtMeta} ${formatMoney(debt)}`
+                    : dp.noDebt}
+                </p>
               </div>
-              <div className="dash-chart-head__right">
-                <div className="card dash-side-stat dash-side-stat--inline">
-                  <span className="dash-side-stat__label">{dp.yearRevenue}</span>
-                  <span className="dash-side-stat__value">
-                    {formatMoney(revenueYearTotal)}
-                  </span>
-                </div>
-                <div className="dash-chart-badge">
-                  {dp.year} {kyBaoCao.nam}
-                </div>
-              </div>
+              <Link href="/hoa-don" className="dash-x-card__link">
+                {dp.handleInvoices} →
+              </Link>
             </div>
-            <div className="chart-canvas chart-canvas--tall">
-              <Line data={lineData} options={lineOptions} />
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-bottom">
-          <section className="card dash-panel dash-panel--tasks">
-            <div className="dash-panel__head">
-              <h3 className="dash-panel__title">{dp.quickTasks}</h3>
-            </div>
-            <div className="dash-task-grid">
-              {TAC_VU_NHANH.map((task) => (
-                <Link key={task.href} href={task.href} className="dash-task">
-                  <span className="dash-task__label">{task.label}</span>
-                  <span className="dash-task__desc">{task.desc}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-          <section className="card dash-panel dash-panel--insights">
-            <div className="dash-panel__head">
-              <h3 className="dash-panel__title">{dp.todayTips}</h3>
-              <span className="dash-panel__count">{goiYHomNay.length}</span>
-            </div>
-            <ul className="dash-insight-list">
-              {goiYHomNay.map((item, i) => (
-                <li
-                  key={i}
-                  className={
-                    item.uuTien === "warn"
-                      ? "dash-insight dash-insight--warn"
-                      : item.uuTien === "ok"
-                        ? "dash-insight dash-insight--ok"
-                        : "dash-insight"
-                  }
-                >
-                  <span className="dash-insight__num">{i + 1}</span>
-                  <div className="dash-insight__body">
-                    {item.href ? (
-                      <Link href={item.href}>{item.text}</Link>
-                    ) : (
-                      item.text
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {unpaidInvoices.length > 0 ? (
+              <ul className="dash-x-debt-list">
+                {unpaidInvoices.map((row, idx) => (
+                  <li key={row.id} className="dash-x-debt-item">
+                    <span className="dash-x-debt-item__rank">{idx + 1}</span>
+                    <div>
+                      <strong>{row.roomCode || "—"}</strong>
+                      <span className="dash-x-debt-item__sub">
+                        {row.tenantName || dp.unknownTenant}
+                      </span>
+                    </div>
+                    <span>
+                      {row.month && row.year
+                        ? `T${row.month}/${row.year}`
+                        : "—"}
+                    </span>
+                    <span className="dash-x-debt-item__amt">
+                      {row.total != null ? formatMoney(row.total) : "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="dash-x-empty dash-x-empty--ok">{dp.noDebtOk}</p>
+            )}
           </section>
         </div>
-
-        <section className="card dash-panel dash-panel--debt dash-panel--debt-v2">
-          <div className="dash-panel__head">
-            <div>
-              <h3 className="dash-panel__title">{dp.debtTitle}</h3>
-              <p className="dash-panel__sub">
-                {unpaidCount > 0
-                  ? `${formatNumber(unpaidCount)} ${dp.debtMeta} ${formatMoney(debt)}`
-                  : dp.noDebt}
-              </p>
-            </div>
-            <Link href="/hoa-don" className="dash-panel__link">
-              {dp.handleInvoices} →
-            </Link>
-          </div>
-          {unpaidInvoices.length > 0 ? (
-            <ul className="dash-debt-list">
-              {unpaidInvoices.map((row, idx) => (
-                <li key={row.id} className="dash-debt-item">
-                  <span className="dash-debt-item__rank">{idx + 1}</span>
-                  <div className="dash-debt-item__main">
-                    <strong>{row.roomCode || "—"}</strong>
-                    <span>{row.tenantName || dp.unknownTenant}</span>
-                  </div>
-                  <span className="dash-debt-item__period">
-                    {row.month && row.year
-                      ? `T${row.month}/${row.year}`
-                      : "—"}
-                  </span>
-                  <span className="dash-debt-item__amount">
-                    {row.total != null
-                      ? formatMoney(row.total)
-                      : "—"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="dash-empty dash-empty--ok">
-              {dp.noDebtOk}
-            </p>
-          )}
-        </section>
       </div>
     </TrangBaoVe>
   );

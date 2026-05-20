@@ -5,7 +5,7 @@
 @import "./navbar-app.css";
 @import "./dashboard-page.css";
 @import "./dashboard-pro.css";
-@import "./dashboard-studio.css";
+@import "./dashboard-pulse.css";
 @import "./theme-dark.css";
 @import "./settings-page.css";
 @import "./account-page.css";
@@ -641,7 +641,8 @@ a.btn {
   animation: dashboard-slogan-scroll 28s linear infinite;
 }
 
-.dashboard-slogan-track span {
+/* Legacy flat spans (tenant marquee) */
+.dashboard-slogan-track > span:not(.dashboard-slogan-item) {
   white-space: nowrap;
   padding-right: 2rem;
   font-size: 0.95rem;
@@ -649,6 +650,32 @@ a.btn {
   color: var(--blue-700);
   letter-spacing: 0.02em;
   opacity: 0.92;
+}
+
+.dashboard-slogan-item {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  gap: 0.35rem;
+}
+
+.dashboard-slogan-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dashboard-slogan-sep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--primary, #0ea5e9);
+  opacity: 1;
+  padding: 0 0.75rem;
 }
 
 @keyframes dashboard-slogan-scroll {
