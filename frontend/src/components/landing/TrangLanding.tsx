@@ -105,7 +105,6 @@ function Reveal({
   );
 }
 
-/** Ảnh chân dung: Unsplash từ nhiếp ảnh gia Việt Nam / bối cảnh VN (Elist Nguyễn, Trần Như Tuấn, Trọng Lê, Phát Nguyễn, Đào Việt Hoàng). */
 const PHOTOS = {
   hero1:
     "https://images.unsplash.com/photo-1776064350269-16747ae80bfa?w=400&h=520&fit=crop&q=80",
@@ -443,6 +442,69 @@ const PLATFORMS = [
   },
 ];
 
+const TRUST_ITEMS = [
+  "Quản lý phòng",
+  "Hợp đồng & khách thuê",
+  "Hóa đơn định kỳ",
+  "Điện nước + ảnh",
+  "Chat & thông báo",
+  "Excel & PDF",
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "iTro có miễn phí dùng thử không?",
+    a: "Có. Bạn đăng nhập demo ngay trên web — tài khoản admin có sẵn để khám phá phòng, hợp đồng, hóa đơn và chat.",
+  },
+  {
+    q: "Cần cài app hay chỉ dùng trình duyệt?",
+    a: "Chỉ cần trình duyệt trên điện thoại hoặc máy tính. Giao diện tối ưu cho cả hai — không bắt buộc cài thêm phần mềm.",
+  },
+  {
+    q: "Có hỗ trợ nhiều vai trò người dùng không?",
+    a: "Có 3 vai trò: Admin (chủ trọ), Nhân viên vận hành và Khách thuê — mỗi người chỉ thấy đúng phần việc của mình.",
+  },
+  {
+    q: "Xuất báo cáo như thế nào?",
+    a: "Hệ thống hỗ trợ xuất Excel và PDF theo kỳ — phù hợp đối soát cuối tháng thay cho làm tay trên file rời.",
+  },
+  {
+    q: "Dữ liệu có realtime không?",
+    a: "Thông báo và tin nhắn cập nhật theo thời gian thực — chủ trọ và khách không bỏ lỡ yêu cầu hay nhắc việc.",
+  },
+];
+
+function FaqAccordion() {
+  const [open, setOpen] = useState<number | null>(0);
+
+  return (
+    <div className="lp-faq-list">
+      {FAQ_ITEMS.map((item, i) => {
+        const isOpen = open === i;
+        return (
+          <article
+            key={item.q}
+            className={`lp-faq-item${isOpen ? " is-open" : ""}`}
+          >
+            <button
+              type="button"
+              className="lp-faq-q"
+              aria-expanded={isOpen}
+              onClick={() => setOpen(isOpen ? null : i)}
+            >
+              {item.q}
+              <span className="lp-faq-icon" aria-hidden>
+                +
+              </span>
+            </button>
+            {isOpen ? <p className="lp-faq-a">{item.a}</p> : null}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 const WHY_ITRO = [
   {
     title: "Tiết kiệm thời gian",
@@ -515,6 +577,7 @@ function PeopleCard({
 
 export default function TrangLanding() {
   const [navScrolled, setNavScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { scrollY } = useScroll();
   const heroStageY = useTransform(scrollY, [0, 480], [0, 48]);
@@ -525,7 +588,24 @@ export default function TrangLanding() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    window.addEventListener("scroll", close, { passive: true });
+    return () => window.removeEventListener("scroll", close);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
+
   return (
+    <>
     <div className="landing">
       <header className={`lp-nav ${navScrolled ? "scrolled" : ""}`}>
         <div className="lp-nav-inner">
@@ -546,6 +626,9 @@ export default function TrangLanding() {
             <li>
               <a href="#danh-gia">Đánh giá</a>
             </li>
+            <li>
+              <a href="#cau-hoi">Câu hỏi</a>
+            </li>
           </ul>
           <div className="lp-nav-actions">
             <Link href="/dang-nhap" className="lp-btn-ghost">
@@ -555,7 +638,47 @@ export default function TrangLanding() {
               Dùng thử
             </Link>
           </div>
+          <button
+            type="button"
+            className="lp-nav-toggle"
+            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
         </div>
+        <nav
+          className={`lp-nav-mobile${menuOpen ? " is-open" : ""}`}
+          aria-label="Menu di động"
+          aria-hidden={!menuOpen}
+        >
+          <a href="#tinh-nang" onClick={closeMenu}>
+            Tính năng
+          </a>
+          <a href="#cach-hoat-dong" onClick={closeMenu}>
+            Cách hoạt động
+          </a>
+          <a href="#vai-tro" onClick={closeMenu}>
+            Vai trò
+          </a>
+          <a href="#danh-gia" onClick={closeMenu}>
+            Đánh giá
+          </a>
+          <a href="#cau-hoi" onClick={closeMenu}>
+            Câu hỏi
+          </a>
+          <div className="lp-nav-mobile-actions">
+            <Link href="/dang-nhap" className="lp-btn-ghost" onClick={closeMenu}>
+              Đăng nhập
+            </Link>
+            <Link href="/dang-nhap" className="lp-btn-primary" onClick={closeMenu}>
+              Dùng thử
+            </Link>
+          </div>
+        </nav>
       </header>
 
       <section className="lp-hero lp-hero-v3">
@@ -699,6 +822,17 @@ export default function TrangLanding() {
           ))}
         </div>
       </div>
+
+      <section className="lp-trust-strip" aria-label="Tính năng chính">
+        <div className="lp-trust-strip-inner">
+          <span className="lp-trust-strip-label">Bao gồm</span>
+          {TRUST_ITEMS.map((item) => (
+            <span key={item} className="lp-trust-strip-item">
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
 
       <section className="lp-stats-band" aria-label="Thống kê">
         <KhốiHinhBay />
@@ -918,125 +1052,95 @@ export default function TrangLanding() {
         </div>
       </section>
 
-      <section className="lp-section">
-        <div className="lp-container lp-showcase">
-          <Reveal>
+      <section className="lp-section lp-showcase-v2">
+        <KhốiHinhBay />
+        <div className="lp-container lp-showcase-v2-inner">
+          <Reveal className="lp-showcase-v2-copy">
             <span className="lp-section-label">Trải nghiệm</span>
-            <h2>Giao diện bạn muốn mở mỗi ngày</h2>
+            <h2>Tổng quan rõ ràng — thao tác ít bước</h2>
             <p className="lp-section-desc">
-              Tông xanh da trời nhạt, typography rõ ràng — thoải mái khi làm việc
-              hàng ngày.
+              Màn hình tổng quan tập trung số liệu nhà trọ: phòng, thu, công nợ —
+              không rối như file Excel.
             </p>
-            <ul className="lp-showcase-list">
+            <ul className="lp-showcase-v2-points">
               {[
-                "Bố cục tập trung vào nghiệp vụ nhà trọ",
-                "Biểu đồ và số liệu dễ đọc",
-                "Hỗ trợ dark mode & tiếng Việt / English",
-                "Xuất báo cáo Excel & PDF",
+                "Bố cục theo nghiệp vụ nhà trọ",
+                "Biểu đồ & KPI dễ đọc",
+                "Tiếng Việt · Dark mode",
+                "Xuất Excel & PDF",
               ].map((item) => (
                 <li key={item}>
-                  <span className="lp-check">✓</span>
+                  <span className="lp-showcase-v2-check" aria-hidden>
+                    ✓
+                  </span>
                   {item}
                 </li>
               ))}
             </ul>
-            <Link
-              href="/dang-nhap"
-              className="lp-btn-primary"
-              style={{ marginTop: 24, display: "inline-flex" }}
-            >
+            <Link href="/dang-nhap" className="lp-btn-primary lp-btn-xl">
               Vào hệ thống →
             </Link>
           </Reveal>
+
           <motion.div
-            className="lp-showcase-visual"
-            initial={{ opacity: 0, scale: 0.92 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            className="lp-showcase-v2-preview"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div
-              className="lp-mock"
-              style={{ boxShadow: "none", border: "none", background: "#fff" }}
-            >
-              <div className="lp-mock-body" style={{ padding: 20 }}>
-                <p
-                  style={{
-                    margin: "0 0 12px",
-                    fontWeight: 700,
-                    color: "#4a4458",
-                  }}
-                >
-                  Tổng quan hôm nay
-                </p>
-                <div className="lp-mock-stats">
-                  <div
-                    className="lp-mock-stat"
-                    style={{ background: "#f5f5f4" }}
-                  >
-                    <div
-                      className="lp-mock-stat-label"
-                      style={{ color: "#8a8199" }}
-                    >
-                      Phòng
-                    </div>
-                    <div
-                      className="lp-mock-stat-val"
-                      style={{ color: "#1c1917" }}
-                    >
-                      48
-                    </div>
+            <div className="lp-preview-window">
+              <div className="lp-preview-chrome">
+                <div className="lp-preview-dots" aria-hidden>
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="lp-preview-url">app.itro.vn / tong-quan</div>
+              </div>
+              <div className="lp-preview-body">
+                <p className="lp-preview-title">Tổng quan tháng 5</p>
+                <div className="lp-preview-kpis">
+                  <div className="lp-preview-kpi">
+                    <span>Phòng</span>
+                    <strong>48</strong>
                   </div>
-                  <div
-                    className="lp-mock-stat"
-                    style={{ background: "#e0f2fe" }}
-                  >
-                    <div
-                      className="lp-mock-stat-label"
-                      style={{ color: "#64748b" }}
-                    >
-                      Thu tháng
-                    </div>
-                    <div
-                      className="lp-mock-stat-val"
-                      style={{ color: "#0284c7" }}
-                    >
-                      120M
-                    </div>
+                  <div className="lp-preview-kpi lp-preview-kpi--accent">
+                    <span>Thu tháng</span>
+                    <strong>120M</strong>
+                  </div>
+                  <div className="lp-preview-kpi">
+                    <span>Lấp đầy</span>
+                    <strong>87%</strong>
                   </div>
                 </div>
-                <div
-                  className="lp-mock-chart"
-                  style={{ height: 80, background: "#fff" }}
-                >
-                  <div
-                    className="lp-mock-bar-col"
-                    style={{
-                      height: "60%",
-                      background: "linear-gradient(180deg,#bae6fd,#7dd3fc)",
-                    }}
-                  />
-                  <div
-                    className="lp-mock-bar-col"
-                    style={{
-                      height: "85%",
-                      background: "linear-gradient(180deg,#38bdf8,#0ea5e9)",
-                    }}
-                  />
-                  <div
-                    className="lp-mock-bar-col"
-                    style={{
-                      height: "45%",
-                      background: "linear-gradient(180deg,#bae6fd,#38bdf8)",
-                    }}
-                  />
-                  <div
-                    className="lp-mock-bar-col"
-                    style={{
-                      height: "70%",
-                      background: "linear-gradient(180deg,#7dd3fc,#0284c7)",
-                    }}
-                  />
+                <div className="lp-preview-chart">
+                  <div className="lp-preview-chart-head">
+                    <span>Doanh thu 6 tháng</span>
+                    <span>đơn vị: triệu</span>
+                  </div>
+                  <div className="lp-preview-bars" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                </div>
+                <div className="lp-preview-rows">
+                  <div className="lp-preview-row">
+                    <strong>P.201</strong>
+                    <em>Đang thuê</em>
+                    <span className="lp-preview-badge lp-preview-badge--ok">
+                      Đã thu
+                    </span>
+                  </div>
+                  <div className="lp-preview-row">
+                    <strong>P.204</strong>
+                    <em>Trống</em>
+                    <span className="lp-preview-badge">Sẵn khách</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1182,6 +1286,9 @@ export default function TrangLanding() {
                     className="lp-quote-avatar"
                   />
                   <div>
+                    <div className="lp-quote-stars" aria-label="5 sao">
+                      ★★★★★
+                    </div>
                     <div className="lp-quote-author">{t.a}</div>
                     <div className="lp-quote-role">{t.r}</div>
                     <span className="lp-quote-rooms">{t.rooms}</span>
@@ -1194,139 +1301,121 @@ export default function TrangLanding() {
         </div>
       </section>
 
-      <section className="lp-cta">
-        <KhốiHinhBay dense />
-        <div className="lp-cta-bg" aria-hidden>
+      <section className="lp-faq" id="cau-hoi">
+        <KhốiHinhBay />
+        <div className="lp-container">
+          <Reveal className="lp-faq-head">
+            <span className="lp-section-label">Câu hỏi thường gặp</span>
+            <h2>Giải đáp nhanh trước khi bạn dùng thử</h2>
+            <p className="lp-section-desc" style={{ margin: "12px auto 0" }}>
+              Những điều chủ trọ và khách thuê thường hỏi về iTro.
+            </p>
+          </Reveal>
+          <FaqAccordion />
+        </div>
+      </section>
+
+      <section className="lp-cta-v2">
+        <div className="lp-cta-v2-bg" aria-hidden>
           <AnhNguoi
             src={PHOTOS.cta}
             alt=""
             width={1400}
             height={600}
+            className="lp-cta-v2-bg-img"
           />
         </div>
-        <div className="lp-cta-overlay" aria-hidden />
-        <div className="lp-cta-mesh" aria-hidden>
-          <span className="lp-cta-blob lp-cta-blob-1" />
-          <span className="lp-cta-blob lp-cta-blob-2" />
-        </div>
-
-        <div className="lp-cta-inner">
-          <Reveal className="lp-cta-main">
-            <span className="lp-cta-badge">
-              <span className="lp-cta-badge-dot" />
+        <div className="lp-cta-v2-overlay" aria-hidden />
+        <KhốiHinhBay />
+        <div className="lp-cta-v2-inner">
+          <Reveal className="lp-cta-v2-copy">
+            <span className="lp-cta-v2-badge">
+              <span className="lp-cta-v2-badge-dot" aria-hidden />
               Dùng thử ngay — không cần cài đặt
             </span>
-            <h2>
-              Sẵn sàng biến nhà trọ thành
-              <span> trải nghiệm đáng nhớ?</span>
-            </h2>
-            <p>
-              Khám phá toàn bộ iTro với tài khoản demo — phòng, hợp đồng, hóa
-              đơn, chat và báo cáo trong vài phút.
+            <h2>Bắt đầu quản lý nhà trọ với iTro</h2>
+            <p className="lp-cta-v2-lead">
+              Đăng nhập demo để xem phòng, hợp đồng, hóa đơn, chat và báo cáo —
+              trải nghiệm đầy đủ trong vài phút.
             </p>
-            <ul className="lp-cta-checklist">
+            <ul className="lp-cta-v2-points">
               {[
-                "Thiết lập nhanh, giao diện tiếng Việt",
-                "3 vai trò: Admin · Nhân viên · Khách thuê",
-                "Realtime thông báo & tin nhắn nội bộ",
+                "Tiếng Việt",
+                "3 vai trò",
+                "Realtime",
+                "Excel & PDF",
               ].map((item) => (
-                <li key={item}>
-                  <span className="lp-cta-check" aria-hidden>
-                    ✓
-                  </span>
-                  {item}
-                </li>
+                <li key={item}>{item}</li>
               ))}
             </ul>
-            <div className="lp-cta-actions">
-              <Link href="/dang-nhap" className="lp-cta-btn-primary">
-                Đăng nhập demo
-                <span aria-hidden>→</span>
+            <div className="lp-cta-v2-actions">
+              <Link href="/dang-nhap" className="lp-cta-v2-btn-primary">
+                Đăng nhập demo →
               </Link>
-              <a href="#tinh-nang" className="lp-cta-btn-secondary">
+              <a href="#tinh-nang" className="lp-cta-v2-btn-ghost">
                 Xem tính năng
               </a>
             </div>
-            <div className="lp-cta-demo-box">
-              <span className="lp-cta-demo-label">Tài khoản demo</span>
+            <div className="lp-cta-v2-demo">
+              <span className="lp-cta-v2-demo-label">Demo:</span>
               <code>admin</code>
-              <span className="lp-cta-demo-sep">/</span>
+              <span aria-hidden>/</span>
               <code>admin123</code>
             </div>
           </Reveal>
 
           <motion.div
-            className="lp-cta-visual"
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            className="lp-cta-v2-card-wrap"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="lp-cta-glass-card">
-              <div className="lp-cta-glass-head">
-                <span className="lp-cta-glass-dot" />
-                <span className="lp-cta-glass-dot" />
-                <span className="lp-cta-glass-dot" />
-                <span>Tổng quan iTro</span>
+            <div className="lp-cta-v2-card">
+              <div className="lp-cta-v2-card-head">
+                <strong>Tổng quan hôm nay</strong>
+                <span>Live demo</span>
               </div>
-              <div className="lp-cta-glass-stats">
-                <div>
-                  <strong>48</strong>
-                  <span>Phòng</span>
+              <div className="lp-cta-v2-metrics">
+                <div className="lp-cta-v2-metric">
+                  <small>Phòng</small>
+                  <b>48</b>
                 </div>
-                <div>
-                  <strong>87%</strong>
-                  <span>Lấp đầy</span>
+                <div className="lp-cta-v2-metric lp-cta-v2-metric--hi">
+                  <small>Lấp đầy</small>
+                  <b>87%</b>
                 </div>
-                <div>
-                  <strong>120M</strong>
-                  <span>Thu tháng</span>
+                <div className="lp-cta-v2-metric">
+                  <small>Thu tháng</small>
+                  <b>120M</b>
                 </div>
               </div>
-              <div className="lp-cta-glass-chart" aria-hidden>
-                <span style={{ height: "55%" }} />
-                <span style={{ height: "78%" }} />
-                <span style={{ height: "42%" }} />
-                <span style={{ height: "92%" }} />
-                <span style={{ height: "65%" }} />
+              <div className="lp-cta-v2-rows">
+                <div className="lp-cta-v2-row">
+                  <span>
+                    P.201 · <em>Đang thuê</em>
+                  </span>
+                  <span>Đã thu</span>
+                </div>
+                <div className="lp-cta-v2-row">
+                  <span>
+                    P.204 · <em>Trống</em>
+                  </span>
+                  <span>Sẵn khách</span>
+                </div>
+                <div className="lp-cta-v2-row">
+                  <span>
+                    Hóa đơn T5 · <em>2.4M</em>
+                  </span>
+                  <span>Đã gửi</span>
+                </div>
               </div>
             </div>
-
-            <motion.div
-              className="lp-cta-float-photo"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.25, duration: 0.6 }}
-            >
-              <AnhNguoi
-                src={PHOTOS.hero1}
-                alt="Chủ nhà trọ"
-                width={200}
-                height={260}
-              />
-              <div className="lp-cta-float-caption">
-                <strong>Chị Huyền</strong>
-                <span>Chủ nhà trọ · Q.7</span>
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="lp-cta-float-chip"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-            >
-              <span>🔔</span>
-              <div>
-                <strong>+12</strong>
-                <span>Thông báo mới</span>
-              </div>
-            </motion.div>
           </motion.div>
         </div>
       </section>
+
+    </div>
 
       <FooterHienDai variant="landing" />
 
@@ -1338,6 +1427,6 @@ export default function TrangLanding() {
           Liên hệ
         </a>
       </aside>
-    </div>
+    </>
   );
 }

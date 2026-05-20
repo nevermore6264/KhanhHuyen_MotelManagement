@@ -931,7 +931,6 @@ a:hover,
   border: 1px solid var(--border) !important;
 }
 
-/* —— Trang thông báo —— */
 [data-page="notifications"] .page-shell,
 .page-thong-bao {
   max-width: 720px;

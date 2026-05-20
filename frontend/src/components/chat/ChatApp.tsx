@@ -101,9 +101,7 @@ export default function ChatApp() {
         const res = await api.get("/tai-khoan/cua-toi");
         id = res.data?.id != null ? String(res.data.id) : null;
         if (id) setUserId(id);
-      } catch {
-        /* ignore */
-      }
+      } catch {}
     }
     setUid(id);
     return id;
@@ -356,7 +354,6 @@ export default function ChatApp() {
                         rel="noreferrer"
                         className="chat-v2-image-wrap"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={urlFile(t.duongDanFile)}
                           alt={t.tenFile ?? "Ảnh"}

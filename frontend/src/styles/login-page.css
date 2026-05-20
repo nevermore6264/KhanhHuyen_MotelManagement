@@ -1,5 +1,3 @@
-/* Trang đăng nhập — scoped, ưu tiên cao hơn input global */
-
 body.login-body {
   overflow-x: hidden;
   overflow-y: auto;

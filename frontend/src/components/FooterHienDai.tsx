@@ -43,6 +43,9 @@ export default function FooterHienDai({
                   <li>
                     <a href="#danh-gia">Đánh giá</a>
                   </li>
+                  <li>
+                    <a href="#cau-hoi">Câu hỏi</a>
+                  </li>
                 </>
               ) : (
                 <>

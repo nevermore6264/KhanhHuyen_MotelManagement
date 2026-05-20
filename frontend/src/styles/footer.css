@@ -1,27 +1,26 @@
-/* Footer hiện đại — landing & app */
-
 .site-footer {
   position: relative;
   margin-top: auto;
-  background: linear-gradient(180deg, #0c4a6e 0%, #075985 100%);
-  color: #e0f2fe;
+  background: linear-gradient(180deg, #075985 0%, #0c4a6e 55%, #082f49 100%);
+  color: #f0f9ff;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .site-footer--landing {
-  border-top: none;
+  border-top: 1px solid rgba(186, 230, 253, 0.22);
 }
 
 .site-footer__glow {
   position: absolute;
-  top: -80px;
+  top: -60px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
-  height: 160px;
+  width: 60%;
+  height: 120px;
   background: radial-gradient(
     ellipse,
-    rgba(56, 189, 248, 0.35) 0%,
+    rgba(56, 189, 248, 0.2) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -40,7 +39,7 @@
   grid-template-columns: 1.4fr repeat(3, 1fr);
   gap: 36px 28px;
   padding-bottom: 36px;
-  border-bottom: 1px solid rgba(186, 230, 253, 0.2);
+  border-bottom: 1px solid rgba(186, 230, 253, 0.28);
 }
 
 .site-footer__logo {
@@ -48,7 +47,7 @@
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #fff;
+  color: #ffffff;
   font-weight: 800;
   font-size: 1.25rem;
   margin-bottom: 12px;
@@ -56,26 +55,27 @@
 }
 
 .site-footer__logo:hover {
-  opacity: 0.9;
+  opacity: 0.92;
   text-decoration: none;
-  color: #fff;
+  color: #ffffff;
 }
 
 .site-footer__tagline {
   margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: rgba(224, 242, 254, 0.75);
-  max-width: 280px;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #e0f2fe;
+  max-width: 300px;
 }
 
+.site-footer h4,
 .site-footer__heading {
   margin: 0 0 14px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #7dd3fc;
+  letter-spacing: 0.1em;
+  color: #bae6fd !important;
 }
 
 .site-footer__links {
@@ -87,22 +87,25 @@
   gap: 10px;
 }
 
-.site-footer__links a {
-  color: rgba(255, 255, 255, 0.88);
+.site-footer__links a,
+.site-footer__links span {
+  color: #f0f9ff !important;
   text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.15s, transform 0.15s;
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
 }
 
 .site-footer__links a:hover {
-  color: #fff;
-  text-decoration: none;
-  transform: translateX(3px);
+  color: #ffffff !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .site-footer__muted {
-  font-size: 0.88rem;
-  color: rgba(224, 242, 254, 0.6);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #cbd5e1;
 }
 
 .site-footer__bottom {
@@ -116,8 +119,8 @@
 
 .site-footer__copy {
   margin: 0;
-  font-size: 0.85rem;
-  color: rgba(224, 242, 254, 0.65);
+  font-size: 0.86rem;
+  color: #94a3b8;
 }
 
 .site-footer__bottom-right {
@@ -132,25 +135,54 @@
   font-weight: 600;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(14, 165, 233, 0.25);
-  border: 1px solid rgba(125, 211, 252, 0.35);
-  color: #bae6fd;
+  background: rgba(14, 165, 233, 0.35);
+  border: 1px solid rgba(186, 230, 253, 0.45);
+  color: #e0f2fe;
 }
 
 .site-footer__back-top {
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  color: #7dd3fc !important;
+  color: #bae6fd;
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color 0.15s ease;
 }
 
 .site-footer__back-top:hover {
-  color: #fff !important;
+  color: #ffffff;
   text-decoration: underline;
 }
 
-/* App shell: footer nhẹ hơn nếu cần — cùng component, full style */
+.site-footer a,
+.site-footer .site-footer__logo {
+  color: #f0f9ff !important;
+}
+
+.site-footer a:hover,
+.site-footer .site-footer__logo:hover {
+  color: #ffffff !important;
+}
+
+.site-footer .site-footer__tagline {
+  color: #e0f2fe !important;
+}
+
+.site-footer .site-footer__copy {
+  color: #94a3b8 !important;
+}
+
+.site-footer .site-footer__muted {
+  color: #cbd5e1 !important;
+}
+
+.site-footer .site-footer__back-top {
+  color: #bae6fd !important;
+}
+
+.site-footer .site-footer__back-top:hover {
+  color: #ffffff !important;
+}
+
 .app-shell-body .site-footer {
   flex-shrink: 0;
 }
