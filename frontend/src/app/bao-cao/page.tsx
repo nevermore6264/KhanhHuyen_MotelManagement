@@ -8,11 +8,8 @@ import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { taiFileTuApi } from "@/lib/taiFile";
 import { useToast } from "@/components/NhaCungCapToast";
-
-const formatMoney = (n?: number | null) => {
-  if (n == null || isNaN(Number(n))) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
-};
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { dinhDangTien } from "@/lib/locale";
 
 type DebtInvoice = {
   id: string;
@@ -96,6 +93,10 @@ export default function TrangBaoCao() {
   );
   const [error, setError] = useState("");
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.baoCao;
+  const formatMoney = (n?: number | null) =>
+    n == null || isNaN(Number(n)) ? "—" : dinhDangTien(Math.round(Number(n)), lang);
   const [mounted, setMounted] = useState(false);
   const role = mounted ? getRole() : null;
   const canView = role === "ADMIN" || role === "STAFF";
@@ -133,7 +134,7 @@ export default function TrangBaoCao() {
     try {
       const ngay = new Date().toISOString().slice(0, 10);
       await taiFileTuApi("/bao-cao/xuat-cong-no", `cong-no-${ngay}.xlsx`);
-      notify("Đã tải file Excel công nợ.", "success");
+      notify(p.okDebtExcel, "success");
     } catch {
       notify("Xuất Excel thất bại.", "error");
     } finally {
@@ -160,7 +161,7 @@ export default function TrangBaoCao() {
           `thu-chi-${tuNgay}_${denNgay}.pdf`,
         );
       }
-      notify("Đã tải báo cáo thu–chi.", "success");
+      notify(p.okCashflow, "success");
     } catch {
       notify("Xuất báo cáo thất bại.", "error");
     } finally {
@@ -198,7 +199,7 @@ export default function TrangBaoCao() {
     return (
       <TrangBaoVe>
       <div className="page-shell page-report">
-          <h2>Báo cáo</h2>
+          <h2>{p.title}</h2>
           <div className="card">
             <p className="form-error">Bạn không có quyền xem báo cáo.</p>
           </div>
@@ -212,8 +213,8 @@ export default function TrangBaoCao() {
       <div className="page-shell page-report">
         <header className="page-top">
           <div className="page-top-text">
-            <h1 className="page-heading">Báo cáo &amp; thống kê</h1>
-            <p className="page-lead">Doanh thu, công nợ, lấp đầy phòng và xuất file theo kỳ.</p>
+            <h1 className="page-heading">{p.title}</h1>
+            <p className="page-lead">{p.lead}</p>
           </div>
         </header>
 
@@ -257,7 +258,7 @@ export default function TrangBaoCao() {
               </div>
               <button className="btn" onClick={loadAll} disabled={loading}>
                 {loading ? (
-                  "Đang tải..."
+                  p.loading
                 ) : (
                   <>
                     <IconRefresh /> Tải lại
@@ -436,7 +437,7 @@ export default function TrangBaoCao() {
               onClick={() => void xuatThuChi("excel")}
             >
               <IconDownload />{" "}
-              {exportingThuChi ? "Đang xuất…" : "Excel thu–chi"}
+              {exportingThuChi ? p.loading : p.exportExcel}
             </button>
             <button
               type="button"
@@ -444,7 +445,7 @@ export default function TrangBaoCao() {
               disabled={exportingThuChi}
               onClick={() => void xuatThuChi("pdf")}
             >
-              <IconDownload /> PDF thu–chi
+              <IconDownload /> {p.exportPdf}
             </button>
           </div>
         </div>
@@ -463,7 +464,7 @@ export default function TrangBaoCao() {
             onClick={() => void xuatCongNoExcel()}
           >
             <IconDownload />{" "}
-            {exportingDebt ? "Đang xuất…" : "Xuất Excel công nợ"}
+            {exportingDebt ? p.loading : p.exportExcel}
           </button>
           <BangDonGian
             data={debtDetail?.invoices ?? []}

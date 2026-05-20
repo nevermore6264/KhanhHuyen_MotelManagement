@@ -3,101 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { dangXuatApp, getName, getRole } from "@/lib/auth";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { layMenuNav } from "@/lib/layMenuNav";
 import ChuongPopoverThongBao from "./ChuongPopoverThongBao";
 import { IconLogout, IconSettings } from "./Icons";
-
-type MucMenu = { label: string; href: string };
-
-type NhomMenu = { label: string; href?: string; items?: MucMenu[] };
-
-const menuTheoVaiTro: Record<string, NhomMenu[]> = {
-  ADMIN: [
-    { label: "Tổng quan", href: "/tong-quan" },
-    {
-      label: "Nhà trọ",
-      items: [
-        { href: "/khu-vuc", label: "Khu" },
-        { href: "/phong", label: "Phòng" },
-        { href: "/khach-thue", label: "Khách thuê" },
-        { href: "/hop-dong", label: "Hợp đồng" },
-        { href: "/nguoi-dung", label: "Người dùng" },
-      ],
-    },
-    {
-      label: "Tài chính",
-      items: [
-        { href: "/bang-gia-dich-vu", label: "Bảng giá" },
-        { href: "/chi-so-dien-nuoc", label: "Điện nước" },
-        { href: "/hoa-don", label: "Hóa đơn" },
-        { href: "/thanh-toan", label: "Thanh toán" },
-        { href: "/bao-cao", label: "Báo cáo" },
-      ],
-    },
-    {
-      label: "Hỗ trợ",
-      items: [
-        { href: "/yeu-cau-ho-tro", label: "Yêu cầu" },
-        { href: "/thong-bao", label: "Thông báo" },
-        { href: "/tin-nhan", label: "Tin nhắn" },
-      ],
-    },
-  ],
-  STAFF: [
-    { label: "Tổng quan", href: "/tong-quan" },
-    {
-      label: "Nhà trọ",
-      items: [
-        { href: "/phong", label: "Phòng" },
-        { href: "/hop-dong", label: "Hợp đồng" },
-      ],
-    },
-    {
-      label: "Tài chính",
-      items: [
-        { href: "/chi-so-dien-nuoc", label: "Điện nước" },
-        { href: "/hoa-don", label: "Hóa đơn" },
-        { href: "/thanh-toan", label: "Thanh toán" },
-        { href: "/bao-cao", label: "Báo cáo" },
-      ],
-    },
-    {
-      label: "Hỗ trợ",
-      items: [
-        { href: "/yeu-cau-ho-tro", label: "Yêu cầu" },
-        { href: "/thong-bao", label: "Thông báo" },
-        { href: "/tin-nhan", label: "Tin nhắn" },
-      ],
-    },
-  ],
-  TENANT: [
-    { label: "Tổng quan", href: "/tong-quan" },
-    {
-      label: "Tài khoản",
-      items: [
-        { href: "/hop-dong-cua-toi", label: "Hợp đồng" },
-        { href: "/hoa-don-cua-toi", label: "Hóa đơn" },
-        { href: "/thanh-toan-cua-toi", label: "Thanh toán" },
-        { href: "/tai-khoan", label: "Hồ sơ cá nhân" },
-      ],
-    },
-    {
-      label: "Hỗ trợ",
-      items: [
-        { href: "/yeu-cau", label: "Yêu cầu" },
-        { href: "/thong-bao", label: "Thông báo" },
-        { href: "/tin-nhan", label: "Tin nhắn" },
-      ],
-    },
-  ],
-};
-
-const TEN_VAI_TRO: Record<string, string> = {
-  ADMIN: "Quản trị",
-  STAFF: "Nhân viên",
-  TENANT: "Khách thuê",
-};
 
 function layChuCai(ten: string) {
   const p = ten.trim().charAt(0);
@@ -106,27 +17,37 @@ function layChuCai(ten: string) {
 
 export default function ThanhDieuHuong() {
   const pathname = usePathname();
+  const { t, lang } = useCaiDat();
   const [vaiTro, setVaiTro] = useState<string | null>(null);
   const [ten, setTen] = useState("User");
 
   useEffect(() => {
     setVaiTro(getRole() || "ADMIN");
     setTen(getName() || "User");
-  }, []);
+  }, [lang]);
+
+  const menu = useMemo(
+    () => (vaiTro != null ? layMenuNav(vaiTro, t.menu) : []),
+    [vaiTro, t.menu, lang],
+  );
 
   const hienThiChuong = vaiTro === "TENANT" || vaiTro === "STAFF";
-  const menu = vaiTro != null ? menuTheoVaiTro[vaiTro] : [];
 
   const active = (href: string) =>
     pathname === href || (href !== "/tong-quan" && pathname.startsWith(href));
 
-  const nhomActive = (nhom: NhomMenu) => {
+  const nhomActive = (nhom: (typeof menu)[0]) => {
     if (nhom.href) return active(nhom.href);
     return nhom.items?.some((m) => active(m.href)) ?? false;
   };
 
   const linkClass = (href: string, extra = "") =>
     `app-navbar__link${active(href) ? " app-navbar__link--active" : ""}${extra ? ` ${extra}` : ""}`;
+
+  const tenVaiTro =
+    vaiTro && vaiTro in t.roles
+      ? t.roles[vaiTro as keyof typeof t.roles]
+      : vaiTro ?? "";
 
   return (
     <header className="app-navbar">
@@ -142,11 +63,11 @@ export default function ThanhDieuHuong() {
           />
           <span className="app-navbar__brand-text">
             <strong>iTro</strong>
-            <small>Quản lý nhà trọ</small>
+            <small>{t.brand.subtitle}</small>
           </span>
         </Link>
 
-        <nav className="app-navbar__menu" aria-label="Menu chính">
+        <nav className="app-navbar__menu" aria-label={t.aria.mainMenu}>
           {menu.map((nhom) => (
             <div key={nhom.label} className="app-navbar__item">
               {nhom.href ? (
@@ -185,7 +106,7 @@ export default function ThanhDieuHuong() {
 
           <Link href="/cai-dat" className="app-navbar__ghost">
             <IconSettings />
-            <span>Cài đặt</span>
+            <span>{t.nav.settings}</span>
           </Link>
 
           <Link href="/tai-khoan" className="app-navbar__user">
@@ -194,7 +115,7 @@ export default function ThanhDieuHuong() {
             </span>
             <span className="app-navbar__user-meta">
               <strong>{ten}</strong>
-              <small>{vaiTro ? TEN_VAI_TRO[vaiTro] ?? vaiTro : ""}</small>
+              <small>{tenVaiTro}</small>
             </span>
           </Link>
 
@@ -202,10 +123,10 @@ export default function ThanhDieuHuong() {
             type="button"
             className="app-navbar__logout"
             onClick={() => dangXuatApp()}
-            aria-label="Đăng xuất khỏi hệ thống"
+            aria-label={t.aria.logout}
           >
             <IconLogout />
-            <span>Đăng xuất</span>
+            <span>{t.nav.logout}</span>
           </button>
         </div>
       </div>

@@ -6,8 +6,12 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { IconHome } from "@/components/Icons";
 import FooterHienDai from "@/components/FooterHienDai";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 
 export default function TrangQuenMatKhau() {
+  const { t: tr } = useCaiDat();
+  const a = tr.pages.auth;
+  const c = tr.common;
   const [tenDangNhap, setTenDangNhap] = useState("");
   const [dangTai, setDangTai] = useState(false);
   const [loi, setLoi] = useState("");
@@ -21,7 +25,7 @@ export default function TrangQuenMatKhau() {
     setLoi("");
     setThanhCong(null);
     if (!tenDangNhap.trim()) {
-      setLoi("Vui lòng nhập tài khoản.");
+      setLoi(a.forgotLead);
       return;
     }
     setDangTai(true);
@@ -40,7 +44,7 @@ export default function TrangQuenMatKhau() {
       });
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
-      setLoi(ax?.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      setLoi(ax?.response?.data?.message || c.failed);
     } finally {
       setDangTai(false);
     }
@@ -55,21 +59,18 @@ export default function TrangQuenMatKhau() {
 
       <Link href="/" className="login-back-home">
         <IconHome />
-        Quay về trang chủ
+        {a.backHome}
       </Link>
 
       <div className="login-page__main">
         <div className="login-layout">
           <section className="login-panel-hero">
             <h1>
-              Khôi phục mật khẩu
+              {a.forgotTitle}
               <br />
-              <span>nhanh và an toàn</span>
+              <span>{a.loginTitleAccent}</span>
             </h1>
-            <p>
-              Nhập tài khoản đã đăng ký — hệ thống gửi hướng dẫn đặt lại mật
-              khẩu để bạn quay lại quản lý nhà trọ trên iTro.
-            </p>
+            <p>{a.forgotLead}</p>
 
             <div className="login-features">
               <div className="login-feature">
@@ -77,8 +78,8 @@ export default function TrangQuenMatKhau() {
                   🔐
                 </span>
                 <div>
-                  <strong>Bảo mật tài khoản</strong>
-                  <span>Link đặt lại có thời hạn — chỉ dùng một lần.</span>
+                  <strong>{a.feat1Title}</strong>
+                  <span>{a.feat1Desc}</span>
                 </div>
               </div>
               <div className="login-feature">
@@ -86,8 +87,8 @@ export default function TrangQuenMatKhau() {
                   ✉️
                 </span>
                 <div>
-                  <strong>Hướng dẫn rõ ràng</strong>
-                  <span>Nhận link trực tiếp trên màn hình (môi trường demo).</span>
+                  <strong>{a.feat2Title}</strong>
+                  <span>{a.feat2Desc}</span>
                 </div>
               </div>
               <div className="login-feature">
@@ -95,8 +96,8 @@ export default function TrangQuenMatKhau() {
                   ↩️
                 </span>
                 <div>
-                  <strong>Quay lại đăng nhập</strong>
-                  <span>Nhớ mật khẩu? Trở về form đăng nhập bất cứ lúc nào.</span>
+                  <strong>{a.backLogin}</strong>
+                  <span>{a.signIn}</span>
                 </div>
               </div>
             </div>
@@ -104,11 +105,11 @@ export default function TrangQuenMatKhau() {
             <div className="login-stats-row">
               <div className="login-stat-pill">
                 <strong>iTro</strong>
-                <span>Quản lý nhà trọ</span>
+                <span>{a.loginTitle}</span>
               </div>
               <div className="login-stat-pill">
                 <strong>Demo</strong>
-                <span>Hỗ trợ đồ án</span>
+                <span>{a.tryDemo}</span>
               </div>
             </div>
           </section>
@@ -124,8 +125,8 @@ export default function TrangQuenMatKhau() {
                   className="login-card-logo"
                   priority
                 />
-                <h2>Quên mật khẩu</h2>
-                <p>Nhập tài khoản để nhận hướng dẫn đặt lại mật khẩu</p>
+                <h2>{a.forgotTitle}</h2>
+                <p>{a.forgotLead}</p>
               </header>
 
               {thanhCong ? (
@@ -134,7 +135,7 @@ export default function TrangQuenMatKhau() {
                   {thanhCong.resetLink ? (
                     <div className="login-reset-link-box">
                       <span className="login-reset-link-label">
-                        Link đặt lại mật khẩu:
+                        {a.resetTitle}:
                       </span>
                       <a
                         href={thanhCong.resetLink}
@@ -147,16 +148,14 @@ export default function TrangQuenMatKhau() {
                     </div>
                   ) : null}
                   <Link href="/dang-nhap" className="btn login-submit">
-                    Quay lại đăng nhập
+                    {a.backLogin}
                   </Link>
                 </div>
               ) : (
                 <form onSubmit={gui} className="login-form">
-                  <p className="login-hint">
-                    Dùng đúng tên đăng nhập bạn hay dùng khi đăng nhập iTro.
-                  </p>
+                  <p className="login-hint">{a.forgotLead}</p>
                   <div className="login-field">
-                    <label htmlFor="username">Tài khoản</label>
+                    <label htmlFor="username">{a.username}</label>
                     <div className="login-input-wrap">
                       <span className="login-input-icon" aria-hidden>
                         <svg viewBox="0 0 24 24" fill="none">
@@ -176,7 +175,7 @@ export default function TrangQuenMatKhau() {
                       <input
                         id="username"
                         className="login-input"
-                        placeholder="Tên đăng nhập"
+                        placeholder={a.username}
                         autoComplete="username"
                         value={tenDangNhap}
                         onChange={(e) => setTenDangNhap(e.target.value)}
@@ -206,11 +205,11 @@ export default function TrangQuenMatKhau() {
                         strokeLinecap="round"
                       />
                     </svg>
-                    {dangTai ? "Đang xử lý…" : "Gửi yêu cầu"}
+                    {dangTai ? c.loading : a.sendRequest}
                   </button>
 
                   <p className="login-forgot">
-                    <Link href="/dang-nhap">← Quay lại đăng nhập</Link>
+                    <Link href="/dang-nhap">← {a.backLogin}</Link>
                   </p>
                 </form>
               )}

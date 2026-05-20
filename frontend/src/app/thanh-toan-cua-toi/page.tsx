@@ -11,11 +11,9 @@ import {
   chuanHoaThanhToanTuApi,
   type PaymentRow,
 } from "@/lib/chuanHoaThanhToanTuApi";
-
-const formatVND = (value?: number | null) => {
-  if (value == null || Number.isNaN(Number(value))) return "—";
-  return new Intl.NumberFormat("vi-VN").format(Number(value)) + " đ";
-};
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanPhuongThucThanhToan } from "@/lib/trangThai";
+import { dinhDangTien, dinhDangNgay } from "@/lib/locale";
 
 export default function TrangThanhToanCuaToi() {
   const searchParams = useSearchParams();
@@ -23,6 +21,14 @@ export default function TrangThanhToanCuaToi() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [invoiceId, setInvoiceId] = useState("");
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.thanhToanCuaToi;
+  const s = tr.pages.shared;
+
+  const formatMoney = (value?: number | null) => {
+    if (value == null || Number.isNaN(Number(value))) return "—";
+    return dinhDangTien(Math.round(Number(value)), lang);
+  };
 
   useEffect(() => {
     api.get("/hoa-don/cua-toi").then((res) => {
@@ -64,7 +70,7 @@ export default function TrangThanhToanCuaToi() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Lịch sử thanh toán</h2>
+        <h2>{p.historyTitle}</h2>
         <div className="card">
           <select
             value={invoiceId}
@@ -73,10 +79,12 @@ export default function TrangThanhToanCuaToi() {
               loadPayments(e.target.value);
             }}
           >
-            <option value="">Chọn hóa đơn</option>
+            <option value="">{p.selectInvoice}</option>
             {invoices.map((i) => (
               <option key={i.id} value={i.id}>
-                Hóa đơn #{i.id} ({i.month}/{i.year})
+                {p.invoiceOption
+                  .replace("{id}", String(i.id))
+                  .replace("{period}", `${i.month}/${i.year}`)}
               </option>
             ))}
           </select>
@@ -85,23 +93,16 @@ export default function TrangThanhToanCuaToi() {
           <BangDonGian
             data={payments}
             columns={[
-              { header: "ID", render: (p) => p.id },
-              { header: "Số tiền", render: (p) => formatVND(p.amount) },
+              { header: s.id, render: (row) => row.id },
+              { header: p.amount, render: (row) => formatMoney(row.amount) },
               {
-                header: "Hình thức",
-                render: (p) =>
-                  p.method === "TRANSFER"
-                    ? "Chuyển khoản"
-                    : p.method === "CASH"
-                      ? "Tiền mặt"
-                      : p.method,
+                header: p.method,
+                render: (row) => nhanPhuongThucThanhToan(tr, row.method),
               },
               {
-                header: "Ngày",
-                render: (p) =>
-                  p.paidAt
-                    ? new Date(p.paidAt).toLocaleDateString("vi-VN")
-                    : "—",
+                header: p.date,
+                render: (row) =>
+                  row.paidAt ? dinhDangNgay(row.paidAt, lang) : "—",
               },
             ]}
           />

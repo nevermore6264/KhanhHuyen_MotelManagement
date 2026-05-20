@@ -9,7 +9,10 @@ import {
   type NotificationPayload,
 } from "@/lib/notificationSocket";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { useThongBao } from "@/components/NhaCungCapThongBao";
+import type { Dict } from "@/lib/i18n";
+import { nhanVaiTro } from "@/lib/trangThai";
 import {
   IconPlus,
   IconTimes,
@@ -34,14 +37,6 @@ type User = {
   phongHienThue?: string;
   khuHienThue?: string;
 };
-
-function tenVaiTroApi(code: string): string {
-  const c = code.toUpperCase();
-  if (c === "ADMIN") return "Quản trị";
-  if (c === "STAFF") return "Nhân viên";
-  if (c === "TENANT") return "Khách thuê";
-  return code;
-}
 
 function mapNguoiDungChoThongBaoFromApi(raw: Record<string, unknown>): User | null {
   const id = raw.id != null ? String(raw.id) : "";
@@ -77,9 +72,9 @@ function mapNguoiDungFromApi(raw: Record<string, unknown>): User | null {
   };
 }
 
-function chuoiHienThiNguoiDung(u: User): string {
+function chuoiHienThiNguoiDung(t: Dict, u: User): string {
   const hoTen = u.fullName ? ` (${u.fullName})` : "";
-  const vai = u.role ? ` — ${tenVaiTroApi(u.role)}` : "";
+  const vai = u.role ? ` — ${nhanVaiTro(t, u.role)}` : "";
   const phongKhu =
     u.phongHienThue || u.khuHienThue
       ? ` · ${[u.phongHienThue, u.khuHienThue].filter(Boolean).join(" · ")}`
@@ -87,12 +82,12 @@ function chuoiHienThiNguoiDung(u: User): string {
   return `${u.username}${hoTen}${vai}${phongKhu}`;
 }
 
-function chuoiLocNguoiDung(u: User): string {
+function chuoiLocNguoiDung(t: Dict, u: User): string {
   return [
     u.username,
     u.fullName ?? "",
     u.role ?? "",
-    u.role ? tenVaiTroApi(u.role) : "",
+    u.role ? nhanVaiTro(t, u.role) : "",
     u.phongHienThue ?? "",
     u.khuHienThue ?? "",
   ]
@@ -126,6 +121,10 @@ export default function TrangThongBao() {
   const laQuanTri = vaiTro === "ADMIN";
   const camDanhDauDaDoc = vaiTro === "ADMIN" || vaiTro === "STAFF";
   const { notify } = useToast();
+  const { t: tr } = useCaiDat();
+  const p = tr.pages.thongBao;
+  const s = tr.pages.shared;
+  const c = tr.common;
   const contextThongBao = useThongBao();
   const clientRef = useRef<ReturnType<typeof createNotificationClient>>(null);
 
@@ -248,11 +247,11 @@ export default function TrangThongBao() {
       await Promise.all(
         chuaDoc.map((n) => api.put(`/thong-bao/${n.id}/da-doc`)),
       );
-      notify("Đã đánh dấu tất cả là đã đọc", "success");
+      notify(p.okMarkAll, "success");
       await tai();
       contextThongBao?.refetchUnread();
     } catch {
-      notify("Không cập nhật được trạng thái", "error");
+      notify(p.errUpdate, "error");
     } finally {
       setDangDanhDauTatCa(false);
     }
@@ -261,7 +260,7 @@ export default function TrangThongBao() {
   const danhSachNguoiDungLoc = useMemo(() => {
     const q = locNguoiNhan.trim().toLowerCase();
     const locTheoChuoi = q
-      ? danhSachNguoiDung.filter((u) => chuoiLocNguoiDung(u).includes(q))
+      ? danhSachNguoiDung.filter((u) => chuoiLocNguoiDung(tr, u).includes(q))
       : danhSachNguoiDung;
     const selId = idNguoiNhan.trim();
     if (!selId) return locTheoChuoi;
@@ -284,7 +283,7 @@ export default function TrangThongBao() {
           ...prev,
         ]);
         notify(
-          "Bạn có thông báo mới: " +
+          p.newPrefix +
             payload.message.slice(0, 50) +
             (payload.message.length > 50 ? "…" : ""),
           "info",
@@ -311,11 +310,11 @@ export default function TrangThongBao() {
 
   const xoaThongBao = async (id: string) => {
     if (!laQuanTri) return;
-    if (!window.confirm("Xóa thông báo này? Hành động không hoàn tác.")) return;
+    if (!window.confirm(p.confirmDelete)) return;
     setDangXoaId(id);
     try {
       await api.delete(`/thong-bao/${id}`);
-      notify("Đã xóa thông báo", "success");
+      notify(p.okDelete, "success");
       await tai();
       contextThongBao?.refetchUnread();
     } catch (err: unknown) {
@@ -324,9 +323,7 @@ export default function TrangThongBao() {
       };
       const msg =
         ax?.response?.data?.message ||
-        (ax?.response?.status === 403
-          ? "Bạn không có quyền xóa"
-          : "Xóa thông báo thất bại");
+        (ax?.response?.status === 403 ? p.errDeletePerm : p.errDelete);
       notify(msg, "error");
     } finally {
       setDangXoaId(null);
@@ -337,7 +334,7 @@ export default function TrangThongBao() {
     e.preventDefault();
     const nd = noiDung.trim();
     if (!nd) {
-      setLoi("Vui lòng nhập nội dung thông báo");
+      setLoi(p.errContent);
       return;
     }
     setLoi("");
@@ -347,7 +344,7 @@ export default function TrangThongBao() {
         message: nd,
         userId: idNguoiNhan.trim() ? idNguoiNhan.trim() : null,
       });
-      notify("Đã gửi thông báo", "success");
+      notify(p.okSend, "success");
       setNoiDung("");
       setIdNguoiNhan("");
       setHienThiTaoMoi(false);
@@ -358,9 +355,7 @@ export default function TrangThongBao() {
       };
       const thongBao =
         ax?.response?.data?.message ||
-        (ax?.response?.status === 403
-          ? "Bạn không có quyền"
-          : "Gửi thông báo thất bại");
+        (ax?.response?.status === 403 ? p.errNoPerm : p.errSend);
       setLoi(thongBao);
       notify(thongBao, "error");
     } finally {
@@ -373,12 +368,8 @@ export default function TrangThongBao() {
       <div className="page-shell page-thong-bao">
         <header className="tb-page-header">
           <div>
-            <h2>Thông báo</h2>
-            <p>
-              {laQuanTri
-                ? "Gửi thông báo tới người dùng và theo dõi trạng thái đã đọc."
-                : "Cập nhật từ ban quản lý — đánh dấu đã đọc khi bạn đã xem."}
-            </p>
+            <h2>{p.title}</h2>
+            <p>{laQuanTri ? p.leadAdmin : p.leadUser}</p>
           </div>
           <div className="tb-header-actions">
             {!camDanhDauDaDoc && soChuaDoc > 0 && (
@@ -389,7 +380,7 @@ export default function TrangThongBao() {
                 onClick={() => void danhDauTatCaDaDoc()}
               >
                 <IconCheck />{" "}
-                {dangDanhDauTatCa ? "Đang cập nhật…" : "Đọc tất cả"}
+                {dangDanhDauTatCa ? p.markingAll : p.readAll}
               </button>
             )}
             {daMount && laQuanTri && (
@@ -402,7 +393,7 @@ export default function TrangThongBao() {
                   setLoi("");
                 }}
               >
-                <IconPlus /> Tạo thông báo
+                <IconPlus /> {p.create}
               </button>
             )}
           </div>
@@ -411,24 +402,28 @@ export default function TrangThongBao() {
         <div className="tb-stats">
           <div className="tb-stat">
             <strong>{danhSachSapXep.length}</strong>
-            <span>Tổng số</span>
+            <span>{p.total}</span>
           </div>
           <div className="tb-stat unread">
             <strong>{soChuaDoc}</strong>
-            <span>Chưa đọc</span>
+            <span>{p.unread}</span>
           </div>
           <div className="tb-stat">
             <strong>{soDaDoc}</strong>
-            <span>Đã đọc</span>
+            <span>{p.read}</span>
           </div>
         </div>
 
-        <div className="tb-filters" role="tablist" aria-label="Lọc thông báo">
+        <div className="tb-filters" role="tablist" aria-label={p.filterAria}>
           {(
             [
-              { key: "all" as const, label: "Tất cả", count: danhSachSapXep.length },
-              { key: "unread" as const, label: "Chưa đọc", count: soChuaDoc },
-              { key: "read" as const, label: "Đã đọc", count: soDaDoc },
+              {
+                key: "all" as const,
+                label: p.filterAll,
+                count: danhSachSapXep.length,
+              },
+              { key: "unread" as const, label: p.filterUnread, count: soChuaDoc },
+              { key: "read" as const, label: p.filterRead, count: soDaDoc },
             ] as const
           ).map((f) => (
             <button
@@ -453,15 +448,13 @@ export default function TrangThongBao() {
               </div>
               <h3>
                 {boLoc === "unread"
-                  ? "Không còn thông báo chưa đọc"
+                  ? p.emptyUnread
                   : boLoc === "read"
-                    ? "Chưa có thông báo đã đọc"
-                    : "Chưa có thông báo"}
+                    ? p.emptyRead
+                    : p.empty}
               </h3>
               <p>
-                {laQuanTri
-                  ? "Bấm «Tạo thông báo» để gửi tin tới người dùng."
-                  : "Khi có cập nhật mới, bạn sẽ thấy tại đây."}
+                {laQuanTri ? p.emptyHintAdmin : p.emptyHintUser}
               </p>
             </div>
           ) : (
@@ -482,7 +475,7 @@ export default function TrangThongBao() {
                           <span
                             className={`tb-badge${n.readFlag ? " read" : " unread"}`}
                           >
-                            {n.readFlag ? "Đã đọc" : "Mới"}
+                            {n.readFlag ? p.badgeRead : p.badgeNew}
                           </span>
                           {n.sentAt && (
                             <time
@@ -503,7 +496,7 @@ export default function TrangThongBao() {
                             className="btn"
                             onClick={() => void danhDauDaDoc(n.id)}
                           >
-                            <IconCheck /> Đã đọc
+                            <IconCheck /> {p.markRead}
                           </button>
                         )}
                         {laQuanTri && (
@@ -511,11 +504,11 @@ export default function TrangThongBao() {
                             type="button"
                             className="btn btn-secondary"
                             disabled={dangXoaId === n.id}
-                            title="Xóa thông báo"
+                            title={p.deleteTitle}
                             onClick={() => void xoaThongBao(n.id)}
                           >
                             <IconTrash />{" "}
-                            {dangXoaId === n.id ? "…" : "Xóa"}
+                            {dangXoaId === n.id ? "…" : s.delete}
                           </button>
                         )}
                       </div>
@@ -532,17 +525,14 @@ export default function TrangThongBao() {
             <div className="modal-card form-card tb-compose-modal">
               <div className="card-header">
                 <div>
-                  <h3>Tạo thông báo</h3>
-                  <p className="card-subtitle">
-                    Gửi cho tất cả hoặc một người dùng. Người nhận sẽ thấy thông
-                    báo realtime.
-                  </p>
+                  <h3>{p.composeTitle}</h3>
+                  <p className="card-subtitle">{p.composeSub}</p>
                 </div>
               </div>
               <form onSubmit={taoThongBao} className="form-grid">
                 {danhSachMau.length > 0 && (
                   <div className="form-span-2">
-                    <label className="field-label">Mẫu thông báo</label>
+                    <label className="field-label">{p.template}</label>
                     <select
                       value={mauId}
                       onChange={(e) => {
@@ -552,7 +542,7 @@ export default function TrangThongBao() {
                         if (m) setNoiDung(m.noiDung);
                       }}
                     >
-                      <option value="">— Chọn mẫu —</option>
+                      <option value="">{p.pickTemplate}</option>
                       {danhSachMau.map((m) => (
                         <option key={m.id} value={m.id}>
                           {m.tieuDe}
@@ -563,10 +553,10 @@ export default function TrangThongBao() {
                 )}
                 <div className="form-span-2">
                   <label className="field-label">
-                    Nội dung <span className="required">*</span>
+                    {p.content} <span className="required">*</span>
                   </label>
                   <textarea
-                    placeholder="Nội dung thông báo..."
+                    placeholder={p.contentPh}
                     value={noiDung}
                     onChange={(e) => setNoiDung(e.target.value)}
                     rows={4}
@@ -574,23 +564,23 @@ export default function TrangThongBao() {
                   />
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Gửi đến</label>
+                  <label className="field-label">{p.sendTo}</label>
                   <input
                     type="search"
-                    placeholder="Lọc theo tên đăng nhập, họ tên, phòng, khu, vai trò…"
+                    placeholder={p.filterPh}
                     value={locNguoiNhan}
                     onChange={(e) => setLocNguoiNhan(e.target.value)}
-                    aria-label="Lọc danh sách người nhận"
+                    aria-label={p.filterRecipientsAria}
                     style={{ width: "100%", marginBottom: 8 }}
                   />
                   <select
                     value={idNguoiNhan}
                     onChange={(e) => setIdNguoiNhan(e.target.value)}
                   >
-                    <option value="">Tất cả người dùng</option>
+                    <option value="">{p.allUsers}</option>
                     {danhSachNguoiDungLoc.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {chuoiHienThiNguoiDung(u)}
+                        {chuoiHienThiNguoiDung(tr, u)}
                       </option>
                     ))}
                   </select>
@@ -606,14 +596,14 @@ export default function TrangThongBao() {
                       setLoi("");
                     }}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button type="submit" className="btn" disabled={dangTao}>
                     {dangTao ? (
-                      "Đang gửi…"
+                      p.sending
                     ) : (
                       <>
-                        <IconSend /> Gửi thông báo
+                        <IconSend /> {p.send}
                       </>
                     )}
                   </button>

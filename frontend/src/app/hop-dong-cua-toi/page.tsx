@@ -12,6 +12,9 @@ import {
 import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiHopDong } from "@/lib/trangThai";
+import { dinhDangNgay } from "@/lib/locale";
 import HopDongXemModal from "@/components/HopDongXemModal";
 
 type Room = { id: string; code: string; currentPrice?: number };
@@ -51,18 +54,6 @@ function hopDongChoDocx(c: Contract): ContractForDocx {
   };
 }
 
-const contractStatusLabel = (value?: string) => {
-  switch (value) {
-    case "ACTIVE":
-      return "Đang hiệu lực";
-    case "ENDED":
-      return "Đã kết thúc";
-    case "TERMINATED":
-      return "Đã hủy";
-    default:
-      return value || "-";
-  }
-};
 const contractStatusBadge = (value?: string) => {
   switch (value) {
     case "ACTIVE":
@@ -76,22 +67,17 @@ const contractStatusBadge = (value?: string) => {
   }
 };
 
-const formatDateDMY = (dateStr?: string) => {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
-
 export default function TrangHopDongCuaToi() {
   const [items, setItems] = useState<Contract[]>([]);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.hopDongCuaToi;
+  const hp = tr.pages.hopDong;
+  const s = tr.pages.shared;
+  const c = tr.common;
 
   useEffect(() => {
     api
@@ -115,7 +101,7 @@ export default function TrangHopDongCuaToi() {
       if (contract.room && contract.tenant && contract.rent != null) {
         setPreviewContract(contract);
       } else {
-        notify("Không thể tải chi tiết hợp đồng.", "error");
+        notify(p.errLoad, "error");
       }
     }
   };
@@ -137,7 +123,7 @@ export default function TrangHopDongCuaToi() {
         (await fetchContractForDoc(contract.id)) ||
         (contract.room && contract.tenant ? contract : null);
       if (!full) {
-        notify("Không thể tải chi tiết hợp đồng.", "error");
+        notify(p.errLoad, "error");
         return;
       }
       const blob = await buildContractDocx(hopDongChoDocx(full));
@@ -147,53 +133,59 @@ export default function TrangHopDongCuaToi() {
       a.download = `hop-dong-thue-nha-tro-${full.room?.code || full.id || "phong"}.docx`;
       a.click();
       URL.revokeObjectURL(url);
-      notify("Đã tải file hợp đồng.", "success");
+      notify(p.okDownload, "success");
     } catch {
-      notify("Tải file thất bại.", "error");
+      notify(p.errDownload, "error");
     }
   };
 
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Hợp đồng của tôi</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <BangDonGian
             data={items}
             columns={[
-              { header: "ID", render: (c) => c.id },
-              { header: "Phòng", render: (c) => c.room?.code },
-              { header: "Bắt đầu", render: (c) => formatDateDMY(c.startDate) },
-              { header: "Kết thúc", render: (c) => formatDateDMY(c.endDate) },
+              { header: s.id, render: (row) => row.id },
+              { header: hp.room, render: (row) => row.room?.code },
               {
-                header: "Trạng thái",
-                render: (c) => (
+                header: hp.start,
+                render: (row) => dinhDangNgay(row.startDate, lang),
+              },
+              {
+                header: hp.end,
+                render: (row) => dinhDangNgay(row.endDate, lang),
+              },
+              {
+                header: hp.status,
+                render: (row) => (
                   <span
-                    className={`status-badge ${contractStatusBadge(c.status)}`}
+                    className={`status-badge ${contractStatusBadge(row.status)}`}
                   >
-                    {contractStatusLabel(c.status)}
+                    {nhanTrangThaiHopDong(tr, row.status)}
                   </span>
                 ),
               },
               {
-                header: "Hợp đồng",
-                render: (c: Contract) => (
+                header: p.contractCol,
+                render: (row: Contract) => (
                   <div className="table-actions">
                     <button
                       type="button"
                       className="btn btn-secondary"
-                      onClick={() => viewContractDoc(c)}
-                      title="Xem nội dung hợp đồng"
+                      onClick={() => viewContractDoc(row)}
+                      title={p.viewContract}
                     >
-                      <IconEye /> Xem
+                      <IconEye /> {s.view}
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary"
-                      onClick={() => downloadContractDoc(c)}
-                      title="Tải file Word"
+                      onClick={() => downloadContractDoc(row)}
+                      title={p.downloadWordTitle}
                     >
-                      <IconDownload /> Tải Word
+                      <IconDownload /> {p.downloadWord}
                     </button>
                   </div>
                 ),
@@ -213,7 +205,7 @@ export default function TrangHopDongCuaToi() {
           }}
           closeLabel={
             <>
-              <IconTimes /> Đóng
+              <IconTimes /> {c.close}
             </>
           }
         />

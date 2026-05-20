@@ -15,6 +15,7 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 
 type Area = {
   id: string;
@@ -44,6 +45,10 @@ export default function TrangKhuVuc() {
   const vaiTro = daMount ? getRole() : null;
   const laQuanTri = vaiTro === "ADMIN";
   const { notify } = useToast();
+  const { t: tr } = useCaiDat();
+  const p = tr.pages.khuVuc;
+  const s = tr.pages.shared;
+  const c = tr.common;
 
   useEffect(() => {
     setDaMount(true);
@@ -64,19 +69,17 @@ export default function TrangKhuVuc() {
     const dc = diaChi.trim();
     const mt = moTa.trim();
     if (!t || !dc || !mt) {
-      setLoi("Vui lòng nhập đầy đủ Tên khu, Địa chỉ, Mô tả");
+      setLoi(p.errRequired);
       return;
     }
     setLoi("");
     try {
       await api.post("/khu-vuc", { ten: t, diaChi: dc, moTa: mt });
-      notify("Thêm khu thành công", "success");
+      notify(p.okAdd, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Thêm khu thất bại";
+        ax?.response?.status === 403 ? s.noPermission : p.errAdd;
       setLoi(thongBao);
       notify(thongBao, "error");
       return;
@@ -90,7 +93,7 @@ export default function TrangKhuVuc() {
 
   const yeuCauXoa = (khu: Area) => {
     if (khu.coTheXoa === false) {
-      notify("Khu còn phòng đang thuê, không thể xóa", "error");
+      notify(p.cannotDelete, "error");
       return;
     }
     setIdXacNhanXoa(khu.id);
@@ -121,13 +124,11 @@ export default function TrangKhuVuc() {
         diaChi: dc,
         moTa: mt,
       });
-      notify("Cập nhật khu thành công", "success");
+      notify(p.okUpdate, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại";
+        ax?.response?.status === 403 ? s.noPermission : p.errUpdate;
       setLoiSua(thongBao);
       notify(thongBao, "error");
       return;
@@ -151,14 +152,14 @@ export default function TrangKhuVuc() {
     if (idXacNhanXoa == null) return;
     const khu = danhSach.find((a) => a.id === idXacNhanXoa);
     if (khu?.coTheXoa === false) {
-      notify("Khu còn phòng đang thuê, không thể xóa", "error");
+      notify(p.cannotDelete, "error");
       setIdXacNhanXoa(null);
       setTenXacNhanXoa("");
       return;
     }
     try {
       await api.delete(`/khu-vuc/${idXacNhanXoa}`);
-      notify("Xóa khu thành công", "success");
+      notify(p.okDelete, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number; data?: unknown } };
       setIdXacNhanXoa(null);
@@ -167,7 +168,7 @@ export default function TrangKhuVuc() {
       const resData = ax?.response?.data;
       const thongBao =
         status === 403
-          ? "Bạn không có quyền thao tác"
+          ? s.noPermission
           : status === 400 &&
               (typeof resData === "string" ||
                 (resData &&
@@ -176,7 +177,7 @@ export default function TrangKhuVuc() {
             ? typeof resData === "string"
               ? resData
               : (resData as { message: string }).message
-            : "Xóa thất bại";
+            : p.errDelete;
       setLoi(thongBao);
       notify(thongBao, "error");
       return;
@@ -204,25 +205,25 @@ export default function TrangKhuVuc() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Khu trọ</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <div className="grid grid-2">
             <input
-              placeholder="Tìm kiếm theo tên, địa chỉ, mô tả..."
+              placeholder={p.searchPh}
               value={tuKhoa}
               onChange={(e) => setTuKhoa(e.target.value)}
             />
             {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setHienThiTaoMoi(true)}>
-                  <IconPlus /> Thêm khu mới
+                  <IconPlus /> {p.addNew}
                 </button>
               </div>
             )}
           </div>
           {!laQuanTri && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              Bạn chỉ có quyền xem dữ liệu.
+              {s.viewOnly}
             </div>
           )}
         </div>
@@ -230,11 +231,11 @@ export default function TrangKhuVuc() {
           <BangDonGian
             data={danhSachLoc}
             columns={[
-              { header: "ID", render: (r) => r.id },
-              { header: "Tên", render: (r) => r.ten },
-              { header: "Địa chỉ", render: (r) => r.diaChi },
+              { header: s.id, render: (r) => r.id },
+              { header: s.name, render: (r) => r.ten },
+              { header: s.address, render: (r) => r.diaChi },
               {
-                header: "Mô tả",
+                header: s.description,
                 render: (r) => (
                   <span className="table-ellipsis" title={r.moTa || ""}>
                     {r.moTa || ""}
@@ -242,26 +243,26 @@ export default function TrangKhuVuc() {
                 ),
               },
               {
-                header: "Số phòng",
+                header: s.roomCount,
                 render: (r: Area) => (
                   <span>{typeof r.soPhong === "number" ? r.soPhong : "—"}</span>
                 ),
               },
               {
-                header: "Phòng",
+                header: tr.menu.rooms,
                 render: (r: Area) => (
                   <Link
                     href={`/phong?areaId=${r.id}`}
                     className="btn btn-secondary"
                   >
-                    <IconEye /> Xem phòng
+                    <IconEye /> {s.viewRooms}
                   </Link>
                 ),
               },
               ...(laQuanTri
                 ? [
                     {
-                      header: "Thao tác",
+                      header: s.actions,
                       render: (r: Area) => {
                         const locked = r.coTheXoa === false;
                         return (
@@ -270,18 +271,14 @@ export default function TrangKhuVuc() {
                               className="btn"
                               onClick={() => batDauSua(r)}
                             >
-                              <IconPencil /> Sửa
+                              <IconPencil /> {s.edit}
                             </button>
                             <button
                               className={`btn btn-secondary ${locked ? "btn-disabled" : ""}`}
                               onClick={() => yeuCauXoa(r)}
-                              title={
-                                locked
-                                  ? "Khu còn phòng đang thuê, không thể xóa"
-                                  : undefined
-                              }
+                              title={locked ? p.cannotDelete : undefined}
                             >
-                              <IconTrash /> Xóa
+                              <IconTrash /> {s.delete}
                             </button>
                           </div>
                         );
@@ -296,17 +293,17 @@ export default function TrangKhuVuc() {
         {idXacNhanXoa != null && (
           <div className="modal-backdrop">
             <div className="modal-card">
-              <h3>Xác nhận xóa</h3>
+              <h3>{s.confirmDelete}</h3>
               <p>
-                Bạn có chắc muốn xóa khu{" "}
-                <strong>{tenXacNhanXoa || "này"}</strong>?
+                {s.confirmDeleteArea}{" "}
+                <strong>{tenXacNhanXoa || s.thisItem}</strong>?
               </p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={huyXoa}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={xacNhanXoa}>
-                  <IconTrash /> Xóa
+                  <IconTrash /> {s.delete}
                 </button>
               </div>
             </div>
@@ -316,34 +313,34 @@ export default function TrangKhuVuc() {
         {phanTuDangSua && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
-              <h3>Chỉnh sửa khu</h3>
+              <h3>{p.editTitle}</h3>
               <div className="form-grid">
                 <div>
                   <label className="field-label">
-                    Tên khu <span className="required">*</span>
+                    {s.areaName} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Tên khu"
+                    placeholder={s.areaName}
                     value={tenSua}
                     onChange={(e) => setTenSua(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">
-                    Địa chỉ <span className="required">*</span>
+                    {s.address} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Địa chỉ"
+                    placeholder={s.address}
                     value={diaChiSua}
                     onChange={(e) => setDiaChiSua(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">
-                    Mô tả <span className="required">*</span>
+                    {s.description} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Mô tả"
+                    placeholder={s.description}
                     value={moTaSua}
                     onChange={(e) => setMoTaSua(e.target.value)}
                   />
@@ -352,10 +349,10 @@ export default function TrangKhuVuc() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={huySua}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={luuSua}>
-                  <IconCheck /> Lưu
+                  <IconCheck /> {c.save}
                 </button>
               </div>
             </div>
@@ -367,17 +364,17 @@ export default function TrangKhuVuc() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Thêm khu mới</h3>
-                  <p className="card-subtitle">Điền thông tin cơ bản của khu</p>
+                  <h3>{p.addTitle}</h3>
+                  <p className="card-subtitle">{p.addSub}</p>
                 </div>
               </div>
               <form onSubmit={tao} className="form-grid">
                 <div>
                   <label className="field-label">
-                    Tên khu <span className="required">*</span>
+                    {s.areaName} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Ví dụ: Khu A"
+                    placeholder={p.namePh}
                     value={ten}
                     onChange={(e) => setTen(e.target.value)}
                   />
@@ -387,7 +384,7 @@ export default function TrangKhuVuc() {
                     Địa chỉ <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Số nhà, đường, phường..."
+                    placeholder={p.addressPh}
                     value={diaChi}
                     onChange={(e) => setDiaChi(e.target.value)}
                   />
@@ -397,7 +394,7 @@ export default function TrangKhuVuc() {
                     Mô tả <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Ghi chú thêm về khu"
+                    placeholder={p.descPh}
                     value={moTa}
                     onChange={(e) => setMoTa(e.target.value)}
                   />
@@ -409,10 +406,10 @@ export default function TrangKhuVuc() {
                     type="button"
                     onClick={() => setHienThiTaoMoi(false)}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconPlus /> Thêm khu
+                    <IconPlus /> {p.addArea}
                   </button>
                 </div>
               </form>

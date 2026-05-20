@@ -14,6 +14,8 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanVaiTro } from "@/lib/trangThai";
 import ChonKhachThueCombobox from "@/components/ChonKhachThueCombobox";
 
 type User = {
@@ -97,17 +99,14 @@ function chuanHoaKhachThueTuApi(raw: RawJson): Tenant {
   };
 }
 
-const roleLabel = (value?: string) => {
-  switch (value) {
-    case "ADMIN":
-      return "Quản trị";
-    case "STAFF":
-      return "Nhân viên";
-    case "TENANT":
-      return "Khách thuê";
-    default:
-      return value || "-";
-  }
+type TenantValidateMsg = {
+  errFullName: string;
+  errPhone: string;
+  errPhoneInvalid: string;
+  errIdNumber: string;
+  errIdNumberInvalid: string;
+  errAddress: string;
+  errEmailInvalid: string;
 };
 
 const statusBadge = (active: boolean) =>
@@ -126,24 +125,27 @@ const roleBadge = (value?: string) => {
   }
 };
 
-const validateTenant = (data: {
-  fullName: string;
-  phone: string;
-  idNumber: string;
-  address: string;
-  email: string;
-}) => {
-  if (!data.fullName.trim()) return "Vui lòng nhập họ tên";
-  if (!data.phone.trim()) return "Vui lòng nhập số điện thoại";
-  if (!/^\d{9,11}$/.test(data.phone.trim())) return "SĐT không hợp lệ";
-  if (!data.idNumber.trim()) return "Vui lòng nhập CCCD/CMND";
-  if (!/^\d{9,12}$/.test(data.idNumber.trim())) return "CCCD/CMND không hợp lệ";
-  if (!data.address.trim()) return "Vui lòng nhập địa chỉ";
+const validateTenant = (
+  m: TenantValidateMsg,
+  data: {
+    fullName: string;
+    phone: string;
+    idNumber: string;
+    address: string;
+    email: string;
+  },
+) => {
+  if (!data.fullName.trim()) return m.errFullName;
+  if (!data.phone.trim()) return m.errPhone;
+  if (!/^\d{9,11}$/.test(data.phone.trim())) return m.errPhoneInvalid;
+  if (!data.idNumber.trim()) return m.errIdNumber;
+  if (!/^\d{9,12}$/.test(data.idNumber.trim())) return m.errIdNumberInvalid;
+  if (!data.address.trim()) return m.errAddress;
   if (
     data.email.trim() &&
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
   ) {
-    return "Email không hợp lệ";
+    return m.errEmailInvalid;
   }
   return "";
 };
@@ -187,6 +189,19 @@ export default function TrangNguoiDung() {
   const vaiTroHienTai = mounted ? getRole() : null;
   const laQuanTri = vaiTroHienTai === "ADMIN";
   const { notify } = useToast();
+  const { t: tr } = useCaiDat();
+  const p = tr.pages.nguoiDung;
+  const s = tr.pages.shared;
+  const c = tr.common;
+  const valMsg: TenantValidateMsg = {
+    errFullName: s.errFullName,
+    errPhone: s.errPhone,
+    errPhoneInvalid: s.errPhoneInvalid,
+    errIdNumber: s.errIdNumber,
+    errIdNumberInvalid: s.errIdNumberInvalid,
+    errAddress: s.errAddress,
+    errEmailInvalid: s.errEmailInvalid,
+  };
 
   const tai = async () => {
     const phanHoi = await api.get("/nguoi-dung");
@@ -217,7 +232,7 @@ export default function TrangNguoiDung() {
     e.preventDefault();
     const ten = tenDangNhap.trim();
     if (!ten || !matKhau.trim()) {
-      setLoi("Vui lòng nhập tài khoản và mật khẩu");
+      setLoi(s.errCredentials);
       return;
     }
     setLoi("");
@@ -235,13 +250,11 @@ export default function TrangNguoiDung() {
             ? idKhachThue.trim()
             : null,
       });
-      notify("Tạo tài khoản thành công", "success");
+      notify(p.okCreate, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Tạo tài khoản thất bại";
+        ax?.response?.status === 403 ? s.noPermission : p.errCreate;
       setLoi(thongBao);
       notify(thongBao, "error");
       return;
@@ -301,13 +314,11 @@ export default function TrangNguoiDung() {
       await api.put(`/nguoi-dung/${phanTuDangSua.id}/khach-thue`, {
         tenantId: idKhachThueSua ? idKhachThueSua.trim() : null,
       });
-      notify("Cập nhật người dùng thành công", "success");
+      notify(p.okUpdate, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại";
+        ax?.response?.status === 403 ? s.noPermission : s.errUpdate;
       setLoiSua(thongBao);
       notify(thongBao, "error");
       return;
@@ -354,15 +365,13 @@ export default function TrangNguoiDung() {
       await api.put(`/nguoi-dung/${nguoiDungLienKet.id}/khach-thue`, {
         tenantId: idKhachThueLienKet ? idKhachThueLienKet.trim() : null,
       });
-      notify("Gắn khách thuê thành công", "success");
+      notify(p.okLink, "success");
       setNguoiDungLienKet(null);
       setIdKhachThueLienKet("");
       tai();
     } catch (err: any) {
       const msg =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Gắn khách thuê thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errLink;
       setLoiLienKet(msg);
       notify(msg, "error");
     }
@@ -371,7 +380,7 @@ export default function TrangNguoiDung() {
   const createAndLinkTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nguoiDungLienKet) return;
-    const msg = validateTenant({
+    const msg = validateTenant(valMsg, {
       fullName: hoTenKhachMoi,
       phone: sdtKhachMoi,
       idNumber: cccdKhachMoi,
@@ -393,7 +402,7 @@ export default function TrangNguoiDung() {
         email: emailKhachMoi.trim() || null,
         userId: nguoiDungLienKet.id,
       });
-      notify("Tạo khách thuê và gắn tài khoản thành công", "success");
+      notify(p.okCreateTenant, "success");
       setNguoiDungLienKet(null);
       setCheDoLienKet("existing");
       setHoTenKhachMoi("");
@@ -405,9 +414,7 @@ export default function TrangNguoiDung() {
       taiKhachThue();
     } catch (err: any) {
       const text =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Tạo khách thuê thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errCreateTenant;
       setLoiKhachMoi(text);
       notify(text, "error");
     }
@@ -427,17 +434,10 @@ export default function TrangNguoiDung() {
       await api.put(
         `/nguoi-dung/${user.id}/${user.active ? "khoa" : "mo-khoa"}`,
       );
-      notify(
-        user.active
-          ? "Khóa tài khoản thành công"
-          : "Mở khóa tài khoản thành công",
-        "success",
-      );
+      notify(user.active ? p.okLock : p.okUnlock, "success");
     } catch (err: any) {
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại";
+        err?.response?.status === 403 ? s.noPermission : s.errUpdate;
       setLoi(message);
       notify(message, "error");
       return;
@@ -459,11 +459,11 @@ export default function TrangNguoiDung() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Người dùng</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <div className="grid grid-3">
             <input
-              placeholder="Tìm kiếm theo tài khoản, họ tên, chức vụ..."
+              placeholder={p.searchPh}
               value={tuKhoa}
               onChange={(e) => setTuKhoa(e.target.value)}
             />
@@ -471,10 +471,10 @@ export default function TrangNguoiDung() {
               value={locVaiTro}
               onChange={(e) => setLocVaiTro(e.target.value)}
             >
-              <option value="">Tất cả chức vụ</option>
-              <option value="ADMIN">Quản trị</option>
-              <option value="STAFF">Nhân viên</option>
-              <option value="TENANT">Khách thuê</option>
+              <option value="">{s.allRoles}</option>
+              <option value="ADMIN">{nhanVaiTro(tr, "ADMIN")}</option>
+              <option value="STAFF">{nhanVaiTro(tr, "STAFF")}</option>
+              <option value="TENANT">{nhanVaiTro(tr, "TENANT")}</option>
             </select>
             {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -487,14 +487,14 @@ export default function TrangNguoiDung() {
                     taiKhachThue();
                   }}
                 >
-                  <IconPlus /> Tạo tài khoản
+                  <IconPlus /> {p.createAccount}
                 </button>
               </div>
             )}
           </div>
           {!laQuanTri && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              Bạn chỉ có quyền xem dữ liệu.
+              {s.viewOnly}
             </div>
           )}
         </div>
@@ -502,10 +502,10 @@ export default function TrangNguoiDung() {
           <BangDonGian
             data={filtered}
             columns={[
-              { header: "ID", render: (u) => u.id },
-              { header: "Tài khoản", render: (u) => u.username },
+              { header: s.id, render: (u) => u.id },
+              { header: s.account, render: (u) => u.username },
               {
-                header: "Họ tên",
+                header: s.fullName,
                 render: (u) => {
                   const linked = danhSachKhachThue.find(
                     (t) => t.user?.id === u.id,
@@ -514,7 +514,7 @@ export default function TrangNguoiDung() {
                 },
               },
               {
-                header: "SĐT",
+                header: s.phone,
                 render: (u) => {
                   const linked = danhSachKhachThue.find(
                     (t) => t.user?.id === u.id,
@@ -524,7 +524,7 @@ export default function TrangNguoiDung() {
                 },
               },
               {
-                header: "CCCD",
+                header: s.idNumber,
                 render: (u) => {
                   const linked = danhSachKhachThue.find(
                     (t) => t.user?.id === u.id,
@@ -533,54 +533,52 @@ export default function TrangNguoiDung() {
                 },
               },
               {
-                header: "Chức vụ",
+                header: s.role,
                 render: (u) => (
                   <span className={`status-badge ${roleBadge(u.role)}`}>
-                    {roleLabel(u.role)}
+                    {nhanVaiTro(tr, u.role)}
                   </span>
                 ),
               },
               {
-                header: "Trạng thái",
+                header: s.status,
                 render: (u) => (
                   <span className={`status-badge ${statusBadge(u.active)}`}>
-                    {u.active ? "Hoạt động" : "Đã khóa"}
+                    {u.active ? s.active : s.locked}
                   </span>
                 ),
               },
               ...(laQuanTri
                 ? [
                     {
-                      header: "Thao tác",
+                      header: s.actions,
                       render: (u: User) => (
                         <div className="table-actions">
                           <button className="btn" onClick={() => batDauSua(u)}>
-                            <IconPencil /> Sửa
+                            <IconPencil /> {s.edit}
                           </button>
                           <button
                             className="btn btn-secondary"
                             onClick={() => moModalLienKet(u)}
-                            title="Gắn tài khoản với khách thuê"
+                            title={p.linkUserBtnTitle}
                           >
-                            <IconLink /> Gắn người dùng
+                            <IconLink /> {p.linkUser}
                           </button>
                           <button
                             type="button"
                             className={`btn ${u.active ? "btn-lock" : "btn-unlock"}`}
                             onClick={() => toggleLock(u)}
                             title={
-                              u.active
-                                ? "Khóa tài khoản"
-                                : "Mở khóa tài khoản"
+                              u.active ? p.lockAccount : p.unlockAccount
                             }
                           >
                             {u.active ? (
                               <>
-                                <IconTrash /> Khóa
+                                <IconTrash /> {p.lock}
                               </>
                             ) : (
                               <>
-                                <IconCheck /> Mở
+                                <IconCheck /> {p.unlock}
                               </>
                             )}
                           </button>
@@ -598,31 +596,31 @@ export default function TrangNguoiDung() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Tạo tài khoản</h3>
-                  <p className="card-subtitle">Thiết lập thông tin đăng nhập</p>
+                  <h3>{p.createAccount}</h3>
+                  <p className="card-subtitle">{p.createSub}</p>
                 </div>
               </div>
               <form onSubmit={tao} className="form-grid">
                 <div>
-                  <label className="field-label">Tài khoản</label>
+                  <label className="field-label">{s.account}</label>
                   <input
-                    placeholder="Nhập tên đăng nhập"
+                    placeholder={p.usernamePh}
                     value={tenDangNhap}
                     onChange={(e) => setTenDangNhap(e.target.value)}
                     autoComplete="username"
                   />
                 </div>
                 <div>
-                  <label className="field-label">Mật khẩu</label>
+                  <label className="field-label">{s.password}</label>
                   <input
-                    placeholder="Nhập mật khẩu"
+                    placeholder={p.passwordPh}
                     type="password"
                     value={matKhau}
                     onChange={(e) => setMatKhau(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Chức vụ</label>
+                  <label className="field-label">{s.role}</label>
                   <select
                     value={vaiTro}
                     onChange={(e) => {
@@ -635,25 +633,25 @@ export default function TrangNguoiDung() {
                       }
                     }}
                   >
-                    <option value="ADMIN">Quản trị</option>
-                    <option value="STAFF">Nhân viên</option>
-                    <option value="TENANT">Khách thuê</option>
+                    <option value="ADMIN">{nhanVaiTro(tr, "ADMIN")}</option>
+                    <option value="STAFF">{nhanVaiTro(tr, "STAFF")}</option>
+                    <option value="TENANT">{nhanVaiTro(tr, "TENANT")}</option>
                   </select>
                 </div>
                 {vaiTro === "STAFF" && (
                   <>
                     <div>
-                      <label className="field-label">Họ tên</label>
+                      <label className="field-label">{s.fullName}</label>
                       <input
-                        placeholder="Họ tên hiển thị (tùy chọn)"
+                        placeholder={p.displayNamePh}
                         value={hoTenTaoMoi}
                         onChange={(e) => setHoTenTaoMoi(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="field-label">SĐT</label>
+                      <label className="field-label">{s.phone}</label>
                       <input
-                        placeholder="Số điện thoại (tùy chọn)"
+                        placeholder={p.phoneOptionalPh}
                         value={sdtTaoMoi}
                         onChange={(e) => setSdtTaoMoi(e.target.value)}
                       />
@@ -662,20 +660,17 @@ export default function TrangNguoiDung() {
                 )}
                 {vaiTro === "TENANT" && (
                   <div className="form-span-2">
-                    <label className="field-label">
-                      Gắn với khách thuê (người được thuê)
-                    </label>
+                    <label className="field-label">{p.linkToTenant}</label>
                     <ChonKhachThueCombobox
                       danhSach={danhSachKhachThue}
                       value={idKhachThue}
                       onChange={setIdKhachThue}
                       chiChuaCoTaiKhoan
-                      placeholderChuaChon="— Không gắn / Tạo mới —"
-                      placeholderTim="Tìm theo tên hoặc số điện thoại…"
+                      placeholderChuaChon={p.noLinkCreate}
+                      placeholderTim={p.searchTenantPh}
                     />
                     <p className="card-subtitle" style={{ marginTop: 4 }}>
-                      Chọn khách thuê có sẵn trong hệ thống để tài khoản đăng
-                      nhập được gắn với hồ sơ đó.
+                      {p.linkToTenantHint}
                     </p>
                   </div>
                 )}
@@ -690,10 +685,10 @@ export default function TrangNguoiDung() {
                       setSdtTaoMoi("");
                     }}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconPlus /> Tạo tài khoản
+                    <IconPlus /> {p.createAccount}
                   </button>
                 </div>
               </form>
@@ -706,9 +701,10 @@ export default function TrangNguoiDung() {
             <div className="modal-card form-card link-tenant-modal">
               <div className="card-header">
                 <div>
-                  <h3>Gắn người dùng với khách thuê</h3>
+                  <h3>{p.linkUserTitle}</h3>
                   <p className="card-subtitle">
-                    Tài khoản: <strong>{nguoiDungLienKet.username}</strong>
+                    {p.linkUserAccount}:{" "}
+                    <strong>{nguoiDungLienKet.username}</strong>
                   </p>
                 </div>
               </div>
@@ -720,7 +716,7 @@ export default function TrangNguoiDung() {
                     checked={cheDoLienKet === "existing"}
                     onChange={() => setCheDoLienKet("existing")}
                   />
-                  <span>Chọn khách thuê có sẵn</span>
+                  <span>{p.pickExisting}</span>
                 </label>
                 <label className="link-mode-radio">
                   <input
@@ -729,7 +725,7 @@ export default function TrangNguoiDung() {
                     checked={cheDoLienKet === "new"}
                     onChange={() => setCheDoLienKet("new")}
                   />
-                  <span>Tạo khách thuê mới</span>
+                  <span>{p.createNew}</span>
                 </label>
               </div>
 
@@ -737,14 +733,14 @@ export default function TrangNguoiDung() {
                 <>
                   <div className="form-grid">
                     <div className="form-span-2">
-                      <label className="field-label">Khách thuê</label>
+                      <label className="field-label">{p.linkTenant}</label>
                       <ChonKhachThueCombobox
                         danhSach={danhSachKhachThue}
                         value={idKhachThueLienKet}
                         onChange={setIdKhachThueLienKet}
                         idNguoiDungGan={nguoiDungLienKet.id}
-                        placeholderChuaChon="— Không gắn —"
-                        placeholderTim="Tìm theo tên hoặc số điện thoại…"
+                        placeholderChuaChon={p.noLink}
+                        placeholderTim={p.searchTenantPh}
                       />
                     </div>
                     {loiLienKet && (
@@ -760,10 +756,10 @@ export default function TrangNguoiDung() {
                         setLoiLienKet("");
                       }}
                     >
-                      <IconTimes /> Hủy
+                      <IconTimes /> {c.cancel}
                     </button>
                     <button className="btn" onClick={saveLinkTenant}>
-                      <IconCheck /> Lưu
+                      <IconCheck /> {c.save}
                     </button>
                   </div>
                 </>
@@ -774,41 +770,41 @@ export default function TrangNguoiDung() {
                   style={{ marginTop: 8 }}
                 >
                   <div>
-                    <label className="field-label">Họ tên</label>
+                    <label className="field-label">{s.fullName}</label>
                     <input
-                      placeholder="Họ tên"
+                      placeholder={s.fullName}
                       value={hoTenKhachMoi}
                       onChange={(e) => setHoTenKhachMoi(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="field-label">SĐT</label>
+                    <label className="field-label">{s.phone}</label>
                     <input
-                      placeholder="SĐT 9–11 số"
+                      placeholder={p.phoneDigitsPh}
                       value={sdtKhachMoi}
                       onChange={(e) => setSdtKhachMoi(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="field-label">CCCD/CMND</label>
+                    <label className="field-label">{s.idNumber}</label>
                     <input
-                      placeholder="CCCD/CMND"
+                      placeholder={s.idNumber}
                       value={cccdKhachMoi}
                       onChange={(e) => setCccdKhachMoi(e.target.value)}
                     />
                   </div>
                   <div className="form-span-2">
-                    <label className="field-label">Địa chỉ</label>
+                    <label className="field-label">{s.address}</label>
                     <input
-                      placeholder="Địa chỉ thường trú / tạm trú"
+                      placeholder={p.addressResidencePh}
                       value={diaChiKhachMoi}
                       onChange={(e) => setDiaChiKhachMoi(e.target.value)}
                     />
                   </div>
                   <div className="form-span-2">
-                    <label className="field-label">Email</label>
+                    <label className="field-label">{s.email}</label>
                     <input
-                      placeholder="Email (không bắt buộc)"
+                      placeholder={p.emailOptionalPh}
                       value={emailKhachMoi}
                       onChange={(e) => setEmailKhachMoi(e.target.value)}
                     />
@@ -831,10 +827,10 @@ export default function TrangNguoiDung() {
                         setLoiKhachMoi("");
                       }}
                     >
-                      <IconTimes /> Hủy
+                      <IconTimes /> {c.cancel}
                     </button>
                     <button className="btn" type="submit">
-                      <IconPlus /> Tạo khách thuê và gắn
+                      <IconPlus /> {p.createAndLink}
                     </button>
                   </div>
                 </form>
@@ -846,22 +842,22 @@ export default function TrangNguoiDung() {
         {phanTuDangSua && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
-              <h3>Chỉnh sửa người dùng</h3>
+              <h3>{p.editTitle}</h3>
               <div className="form-grid">
                 {phanTuDangSua.role === "STAFF" && (
                   <>
                     <div>
-                      <label className="field-label">Họ tên</label>
+                      <label className="field-label">{s.fullName}</label>
                       <input
-                        placeholder="Họ tên"
+                        placeholder={s.fullName}
                         value={hoTenSua}
                         onChange={(e) => setHoTenSua(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="field-label">SĐT</label>
+                      <label className="field-label">{s.phone}</label>
                       <input
-                        placeholder="SĐT"
+                        placeholder={s.phone}
                         value={sdtSua}
                         onChange={(e) => setSdtSua(e.target.value)}
                       />
@@ -869,15 +865,15 @@ export default function TrangNguoiDung() {
                   </>
                 )}
                 <div>
-                  <label className="field-label">Chức vụ</label>
+                  <label className="field-label">{s.role}</label>
                   <div className="readonly-field">
-                    {phanTuDangSua ? roleLabel(phanTuDangSua.role) : "—"}
+                    {phanTuDangSua ? nhanVaiTro(tr, phanTuDangSua.role) : "—"}
                   </div>
                 </div>
                 <div>
-                  <label className="field-label">Mật khẩu mới</label>
+                  <label className="field-label">{p.newPassword}</label>
                   <input
-                    placeholder="Để trống nếu không đổi"
+                    placeholder={p.pwOptional}
                     type="password"
                     value={matKhauSua}
                     onChange={(e) => setMatKhauSua(e.target.value)}
@@ -885,20 +881,17 @@ export default function TrangNguoiDung() {
                 </div>
                 {phanTuDangSua?.role === "TENANT" && (
                   <div className="form-span-2">
-                    <label className="field-label">
-                      Gắn với khách thuê (người được thuê)
-                    </label>
+                    <label className="field-label">{p.linkToTenant}</label>
                     <p className="card-subtitle" style={{ marginBottom: 8 }}>
-                      Họ tên và SĐT hiển thị lấy từ hồ sơ khách thuê đã gắn, không
-                      chỉnh tại đây.
+                      {p.editTenantHint}
                     </p>
                     <ChonKhachThueCombobox
                       danhSach={danhSachKhachThue}
                       value={idKhachThueSua}
                       onChange={setIdKhachThueSua}
                       idNguoiDungGan={phanTuDangSua.id}
-                      placeholderChuaChon="— Không gắn —"
-                      placeholderTim="Tìm theo tên hoặc số điện thoại…"
+                      placeholderChuaChon={p.noLink}
+                      placeholderTim={p.searchTenantPh}
                     />
                   </div>
                 )}
@@ -906,10 +899,10 @@ export default function TrangNguoiDung() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={luuSua}>
-                  <IconCheck /> Lưu
+                  <IconCheck /> {c.save}
                 </button>
               </div>
             </div>

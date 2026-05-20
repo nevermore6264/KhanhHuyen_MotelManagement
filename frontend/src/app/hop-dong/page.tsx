@@ -14,6 +14,13 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiHopDong } from "@/lib/trangThai";
+import {
+  dinhDangTien,
+  dinhDangNgay,
+  layLocaleTag,
+} from "@/lib/locale";
 import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import ChonKhuCombobox, { type MucKhu } from "@/components/ChonKhuCombobox";
@@ -53,19 +60,6 @@ function hopDongChoDocx(c: Contract): ContractForDocx {
   };
 }
 
-const contractStatusLabel = (value?: string) => {
-  switch (value) {
-    case "ACTIVE":
-      return "Đang hiệu lực";
-    case "ENDED":
-      return "Đã kết thúc";
-    case "TERMINATED":
-      return "Đã hủy";
-    default:
-      return value || "-";
-  }
-};
-
 const contractStatusBadge = (value?: string) => {
   switch (value) {
     case "ACTIVE":
@@ -77,27 +71,6 @@ const contractStatusBadge = (value?: string) => {
     default:
       return "status-unknown";
   }
-};
-
-const formatDateDMY = (dateStr?: string) => {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
-
-const formatMoneyDoc = (n?: number | null) => {
-  if (n == null || isNaN(n)) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(n))} VNĐ`;
-};
-
-const formatCurrencyInput = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return "";
-  return new Intl.NumberFormat("vi-VN").format(Number(digits));
 };
 
 const parseCurrencyInput = (value: string) => {
@@ -157,6 +130,16 @@ export default function TrangHopDong() {
   const isAdmin = role === "ADMIN";
   const isTenant = role === "TENANT";
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.hopDong;
+  const s = tr.pages.shared;
+  const c = tr.common;
+
+  const formatCurrencyInput = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "";
+    return new Intl.NumberFormat(layLocaleTag(lang)).format(Number(digits));
+  };
 
   useEffect(() => {
     setRole(getRole());
@@ -204,9 +187,7 @@ export default function TrangHopDong() {
       );
     } catch (err: any) {
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền xem danh sách hợp đồng"
-          : "Tải dữ liệu hợp đồng thất bại";
+        err?.response?.status === 403 ? p.errViewList : p.errLoad;
       notify(message, "error");
     }
   };
@@ -226,22 +207,22 @@ export default function TrangHopDong() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!khuId.trim()) {
-      setError("Vui lòng chọn khu");
+      setError(p.errSelectArea);
       return;
     }
     if (!roomId) {
-      setError("Vui lòng chọn phòng");
+      setError(p.errSelectRoom);
       return;
     }
     if (selectedTenantIds.length === 0) {
-      setError("Vui lòng chọn ít nhất một khách thuê");
+      setError(p.errSelectTenants);
       return;
     }
     if (
       daiDienTenantId == null ||
       !selectedTenantIds.includes(daiDienTenantId)
     ) {
-      setError("Vui lòng chọn người đại diện trong danh sách khách đã chọn");
+      setError(p.errSelectRep);
       return;
     }
     const idKhu = khuId;
@@ -251,31 +232,31 @@ export default function TrangHopDong() {
       phongDaChon.khuVucId != null &&
       phongDaChon.khuVucId !== idKhu
     ) {
-      setError("Phòng đã chọn không thuộc khu đã chọn");
+      setError(p.errRoomWrongArea);
       return;
     }
     if (!startDate) {
-      setError("Vui lòng chọn ngày bắt đầu");
+      setError(p.errSelectStart);
       return;
     }
     if (!endDate) {
-      setError("Vui lòng chọn ngày kết thúc");
+      setError(p.errSelectEnd);
       return;
     }
     if (new Date(endDate) < new Date(startDate)) {
-      setError("Ngày kết thúc phải sau ngày bắt đầu");
+      setError(p.errEndBeforeStart);
       return;
     }
     const selectedRoom = rooms.find((r) => roomId !== "" && r.id === roomId);
     const rentValue =
       parseCurrencyInput(rent) ?? selectedRoom?.currentPrice ?? null;
     if (rentValue != null && rentValue < 0) {
-      setError("Giá thuê không hợp lệ");
+      setError(p.errInvalidRent);
       return;
     }
     const depositValue = parseCurrencyInput(deposit);
     if (depositValue != null && depositValue < 0) {
-      setError("Tiền cọc không hợp lệ");
+      setError(p.errInvalidDeposit);
       return;
     }
     setError("");
@@ -289,12 +270,10 @@ export default function TrangHopDong() {
         deposit: depositValue,
         rent: rentValue,
       });
-      notify("Tạo hợp đồng thành công", "success");
+      notify(p.okCreate, "success");
     } catch (err: any) {
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Tạo hợp đồng thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errCreate;
       setError(message);
       notify(message, "error");
       return;
@@ -404,7 +383,7 @@ export default function TrangHopDong() {
 
   const xacNhanChonKhachThue = () => {
     if (draftKhachIds.length === 0) {
-      notify("Chọn ít nhất một khách thuê.", "error");
+      notify(p.selectTenant, "error");
       return;
     }
     let dai = draftDaiDienId;
@@ -458,12 +437,10 @@ export default function TrangHopDong() {
     if (!extendId || !extendDate) return;
     try {
       await api.put(`/hop-dong/${extendId}/gia-han`, { endDate: extendDate });
-      notify("Gia hạn hợp đồng thành công", "success");
+      notify(p.okExtend, "success");
     } catch (err: any) {
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Gia hạn thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errExtend;
       setError(message);
       notify(message, "error");
       return;
@@ -486,12 +463,10 @@ export default function TrangHopDong() {
     if (!confirmEndId) return;
     try {
       await api.put(`/hop-dong/${confirmEndId}/ket-thuc`);
-      notify("Kết thúc hợp đồng thành công", "success");
+      notify(p.okEnd, "success");
     } catch (err: any) {
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Kết thúc thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errEnd;
       setError(message);
       notify(message, "error");
       return;
@@ -529,34 +504,32 @@ export default function TrangHopDong() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      notify("Tải file thất bại", "error");
+      notify(p.errDownload, "error");
     }
   };
 
   return (
     <TrangBaoVe>
       <div className="container hop-dong-trang-container">
-        <h2>Hợp đồng thuê</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <div className="grid grid-2">
             <input
-              placeholder="Tìm kiếm theo phòng, khách, trạng thái..."
+              placeholder={p.searchPh}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={moModalTaoHopDong}>
-                  <IconPlus /> Tạo hợp đồng
+                  <IconPlus /> {p.create}
                 </button>
               </div>
             )}
           </div>
           {!isAdmin && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              {isTenant
-                ? "Bạn chỉ có thể xem hợp đồng của chính mình."
-                : "Bạn chỉ có quyền xem dữ liệu."}
+              {isTenant ? p.viewOwn : s.viewOnly}
             </div>
           )}
         </div>
@@ -565,61 +538,65 @@ export default function TrangHopDong() {
             className="table-nowrap contracts-table-fit"
             data={filtered}
             columns={[
-              { header: "ID", render: (c) => c.id },
-              { header: "Phòng", render: (c) => c.room?.code },
+              { header: s.id, render: (row) => row.id },
+              { header: p.room, render: (row) => row.room?.code },
               {
-                header: "Khách",
-                render: (c) => {
-                  const parts = (c.coThue ?? []).map((m) =>
+                header: p.tenant,
+                render: (row) => {
+                  const parts = (row.coThue ?? []).map((m) =>
                     m.laDaiDien
-                      ? `${m.fullName} (đại diện)`
-                      : m.fullName || `—`,
+                      ? `${m.fullName} ${p.repSuffix}`
+                      : m.fullName || "—",
                   );
                   return parts.length
                     ? parts.join(", ")
-                    : c.tenant?.fullName ?? "—";
+                    : row.tenant?.fullName ?? "—";
                 },
               },
               {
-                header: "CCCD (đại diện)",
-                render: (c) => c.tenant?.idNumber ?? "—",
+                header: p.idRep,
+                render: (row) => row.tenant?.idNumber ?? "—",
               },
               {
-                header: "Bắt đầu",
-                render: (c) => formatDateDMY(c.startDate),
-              },
-              { header: "Kết thúc", render: (c) => formatDateDMY(c.endDate) },
-              {
-                header: "Tiền thuê/tháng",
-                render: (c) => (c.rent != null ? formatMoneyDoc(c.rent) : "—"),
+                header: p.start,
+                render: (row) => dinhDangNgay(row.startDate, lang),
               },
               {
-                header: "Trạng thái",
-                render: (c) => (
+                header: p.end,
+                render: (row) => dinhDangNgay(row.endDate, lang),
+              },
+              {
+                header: p.rentMonthly,
+                render: (row) =>
+                  row.rent != null ? dinhDangTien(row.rent, lang) : "—",
+              },
+              {
+                header: p.status,
+                render: (row) => (
                   <span
-                    className={`status-badge ${contractStatusBadge(c.status)}`}
+                    className={`status-badge ${contractStatusBadge(row.status)}`}
                   >
-                    {contractStatusLabel(c.status)}
+                    {nhanTrangThaiHopDong(tr, row.status)}
                   </span>
                 ),
               },
               {
-                header: "Hợp đồng",
-                render: (c: Contract) => (
+                header: p.contractCol,
+                render: (row: Contract) => (
                   <div className="table-actions">
                     <button
                       className="btn btn-secondary"
-                      onClick={() => viewContractDoc(c)}
-                      title="Xem nội dung hợp đồng"
+                      onClick={() => viewContractDoc(row)}
+                      title={p.viewContract}
                     >
-                      <IconEye /> Xem
+                      <IconEye /> {s.view}
                     </button>
                     <button
                       className="btn btn-secondary"
-                      onClick={() => downloadContractDoc(c)}
-                      title="Tải file Word"
+                      onClick={() => downloadContractDoc(row)}
+                      title={p.downloadWordTitle}
                     >
-                      <IconDownload /> Tải Word
+                      <IconDownload /> {p.downloadWord}
                     </button>
                   </div>
                 ),
@@ -627,17 +604,17 @@ export default function TrangHopDong() {
               ...(isAdmin
                 ? [
                     {
-                      header: "Thao tác",
-                      render: (c: Contract) => (
+                      header: s.actions,
+                      render: (row: Contract) => (
                         <div className="table-actions">
-                          <button className="btn" onClick={() => openExtend(c)}>
-                            <IconCalendar /> Gia hạn
+                          <button className="btn" onClick={() => openExtend(row)}>
+                            <IconCalendar /> {p.extend}
                           </button>
                           <button
                             className="btn btn-secondary"
-                            onClick={() => confirmEnd(c)}
+                            onClick={() => confirmEnd(row)}
                           >
-                            <IconTimes /> Kết thúc
+                            <IconTimes /> {p.endContract}
                           </button>
                         </div>
                       ),
@@ -665,17 +642,17 @@ export default function TrangHopDong() {
             <div className="modal-card form-card contract-create-modal">
               <div className="card-header">
                 <div>
-                  <h3>Tạo hợp đồng</h3>
-                  <p className="card-subtitle">Điền thông tin hợp đồng</p>
+                  <h3>{p.create}</h3>
+                  <p className="card-subtitle">{p.createSub}</p>
                 </div>
               </div>
               <form onSubmit={create} className="form-grid">
                 <div className="form-section form-span-2">
-                  <h4 className="form-section-title">Khu, phòng &amp; khách</h4>
+                  <h4 className="form-section-title">{p.sectionAreaRoom}</h4>
                   <div className="form-section-fields form-section-fields--khu-phong">
                     <div>
                       <label className="field-label">
-                        Khu <span className="required">*</span>
+                        {p.area} <span className="required">*</span>
                       </label>
                       <ChonKhuCombobox
                         danhSachKhu={danhSachKhu}
@@ -685,12 +662,12 @@ export default function TrangHopDong() {
                           setRoomId("");
                           setRent("");
                         }}
-                        placeholderChuaChon="Chọn khu"
+                        placeholderChuaChon={p.selectArea}
                       />
                     </div>
                     <div>
                       <label className="field-label">
-                        Phòng <span className="required">*</span>
+                        {p.room} <span className="required">*</span>
                       </label>
                       <select
                         value={roomId}
@@ -707,9 +684,7 @@ export default function TrangHopDong() {
                         }}
                       >
                         <option value="">
-                          {khuId
-                            ? "Chọn phòng"
-                            : "Chọn khu trước để xem phòng trống"}
+                          {khuId ? p.selectRoom : p.selectAreaFirst}
                         </option>
                         {phongTrongTheoKhu.map((r) => (
                           <option key={r.id} value={r.id}>
@@ -719,20 +694,17 @@ export default function TrangHopDong() {
                       </select>
                       {khuId && phongTrongTheoKhu.length === 0 && (
                         <p className="card-subtitle" style={{ marginTop: 4 }}>
-                          Không có phòng trống trong khu này.
+                          {p.noEmptyRooms}
                         </p>
                       )}
                     </div>
                     <div className="form-section-full">
                       <label className="field-label">
-                        Khách thuê (có thể nhiều người){" "}
+                        {p.tenantsLabel}{" "}
                         <span className="required">*</span>
                       </label>
                       <div className="contract-create-khach-toolbar">
-                        <p className="card-subtitle">
-                          Chọn trong cửa sổ: nhiều người cùng phòng, một người{" "}
-                          <strong>đại diện</strong> ký hợp đồng.
-                        </p>
+                        <p className="card-subtitle">{p.tenantsHint}</p>
                         <button
                           type="button"
                           className="btn btn-secondary"
@@ -741,28 +713,28 @@ export default function TrangHopDong() {
                             availableTenantsForNewContract.length === 0
                           }
                         >
-                          Chọn khách thuê…
+                          {p.selectTenantsBtn}
                         </button>
                       </div>
                       <div className="hop-dong-create-khach-bang-wrap">
                         {selectedTenantIds.length === 0 ? (
                           <div className="hop-dong-khach-preview-empty">
                             <span className="text-muted">
-                              Chưa chọn — bấm nút Chọn khách thuê… phía trên
+                              {p.notSelectedTenants}
                             </span>
                           </div>
                         ) : (
                           <table className="hop-dong-create-khach-bang">
                             <thead>
                               <tr>
-                                <th scope="col">Họ tên</th>
-                                <th scope="col">SĐT</th>
-                                <th scope="col">CCCD</th>
+                                <th scope="col">{p.fullName}</th>
+                                <th scope="col">{p.phone}</th>
+                                <th scope="col">{p.idNumber}</th>
                                 <th
                                   scope="col"
                                   className="hop-dong-create-khach-vai-tro"
                                 >
-                                  Vai trò
+                                  {p.role}
                                 </th>
                               </tr>
                             </thead>
@@ -796,9 +768,9 @@ export default function TrangHopDong() {
                                     {row.laDaiDien ? (
                                       <span
                                         className="hop-dong-khach-chip-badge"
-                                        title="Người ký và chịu trách nhiệm chính"
+                                        title={p.repTitle}
                                       >
-                                        Đại diện
+                                        {p.representative}
                                       </span>
                                     ) : (
                                       <span className="text-muted">—</span>
@@ -812,7 +784,7 @@ export default function TrangHopDong() {
                       </div>
                       {availableTenantsForNewContract.length === 0 && (
                         <p className="card-subtitle" style={{ marginTop: 4 }}>
-                          Tất cả khách thuê đều đang có hợp đồng hiệu lực.
+                          {p.allTenantsBusy}
                         </p>
                       )}
                     </div>
@@ -820,11 +792,11 @@ export default function TrangHopDong() {
                 </div>
 
                 <div className="form-section form-span-2">
-                  <h4 className="form-section-title">Thời hạn hợp đồng</h4>
+                  <h4 className="form-section-title">{p.sectionDuration}</h4>
                   <div className="form-section-fields form-section-fields--thoi-han-ba-cot">
                     <div>
                       <label className="field-label">
-                        Ngày bắt đầu <span className="required">*</span>
+                        {p.startDate} <span className="required">*</span>
                       </label>
                       <input
                         type="date"
@@ -833,9 +805,7 @@ export default function TrangHopDong() {
                       />
                     </div>
                     <div>
-                      <label className="field-label">
-                        Khoảng thời gian thuê
-                      </label>
+                      <label className="field-label">{p.duration}</label>
                       <select
                         value={durationMonths}
                         onChange={(e) =>
@@ -844,17 +814,15 @@ export default function TrangHopDong() {
                           )
                         }
                       >
-                        <option value="">
-                          Tùy chọn (tự nhập ngày kết thúc)
-                        </option>
-                        <option value="6">6 tháng</option>
-                        <option value="12">1 năm</option>
-                        <option value="24">2 năm</option>
+                        <option value="">{p.customDuration}</option>
+                        <option value="6">{p.months6}</option>
+                        <option value="12">{p.year1}</option>
+                        <option value="24">{p.year2}</option>
                       </select>
                     </div>
                     <div>
                       <label className="field-label">
-                        Ngày kết thúc <span className="required">*</span>
+                        {p.endDate} <span className="required">*</span>
                       </label>
                       <input
                         type="date"
@@ -869,13 +837,13 @@ export default function TrangHopDong() {
                 </div>
 
                 <div className="form-section form-span-2">
-                  <h4 className="form-section-title">Tài chính</h4>
+                  <h4 className="form-section-title">{p.sectionFinance}</h4>
                   <div className="form-section-fields">
                     <div>
-                      <label className="field-label">Tiền cọc</label>
+                      <label className="field-label">{p.deposit}</label>
                       <div className="input-suffix">
                         <input
-                          placeholder="Ví dụ: 1.000.000"
+                          placeholder={p.pricePh}
                           value={deposit}
                           onChange={(e) =>
                             setDeposit(formatCurrencyInput(e.target.value))
@@ -885,13 +853,11 @@ export default function TrangHopDong() {
                       </div>
                     </div>
                     <div>
-                      <label className="field-label">Giá thuê</label>
+                      <label className="field-label">{p.rent}</label>
                       <div className="input-suffix">
                         <input
                           placeholder={
-                            khuId
-                              ? "Chọn phòng để lấy giá"
-                              : "Chọn khu và phòng để lấy giá"
+                            khuId ? p.selectRoomForPrice : p.selectAreaRoomForPrice
                           }
                           value={rent}
                           readOnly
@@ -913,10 +879,10 @@ export default function TrangHopDong() {
                     type="button"
                     onClick={dongModalTaoHopDong}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn btn-primary" type="submit">
-                    <IconPlus /> Tạo hợp đồng
+                    <IconPlus /> {p.create}
                   </button>
                 </div>
               </form>
@@ -941,45 +907,44 @@ export default function TrangHopDong() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 id="chon-khach-title" style={{ marginTop: 0 }}>
-                  Chọn khách thuê
+                  {p.selectTenantsTitle}
                 </h3>
                 <p className="card-subtitle" style={{ marginBottom: 10 }}>
-                  Đánh dấu người tham gia hợp đồng, chọn một người là{" "}
-                  <strong>đại diện</strong> ký và chịu trách nhiệm chính.
+                  {p.selectRepHint}
                 </p>
                 <div className="hop-dong-chon-khach-toolbar">
                   <input
                     ref={chonKhachInputRef}
                     type="search"
                     enterKeyHint="search"
-                    placeholder="Lọc theo tên, SĐT, CCCD, email hoặc mã…"
+                    placeholder={p.filterTenantPh}
                     value={chonKhachLoc}
                     onChange={(e) => setChonKhachLoc(e.target.value)}
                     autoComplete="off"
-                    aria-label="Lọc danh sách khách thuê"
+                    aria-label={p.filterTenantsAria}
                   />
                   <span className="hop-dong-chon-khach-toolbar-meta">
                     {chonKhachLoc.trim()
                       ? `${khachTrongModalSauLoc.length}/${availableTenantsForNewContract.length}`
                       : `${availableTenantsForNewContract.length}`}{" "}
-                    khách
+                    {p.tenantUnit}
                   </span>
                 </div>
                 <div className="hop-dong-chon-khach-list-scroll">
                   {khachTrongModalSauLoc.length === 0 ? (
                     <div className="empty-state" style={{ padding: "20px 16px" }}>
                       {availableTenantsForNewContract.length === 0
-                        ? "Không có khách thuê khả dụng (đều đang có hợp đồng hiệu lực)."
-                        : "Không khách nào khớp bộ lọc — thử từ khóa khác."}
+                        ? p.noTenantsAvailable
+                        : p.noFilterMatch}
                     </div>
                   ) : (
                     <>
                       <div className="hop-dong-chon-khach-head">
                         <span />
-                        <span>Họ tên</span>
-                        <span>SĐT</span>
-                        <span>CCCD</span>
-                        <span>Đại diện</span>
+                        <span>{p.fullName}</span>
+                        <span>{p.phone}</span>
+                        <span>{p.idNumber}</span>
+                        <span>{p.representative}</span>
                       </div>
                       {khachTrongModalSauLoc.map((t) => {
                         const checked = draftKhachIds.includes(t.id);
@@ -1031,7 +996,7 @@ export default function TrangHopDong() {
                                     checked={draftDaiDienId === t.id}
                                     onChange={() => setDraftDaiDienId(t.id)}
                                   />
-                                  <label htmlFor={rdId}>Đại diện</label>
+                                  <label htmlFor={rdId}>{p.representative}</label>
                                 </>
                               ) : null}
                             </div>
@@ -1047,14 +1012,14 @@ export default function TrangHopDong() {
                     className="btn btn-secondary"
                     onClick={dongChonKhachKhongLuu}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button
                     type="button"
                     className="btn btn-primary"
                     onClick={xacNhanChonKhachThue}
                   >
-                    <IconCheck /> Xác nhận
+                    <IconCheck /> {c.confirm}
                   </button>
                 </div>
               </div>
@@ -1066,10 +1031,10 @@ export default function TrangHopDong() {
         {extendId != null && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
-              <h3>Gia hạn hợp đồng</h3>
+              <h3>{p.extendTitle}</h3>
               <div className="form-grid">
                 <div className="form-span-2">
-                  <label className="field-label">Ngày kết thúc mới</label>
+                  <label className="field-label">{p.newEndDate}</label>
                   <input
                     type="date"
                     value={extendDate}
@@ -1079,10 +1044,10 @@ export default function TrangHopDong() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelExtend}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={saveExtend}>
-                  <IconCheck /> Lưu
+                  <IconCheck /> {c.save}
                 </button>
               </div>
             </div>
@@ -1092,14 +1057,14 @@ export default function TrangHopDong() {
         {confirmEndId != null && (
           <div className="modal-backdrop">
             <div className="modal-card">
-              <h3>Kết thúc hợp đồng</h3>
-              <p>Bạn có chắc muốn kết thúc hợp đồng này?</p>
+              <h3>{p.endTitle}</h3>
+              <p>{p.endConfirm}</p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEnd}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={endContract}>
-                  <IconTimes /> Kết thúc
+                  <IconTimes /> {p.endContract}
                 </button>
               </div>
             </div>

@@ -13,6 +13,8 @@ import {
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { layLocaleTag, dinhDangTien as dinhDangTienLocale } from "@/lib/locale";
 
 type ServicePrice = {
   id: string;
@@ -22,12 +24,7 @@ type ServicePrice = {
   hieuLucTu?: string;
 };
 
-const dinhDangTien = (n?: number | null) => {
-  if (n == null || isNaN(n)) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
-};
-
-const dinhDangNgayDMY = (dateStr?: string) => {
+const dinhDangNgayDMY = (dateStr?: string, localeTag = "vi-VN") => {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
@@ -37,10 +34,10 @@ const dinhDangNgayDMY = (dateStr?: string) => {
   return `${day}/${month}/${year}`;
 };
 
-const dinhDangNhapTien = (value: string) => {
+const dinhDangNhapTien = (value: string, localeTag: string) => {
   const digits = value.replace(/\D/g, "");
   if (!digits) return "";
-  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+  return new Intl.NumberFormat(localeTag).format(Number(digits));
 };
 
 const parseNhapTien = (value: string) => {
@@ -63,6 +60,13 @@ export default function TrangBangGiaDichVu() {
   const [vaiTro, setVaiTro] = useState<string | null>(null);
   const laQuanTri = vaiTro === "ADMIN";
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.bangGia;
+  const s = tr.pages.shared;
+  const c = tr.common;
+  const localeTag = layLocaleTag(lang);
+  const dinhDangTien = (n?: number | null) =>
+    n == null || isNaN(n) ? "—" : dinhDangTienLocale(Math.round(Number(n)), lang);
 
   useEffect(() => {
     setVaiTro(getRole());
@@ -92,7 +96,7 @@ export default function TrangBangGiaDichVu() {
       giaNuoc: gn,
       hieuLucTu: ngayHieuLuc,
     });
-    notify("Thêm bảng giá thành công", "success");
+    notify(p.okAdd, "success");
     setGiaDien("");
     setGiaNuoc("");
     setNgayHieuLuc("");
@@ -104,12 +108,12 @@ export default function TrangBangGiaDichVu() {
     setPhanTuDangSua(phanTu);
     setGiaDienSua(
       phanTu.giaDien != null
-        ? dinhDangNhapTien(String(phanTu.giaDien))
+        ? dinhDangNhapTien(String(phanTu.giaDien), localeTag)
         : "",
     );
     setGiaNuocSua(
       phanTu.giaNuoc != null
-        ? dinhDangNhapTien(String(phanTu.giaNuoc))
+        ? dinhDangNhapTien(String(phanTu.giaNuoc), localeTag)
         : "",
     );
     setNgayHieuLucSua(phanTu.hieuLucTu || "");
@@ -140,14 +144,14 @@ export default function TrangBangGiaDichVu() {
   const xoaPhanTu = async (id: string) => {
     if (!confirm("Bạn có chắc muốn xóa bảng giá này?")) return;
     await api.delete(`/bang-gia-dich-vu/${id}`);
-    notify("Đã xóa bảng giá", "success");
+    notify(p.okDelete, "success");
     tai();
   };
 
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Bảng giá dịch vụ</h2>
+        <h2>{p.title}</h2>
         <div className="card service-price-intro">
           <p className="service-price-intro-title">
             Màn hình này dùng để làm gì?
@@ -172,9 +176,7 @@ export default function TrangBangGiaDichVu() {
             <div>
               <h3>Bảng giá hiện hành</h3>
               <p className="card-subtitle">
-                {danhSach.length === 0
-                  ? "Chưa có giá. Bấm bên phải để thiết lập giá điện và giá nước (chỉ cần một bộ giá)."
-                  : "Chỉ cần một bộ giá điện + giá nước. Dùng Sửa để cập nhật, không cần thêm bản ghi mới."}
+                {danhSach.length === 0 ? p.noPrice : p.noPrice}
               </p>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -194,7 +196,7 @@ export default function TrangBangGiaDichVu() {
           <BangDonGian
             data={danhSach}
             columns={[
-              { header: "ID", render: (i: ServicePrice) => i.id },
+              { header: s.id, render: (i: ServicePrice) => i.id },
               {
                 header: "Giá điện (VNĐ/kWh)",
                 render: (i: ServicePrice) => dinhDangTien(i.giaDien),
@@ -205,12 +207,12 @@ export default function TrangBangGiaDichVu() {
               },
               {
                 header: "Ngày hiệu lực",
-                render: (i: ServicePrice) => dinhDangNgayDMY(i.hieuLucTu),
+                render: (i: ServicePrice) => dinhDangNgayDMY(i.hieuLucTu, localeTag),
               },
               ...(laQuanTri
                 ? [
                     {
-                      header: "Thao tác",
+                      header: s.actions,
                       render: (i: ServicePrice) => (
                         <span
                           style={{
@@ -224,7 +226,7 @@ export default function TrangBangGiaDichVu() {
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => batDauSua(i)}
                           >
-                            <IconPencil /> Sửa
+                            <IconPencil /> {s.edit}
                           </button>
                           {danhSach.length > 1 && (
                             <button
@@ -232,7 +234,7 @@ export default function TrangBangGiaDichVu() {
                               className="btn btn-sm btn-secondary"
                               onClick={() => xoaPhanTu(i.id)}
                             >
-                              <IconTrash /> Xóa
+                              <IconTrash /> {s.delete}
                             </button>
                           )}
                         </span>
@@ -249,7 +251,7 @@ export default function TrangBangGiaDichVu() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Thêm bảng giá</h3>
+                  <h3>{p.addTitle}</h3>
                   <p className="card-subtitle">Thiết lập giá dịch vụ</p>
                 </div>
               </div>
@@ -264,7 +266,7 @@ export default function TrangBangGiaDichVu() {
                       inputMode="numeric"
                       value={giaDien}
                       onChange={(e) =>
-                        setGiaDien(dinhDangNhapTien(e.target.value))
+                        setGiaDien(dinhDangNhapTien(e.target.value, localeTag))
                       }
                     />
                     <span>VNĐ</span>
@@ -280,7 +282,7 @@ export default function TrangBangGiaDichVu() {
                       inputMode="numeric"
                       value={giaNuoc}
                       onChange={(e) =>
-                        setGiaNuoc(dinhDangNhapTien(e.target.value))
+                        setGiaNuoc(dinhDangNhapTien(e.target.value, localeTag))
                       }
                     />
                     <span>VNĐ</span>
@@ -303,10 +305,10 @@ export default function TrangBangGiaDichVu() {
                     type="button"
                     onClick={() => setHienThiTaoMoi(false)}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconCheck /> Lưu bảng giá
+                    <IconCheck /> {p.savePrice}
                   </button>
                 </div>
               </form>
@@ -336,7 +338,7 @@ export default function TrangBangGiaDichVu() {
                       inputMode="numeric"
                       value={giaDienSua}
                       onChange={(e) =>
-                        setGiaDienSua(dinhDangNhapTien(e.target.value))
+                        setGiaDienSua(dinhDangNhapTien(e.target.value, localeTag))
                       }
                     />
                     <span>VNĐ</span>
@@ -352,7 +354,7 @@ export default function TrangBangGiaDichVu() {
                       inputMode="numeric"
                       value={giaNuocSua}
                       onChange={(e) =>
-                        setGiaNuocSua(dinhDangNhapTien(e.target.value))
+                        setGiaNuocSua(dinhDangNhapTien(e.target.value, localeTag))
                       }
                     />
                     <span>VNĐ</span>
@@ -375,7 +377,7 @@ export default function TrangBangGiaDichVu() {
                     type="button"
                     onClick={() => setPhanTuDangSua(null)}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
                     <IconCheck /> Lưu thay đổi

@@ -45,16 +45,6 @@
   --gray-900: var(--text);
 }
 
-[data-theme="dark"] {
-  --bg-app: #1c1917;
-  --bg-surface: #292524;
-  --bg-muted: #44403c;
-  --border: #57534e;
-  --text: #fafaf9;
-  --text-muted: #a8a29e;
-  --primary-soft: rgba(255, 255, 255, 0.08);
-  --nav-bg: rgba(28, 25, 23, 0.95);
-}
 
 body {
   font-family: var(--font-sans) !important;
@@ -423,6 +413,11 @@ textarea:focus {
   color: var(--text-muted);
   border-top: 1px solid var(--border);
   background: rgba(255, 252, 248, 0.8);
+}
+
+[data-page="dashboard"] .app-shell-content,
+[data-page="dashboard"] .page-shell {
+  background: #f1f5f9;
 }
 
 [data-page="dashboard"] .page-shell {

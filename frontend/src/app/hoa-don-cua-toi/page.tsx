@@ -8,36 +8,14 @@ import { IconCheck, IconEye, IconTimes, IconDownload } from "@/components/Icons"
 import api from "@/lib/api";
 import { taiFileTuApi } from "@/lib/taiFile";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiHoaDon } from "@/lib/trangThai";
+import { dinhDangTien, dinhDangSo, dinhDangNgay } from "@/lib/locale";
 import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
 import { mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
 
-const formatVND = (value?: number | null) => {
-  if (value == null || Number.isNaN(Number(value))) return "—";
-  return new Intl.NumberFormat("vi-VN").format(Number(value)) + " đ";
-};
+const canPay = (status?: string) => status === "UNPAID" || status === "PARTIAL";
 
-const formatMoneyLine = (n?: number | null) => {
-  if (n == null || Number.isNaN(Number(n))) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} đ`;
-};
-
-const formatChiSo = (n?: number) =>
-  n != null && Number.isFinite(n)
-    ? new Intl.NumberFormat("vi-VN").format(n)
-    : "—";
-
-const invoiceStatusLabel = (value?: string) => {
-  switch (value) {
-    case "UNPAID":
-      return "Chưa thanh toán";
-    case "PARTIAL":
-      return "Thanh toán một phần";
-    case "PAID":
-      return "Đã thanh toán";
-    default:
-      return value || "-";
-  }
-};
 const invoiceStatusBadge = (value?: string) => {
   switch (value) {
     case "PAID":
@@ -51,8 +29,6 @@ const invoiceStatusBadge = (value?: string) => {
   }
 };
 
-const canPay = (status?: string) => status === "UNPAID" || status === "PARTIAL";
-
 export default function TrangHoaDonCuaToi() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<Invoice[]>([]);
@@ -63,6 +39,18 @@ export default function TrangHoaDonCuaToi() {
     text: string;
   } | null>(null);
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.hoaDonCuaToi;
+  const hp = tr.pages.hoaDon;
+  const s = tr.pages.shared;
+  const c = tr.common;
+
+  const formatMoney = (n?: number | null) => {
+    if (n == null || Number.isNaN(Number(n))) return "—";
+    return dinhDangTien(Math.round(Number(n)), lang);
+  };
+  const formatChiSo = (n?: number) =>
+    n != null && Number.isFinite(n) ? dinhDangSo(n, lang) : "—";
 
   const taiLaiHoaDon = async () => {
     const res = await api.get("/hoa-don/cua-toi");
@@ -77,14 +65,11 @@ export default function TrangHoaDonCuaToi() {
           const r = await api.get(`/thanh-toan/hoa-don/${inv.id}`);
           const list = Array.isArray(r.data) ? r.data : [];
           const paid = list.reduce(
-            (s, row) =>
-              s + Number((row as { soTien?: unknown }).soTien ?? 0),
+            (sum, row) =>
+              sum + Number((row as { soTien?: unknown }).soTien ?? 0),
             0,
           );
-          const rem = Math.max(
-            0,
-            Math.round((inv.total ?? 0) - paid),
-          );
+          const rem = Math.max(0, Math.round((inv.total ?? 0) - paid));
           return { ...inv, remaining: rem };
         } catch {
           return { ...inv, remaining: inv.total };
@@ -96,15 +81,13 @@ export default function TrangHoaDonCuaToi() {
   };
 
   useEffect(() => {
-    taiLaiHoaDon().catch(() => {
-
-    });
+    taiLaiHoaDon().catch(() => undefined);
   }, []);
 
   useEffect(() => {
     const payment = searchParams.get("payment");
     if (payment === "success") {
-      setMessage({ type: "success", text: "Thanh toán thành công." });
+      setMessage({ type: "success", text: p.okPayment });
       const orderCode = searchParams.get("orderCode");
       const code = searchParams.get("code");
       const status = searchParams.get("status");
@@ -127,8 +110,9 @@ export default function TrangHoaDonCuaToi() {
       );
       return () => timers.forEach((id) => window.clearTimeout(id));
     }
-    if (payment === "cancel")
-      setMessage({ type: "cancel", text: "Bạn đã hủy thanh toán." });
+    if (payment === "cancel") {
+      setMessage({ type: "cancel", text: p.cancelPayment });
+    }
   }, [searchParams]);
 
   const handlePay = async (invoiceId: string) => {
@@ -147,7 +131,7 @@ export default function TrangHoaDonCuaToi() {
     } catch {
       setMessage({
         type: "fail",
-        text: "Không tạo được link thanh toán. Kiểm tra cấu hình PayOS hoặc thử lại.",
+        text: p.failPaymentLink,
       });
     } finally {
       setPayingId(null);
@@ -157,7 +141,7 @@ export default function TrangHoaDonCuaToi() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Hóa đơn của tôi</h2>
+        <h2>{p.title}</h2>
         {message && (
           <div
             className="card"
@@ -185,20 +169,23 @@ export default function TrangHoaDonCuaToi() {
             data={items}
             columns={[
               {
-                header: "ID",
+                header: s.id,
                 render: (i) => (
                   <span title={i.id}>
                     {i.id.length > 10 ? `${i.id.slice(0, 8)}…` : i.id}
                   </span>
                 ),
               },
-              { header: "Phòng", render: (i) => i.room?.code ?? "—" },
-              { header: "Tháng/Năm", render: (i) => `${i.month}/${i.year}` },
+              { header: hp.room, render: (i) => i.room?.code ?? "—" },
               {
-                header: "Tổng",
+                header: p.monthYear,
+                render: (i) => `${i.month}/${i.year}`,
+              },
+              {
+                header: p.total,
                 render: (i) => (
                   <div>
-                    <div>{formatVND(i.total)}</div>
+                    <div>{formatMoney(i.total)}</div>
                     {i.remaining != null &&
                       i.total != null &&
                       i.remaining < i.total && (
@@ -210,24 +197,24 @@ export default function TrangHoaDonCuaToi() {
                             fontWeight: 500,
                           }}
                         >
-                          Còn lại: {formatVND(i.remaining)}
+                          {p.remaining}: {formatMoney(i.remaining)}
                         </div>
                       )}
                   </div>
                 ),
               },
               {
-                header: "Trạng thái",
+                header: hp.status,
                 render: (i) => (
                   <span
                     className={`status-badge ${invoiceStatusBadge(i.status)}`}
                   >
-                    {invoiceStatusLabel(i.status)}
+                    {nhanTrangThaiHoaDon(tr, i.status)}
                   </span>
                 ),
               },
               {
-                header: "Thao tác",
+                header: s.actions,
                 render: (i) => (
                   <div
                     style={{
@@ -242,7 +229,7 @@ export default function TrangHoaDonCuaToi() {
                       className="btn btn-sm btn-secondary"
                       onClick={() => setXemChiTiet(i)}
                     >
-                      <IconEye /> Chi tiết
+                      <IconEye /> {p.detail}
                     </button>
                     <button
                       type="button"
@@ -251,10 +238,10 @@ export default function TrangHoaDonCuaToi() {
                         void taiFileTuApi(
                           `/hoa-don/${i.id}/xuat-pdf`,
                           `hoa-don-${i.id}.pdf`,
-                        ).catch(() => notify("Tải PDF thất bại.", "error"))
+                        ).catch(() => notify(p.errDownloadPdf, "error"))
                       }
                     >
-                      <IconDownload /> PDF
+                      <IconDownload /> {p.pdf}
                     </button>
                     {canPay(i.status) ? (
                       <button
@@ -264,10 +251,10 @@ export default function TrangHoaDonCuaToi() {
                         onClick={() => handlePay(i.id)}
                       >
                         {payingId === i.id ? (
-                          "Đang chuyển..."
+                          p.paying
                         ) : (
                           <>
-                            <IconCheck /> Thanh toán
+                            <IconCheck /> {p.pay}
                           </>
                         )}
                       </button>
@@ -293,10 +280,14 @@ export default function TrangHoaDonCuaToi() {
             >
               <div className="card-header">
                 <div>
-                  <h3>Chi tiết hóa đơn</h3>
+                  <h3>{p.detailTitle}</h3>
                   <p className="card-subtitle">
-                    Phòng {xemChiTiet.room?.code ?? "—"} — Kỳ{" "}
-                    {xemChiTiet.month}/{xemChiTiet.year}
+                    {p.detailSub
+                      .replace("{room}", xemChiTiet.room?.code ?? "—")
+                      .replace(
+                        "{period}",
+                        `${xemChiTiet.month}/${xemChiTiet.year}`,
+                      )}
                   </p>
                 </div>
               </div>
@@ -316,8 +307,8 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Tiền phòng</span>
-                  <strong>{formatMoneyLine(xemChiTiet.roomCost)}</strong>
+                  <span>{p.roomRent}</span>
+                  <strong>{formatMoney(xemChiTiet.roomCost)}</strong>
                 </div>
                 <div
                   style={{
@@ -328,7 +319,7 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số điện cũ</span>
+                  <span>{p.electricOld}</span>
                   <strong>{formatChiSo(xemChiTiet.electricOld)}</strong>
                 </div>
                 <div
@@ -340,7 +331,7 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số điện mới</span>
+                  <span>{p.electricNew}</span>
                   <strong>{formatChiSo(xemChiTiet.electricNew)}</strong>
                 </div>
                 <div
@@ -352,8 +343,8 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Tiền điện</span>
-                  <strong>{formatMoneyLine(xemChiTiet.electricityCost)}</strong>
+                  <span>{p.electricCost}</span>
+                  <strong>{formatMoney(xemChiTiet.electricityCost)}</strong>
                 </div>
                 <div
                   style={{
@@ -364,7 +355,7 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số nước cũ</span>
+                  <span>{p.waterOld}</span>
                   <strong>{formatChiSo(xemChiTiet.waterOld)}</strong>
                 </div>
                 <div
@@ -376,7 +367,7 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số nước mới</span>
+                  <span>{p.waterNew}</span>
                   <strong>{formatChiSo(xemChiTiet.waterNew)}</strong>
                 </div>
                 <div
@@ -388,8 +379,8 @@ export default function TrangHoaDonCuaToi() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Tiền nước</span>
-                  <strong>{formatMoneyLine(xemChiTiet.waterCost)}</strong>
+                  <span>{p.waterCost}</span>
+                  <strong>{formatMoney(xemChiTiet.waterCost)}</strong>
                 </div>
                 {xemChiTiet.lineItems &&
                   xemChiTiet.lineItems.length > 0 &&
@@ -405,7 +396,7 @@ export default function TrangHoaDonCuaToi() {
                       }}
                     >
                       <span>{l.tenKhoan}</span>
-                      <strong>{formatMoneyLine(l.soTien)}</strong>
+                      <strong>{formatMoney(l.soTien)}</strong>
                     </div>
                   ))}
                 <div
@@ -419,8 +410,8 @@ export default function TrangHoaDonCuaToi() {
                     color: "#102a5c",
                   }}
                 >
-                  <span>Tổng</span>
-                  <strong>{formatMoneyLine(xemChiTiet.total)}</strong>
+                  <span>{p.total}</span>
+                  <strong>{formatMoney(xemChiTiet.total)}</strong>
                 </div>
                 {xemChiTiet.remaining != null &&
                   xemChiTiet.total != null &&
@@ -435,9 +426,9 @@ export default function TrangHoaDonCuaToi() {
                         color: "#0f172a",
                       }}
                     >
-                      <span>Còn thanh toán</span>
+                      <span>{p.remainingPay}</span>
                       <strong style={{ color: "#4f7cff" }}>
-                        {formatMoneyLine(xemChiTiet.remaining)}
+                        {formatMoney(xemChiTiet.remaining)}
                       </strong>
                     </div>
                   )}
@@ -450,17 +441,17 @@ export default function TrangHoaDonCuaToi() {
                     void taiFileTuApi(
                       `/hoa-don/${xemChiTiet.id}/xuat-pdf`,
                       `hoa-don-${xemChiTiet.id}.pdf`,
-                    ).catch(() => notify("Tải PDF thất bại.", "error"))
+                    ).catch(() => notify(p.errDownloadPdf, "error"))
                   }
                 >
-                  <IconDownload /> Tải PDF
+                  <IconDownload /> {p.pdf}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setXemChiTiet(null)}
                 >
-                  <IconTimes /> Đóng
+                  <IconTimes /> {c.close}
                 </button>
               </div>
             </div>

@@ -1,9 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api, { API_ORIGIN } from "@/lib/api";
 import { getUserId, setUserId } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { thayMauChuoi } from "@/lib/i18n";
+import { layLocaleTag } from "@/lib/locale";
+import { nhanVaiTro } from "@/lib/trangThai";
 import { IconSend } from "@/components/Icons";
 import { createChatClient, type ChatSocketPayload } from "@/lib/chatSocket";
 
@@ -55,26 +59,86 @@ const EMOJI_GUI = [
 
 const REACTION_NHANH = ["👍", "❤️", "😂", "😮", "😢", "🎉"];
 
-const vaiTroNhan = (v?: string) => {
-  switch (v) {
-    case "ADMIN":
-      return "Quản trị";
-    case "STAFF":
-      return "Nhân viên";
-    case "TENANT":
-      return "Khách thuê";
-    default:
-      return v ?? "";
-  }
-};
-
 function urlFile(path?: string) {
   if (!path) return "";
   if (path.startsWith("http")) return path;
   return `${API_ORIGIN}${path}`;
 }
 
+function layChuCai(ten?: string) {
+  const parts = (ten || "?").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function formatGioNgan(iso?: string, locale = "vi-VN") {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const homNay = d.toDateString() === now.toDateString();
+  const gio = d.toLocaleTimeString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  if (homNay) return gio;
+  const ngay = d.toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "2-digit",
+  });
+  return `${ngay} ${gio}`;
+}
+
+function nhanNhanNgay(
+  iso: string,
+  locale: string,
+  today: string,
+  yesterday: string,
+) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const homQua = new Date(now);
+  homQua.setDate(homQua.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return today;
+  if (d.toDateString() === homQua.toDateString()) return yesterday;
+  return d.toLocaleDateString(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function gopTinTheoNgay(
+  tin: TinNhan[],
+  locale: string,
+  today: string,
+  yesterday: string,
+) {
+  const nhom: { key: string; label: string; items: TinNhan[] }[] = [];
+  let lastKey = "";
+  for (const msg of tin) {
+    const iso = msg.thoiGianGui ?? new Date().toISOString();
+    const key = new Date(iso).toDateString();
+    if (key !== lastKey) {
+      nhom.push({
+        key,
+        label: nhanNhanNgay(iso, locale, today, yesterday),
+        items: [],
+      });
+      lastKey = key;
+    }
+    nhom[nhom.length - 1].items.push(msg);
+  }
+  return nhom;
+}
+
 export default function ChatApp() {
+  const { t: i18n, lang } = useCaiDat();
+  const ct = i18n.chat;
+  const localeTag = layLocaleTag(lang);
   const [hoiThoai, setHoiThoai] = useState<HoiThoai[]>([]);
   const [hoiThoaiId, setHoiThoaiId] = useState<string | null>(null);
   const [tinNhan, setTinNhan] = useState<TinNhan[]>([]);
@@ -82,6 +146,7 @@ export default function ChatApp() {
   const [dangGui, setDangGui] = useState(false);
   const [moTimNguoi, setMoTimNguoi] = useState(false);
   const [tuKhoa, setTuKhoa] = useState("");
+  const [locHoiThoai, setLocHoiThoai] = useState("");
   const [nguoiTim, setNguoiTim] = useState<NguoiChat[]>([]);
   const [moEmoji, setMoEmoji] = useState(false);
   const [userId, setUid] = useState<string | null>(null);
@@ -118,7 +183,7 @@ export default function ChatApp() {
         return nhom?.id ?? ds[0]?.id ?? null;
       });
     } catch {
-      notify("Không tải được danh sách hội thoại.", "error");
+      notify(ct.errLoadThreads, "error");
     }
   }, [notify]);
 
@@ -129,7 +194,7 @@ export default function ChatApp() {
         setTinNhan(Array.isArray(res.data) ? (res.data as TinNhan[]) : []);
         await api.put(`/hoi-thoai/${id}/da-doc`);
       } catch {
-        notify("Không tải được tin nhắn.", "error");
+        notify(ct.errLoadMessages, "error");
       }
     },
     [notify],
@@ -208,7 +273,7 @@ export default function ChatApp() {
       setTuKhoa("");
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
-      notify(ax?.response?.data?.message ?? "Không tạo được hội thoại.", "error");
+      notify(ax?.response?.data?.message ?? ct.errCreateThread, "error");
     }
   };
 
@@ -225,7 +290,7 @@ export default function ChatApp() {
       await taiHoiThoai();
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
-      notify(ax?.response?.data?.message ?? "Gửi tin thất bại.", "error");
+      notify(ax?.response?.data?.message ?? ct.errSend, "error");
     } finally {
       setDangGui(false);
     }
@@ -246,7 +311,7 @@ export default function ChatApp() {
       await taiHoiThoai();
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
-      notify(ax?.response?.data?.message ?? "Tải file thất bại.", "error");
+      notify(ax?.response?.data?.message ?? ct.errUpload, "error");
     } finally {
       setDangGui(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -258,7 +323,7 @@ export default function ChatApp() {
       await api.post(`/hoi-thoai/tin-nhan/${tinId}/phan-hoi`, { emoji });
       if (hoiThoaiId) await taiTin(hoiThoaiId);
     } catch {
-      notify("Không cập nhật được reaction.", "error");
+      notify(ct.errReaction, "error");
     }
   };
 
@@ -266,200 +331,289 @@ export default function ChatApp() {
     setNoiDung((s) => s + emoji);
   };
 
-  const laCuaToi = (t: TinNhan) => t.nguoiGuiId === userId;
+  const laCuaToi = (msg: TinNhan) => msg.nguoiGuiId === userId;
+
+  const tenHienThiChon =
+    hoiThoaiChon?.tenHienThi ??
+    hoiThoaiChon?.doiTuongTen ??
+    ct.conversation;
+
+  const moTaHeader = hoiThoaiChon
+    ? hoiThoaiChon.loai === "GROUP"
+      ? ct.groupDesc
+      : thayMauChuoi(ct.privateDesc, {
+          name: hoiThoaiChon.doiTuongTen ?? "",
+        })
+    : "";
+
+  const hoiThoaiLoc = useMemo(() => {
+    const q = locHoiThoai.trim().toLowerCase();
+    if (!q) return hoiThoai;
+    return hoiThoai.filter((h) => {
+      const ten = (h.tenHienThi ?? h.doiTuongTen ?? "").toLowerCase();
+      const preview = (h.tinCuoi ?? "").toLowerCase();
+      return ten.includes(q) || preview.includes(q);
+    });
+  }, [hoiThoai, locHoiThoai]);
+
+  const nhomTin = useMemo(
+    () =>
+      gopTinTheoNgay(tinNhan, localeTag, ct.today, ct.yesterday),
+    [tinNhan, localeTag, ct.today, ct.yesterday],
+  );
 
   return (
-    <div className="chat-v2">
-      <aside className="chat-v2-sidebar">
-        <div className="chat-v2-sidebar-head">
-          <h3>Hội thoại</h3>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setMoTimNguoi(true)}
-          >
-            + Chat riêng
-          </button>
-        </div>
-        <ul className="chat-v2-list">
-          {hoiThoai.map((h) => (
-            <li key={h.id}>
-              <button
-                type="button"
-                className={`chat-v2-item${h.id === hoiThoaiId ? " active" : ""}`}
-                onClick={() => chonHoiThoai(h.id)}
-              >
-                <span className="chat-v2-item-icon">
-                  {h.loai === "GROUP" ? "👥" : "💬"}
-                </span>
-                <span className="chat-v2-item-body">
-                  <strong>{h.tenHienThi ?? "Hội thoại"}</strong>
-                  {h.loai === "GROUP" && h.soThanhVien != null && (
-                    <small>{h.soThanhVien} thành viên</small>
-                  )}
-                  {h.loai === "PRIVATE" && h.doiTuongVaiTro && (
-                    <small>{vaiTroNhan(h.doiTuongVaiTro)}</small>
-                  )}
-                  {h.tinCuoi && (
-                    <span className="chat-v2-preview">{h.tinCuoi}</span>
-                  )}
-                </span>
-              </button>
-            </li>
-          ))}
+    <div className="chat-flow">
+      <aside className="chat-flow__panel">
+        <header className="chat-flow__panel-head">
+          <div className="chat-flow__panel-head-row">
+            <h1>{ct.title}</h1>
+            <button
+              type="button"
+              className="chat-flow__new-btn"
+              onClick={() => setMoTimNguoi(true)}
+              title={ct.newChat}
+              aria-label={ct.newChat}
+            >
+              {ct.newChat}
+            </button>
+          </div>
+          <input
+            type="search"
+            className="chat-flow__search"
+            placeholder={ct.searchThreads}
+            value={locHoiThoai}
+            onChange={(e) => setLocHoiThoai(e.target.value)}
+          />
+        </header>
+        <ul className="chat-flow__threads">
+          {hoiThoaiLoc.map((h) => {
+            const ten = h.tenHienThi ?? h.doiTuongTen ?? ct.conversation;
+            const laNhom = h.loai === "GROUP";
+            return (
+              <li key={h.id}>
+                <button
+                  type="button"
+                  className={`chat-flow__thread${h.id === hoiThoaiId ? " chat-flow__thread--on" : ""}`}
+                  onClick={() => chonHoiThoai(h.id)}
+                >
+                  <span
+                    className={`chat-flow__thread-av${laNhom ? " chat-flow__thread-av--group" : ""}`}
+                    aria-hidden
+                  >
+                    {laNhom ? "👥" : layChuCai(ten)}
+                  </span>
+                  <span className="chat-flow__thread-body">
+                    <span className="chat-flow__thread-top">
+                      <strong>{ten}</strong>
+                      {h.thoiGianTinCuoi && (
+                        <span className="chat-flow__thread-time">
+                          {formatGioNgan(h.thoiGianTinCuoi, localeTag)}
+                        </span>
+                      )}
+                    </span>
+                    {laNhom && h.soThanhVien != null && (
+                      <span className="chat-flow__thread-meta">
+                        {h.soThanhVien} {ct.members}
+                      </span>
+                    )}
+                    {!laNhom && h.doiTuongVaiTro && (
+                      <span className="chat-flow__thread-meta">
+                        {nhanVaiTro(i18n, h.doiTuongVaiTro)}
+                      </span>
+                    )}
+                    {h.tinCuoi && (
+                      <span className="chat-flow__thread-preview">
+                        {h.tinCuoi}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </aside>
 
-      <main className="chat-v2-main card chat-panel">
-        {hoiThoaiChon ? (
-          <>
-            <header className="chat-v2-header">
-              <div>
-                <h2>{hoiThoaiChon.tenHienThi ?? "Chat"}</h2>
-                <p className="text-muted">
-                  {hoiThoaiChon.loai === "GROUP"
-                    ? "Nhóm chung — mọi người dùng trong hệ thống"
-                    : `Chat riêng với ${hoiThoaiChon.doiTuongTen ?? ""}`}
-                </p>
-              </div>
-            </header>
-
-            <div ref={cuonRef} className="chat-v2-messages">
-              {tinNhan.length === 0 ? (
-                <p className="text-muted">Chưa có tin nhắn. Hãy chào mọi người!</p>
-              ) : (
-                tinNhan.map((t) => (
-                  <div
-                    key={t.id}
-                    className={`chat-bubble${laCuaToi(t) ? " mine" : ""}`}
-                  >
-                    <div className="chat-bubble-meta">
-                      <strong>{t.nguoiGuiTen ?? "—"}</strong>
-                      {t.nguoiGuiVaiTro && (
-                        <span className="chat-v2-role">
-                          {vaiTroNhan(t.nguoiGuiVaiTro)}
-                        </span>
-                      )}
-                      {t.thoiGianGui && (
-                        <span>
-                          {new Date(t.thoiGianGui).toLocaleString("vi-VN")}
-                        </span>
-                      )}
-                    </div>
-
-                    {t.loai === "IMAGE" && t.duongDanFile && (
-                      <a
-                        href={urlFile(t.duongDanFile)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="chat-v2-image-wrap"
-                      >
-                        <img
-                          src={urlFile(t.duongDanFile)}
-                          alt={t.tenFile ?? "Ảnh"}
-                        />
-                      </a>
-                    )}
-
-                    {t.loai === "FILE" && t.duongDanFile && (
-                      <a
-                        href={urlFile(t.duongDanFile)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="chat-v2-file"
-                      >
-                        📎 {t.tenFile ?? "Tải file"}
-                        {t.kichThuocFile != null && (
-                          <small>
-                            {" "}
-                            ({Math.round(t.kichThuocFile / 1024)} KB)
-                          </small>
-                        )}
-                      </a>
-                    )}
-
-                    {t.noiDung && (
-                      <div className="chat-v2-text">{t.noiDung}</div>
-                    )}
-
-                    <div className="chat-v2-reactions">
-                      {(t.phanHoi ?? []).map((p) => (
-                        <button
-                          key={p.emoji}
-                          type="button"
-                          className={`chat-v2-reaction${p.cuaToi ? " active" : ""}`}
-                          onClick={() => void toggleReaction(t.id, p.emoji)}
-                          title="Bỏ/chọn reaction"
-                        >
-                          {p.emoji} {p.soLuong}
-                        </button>
-                      ))}
-                      <div className="chat-v2-react-quick">
-                        {REACTION_NHANH.map((em) => (
-                          <button
-                            key={em}
-                            type="button"
-                            className="chat-v2-react-btn"
-                            onClick={() => void toggleReaction(t.id, em)}
-                          >
-                            {em}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+      {hoiThoaiChon ? (
+        <section className="chat-flow__main">
+          <header className="chat-flow__top">
+            <span
+              className={`chat-flow__top-av${hoiThoaiChon.loai === "GROUP" ? " chat-flow__top-av--group" : ""}`}
+              aria-hidden
+            >
+              {hoiThoaiChon.loai === "GROUP"
+                ? "👥"
+                : layChuCai(tenHienThiChon)}
+            </span>
+            <div className="chat-flow__top-info">
+              <h2>{tenHienThiChon}</h2>
+              <p>{moTaHeader}</p>
             </div>
+            <span className="chat-flow__top-dot">{ct.live}</span>
+          </header>
 
-            {moEmoji && (
-              <div className="chat-v2-emoji-picker">
-                {EMOJI_GUI.map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    onClick={() => chenEmoji(em)}
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
+          <div ref={cuonRef} className="chat-flow__scroll">
+            {tinNhan.length === 0 ? (
+              <p className="chat-flow__scroll-empty">{ct.emptyGreet}</p>
+            ) : (
+              nhomTin.map((ngay) => (
+                <div key={ngay.key}>
+                  <div className="chat-flow__stamp-wrap">
+                    <span className="chat-flow__stamp">{ngay.label}</span>
+                  </div>
+                  {ngay.items.map((msg) => {
+                    const mine = laCuaToi(msg);
+                    const showName =
+                      !mine && hoiThoaiChon.loai === "GROUP";
+                    const coMedia =
+                      (msg.loai === "IMAGE" || msg.loai === "FILE") &&
+                      msg.duongDanFile;
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`chat-flow__row${mine ? " chat-flow__row--out" : " chat-flow__row--in"}`}
+                      >
+                        {!mine && (
+                          <span
+                            className="chat-flow__row-av"
+                            aria-hidden
+                          >
+                            {layChuCai(msg.nguoiGuiTen)}
+                          </span>
+                        )}
+                        <div className="chat-flow__bubble-wrap">
+                          {showName && (
+                            <span className="chat-flow__sender">
+                              {msg.nguoiGuiTen ?? "—"}
+                            </span>
+                          )}
+                          <div
+                            className={`chat-flow__bubble${coMedia ? " chat-flow__bubble--file" : ""}`}
+                          >
+                            {msg.loai === "IMAGE" && msg.duongDanFile && (
+                              <a
+                                href={urlFile(msg.duongDanFile)}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <img
+                                  className="chat-flow__img"
+                                  src={urlFile(msg.duongDanFile)}
+                                  alt={msg.tenFile ?? ct.imageAlt}
+                                />
+                              </a>
+                            )}
+                            {msg.loai === "FILE" && msg.duongDanFile && (
+                              <a
+                                href={urlFile(msg.duongDanFile)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="chat-flow__file-link"
+                              >
+                                📎 {msg.tenFile ?? ct.downloadFile}
+                                {msg.kichThuocFile != null && (
+                                  <>
+                                    {" "}
+                                    ({Math.round(msg.kichThuocFile / 1024)}{" "}
+                                    KB)
+                                  </>
+                                )}
+                              </a>
+                            )}
+                            {msg.noiDung && <span>{msg.noiDung}</span>}
+                          </div>
+                          {msg.thoiGianGui && (
+                            <time className="chat-flow__meta-time">
+                              {formatGioNgan(msg.thoiGianGui, localeTag)}
+                            </time>
+                          )}
+                          <div className="chat-flow__reacts">
+                            {(msg.phanHoi ?? []).map((p) => (
+                              <button
+                                key={p.emoji}
+                                type="button"
+                                className={`chat-flow__react-chip${p.cuaToi ? " chat-flow__react-chip--on" : ""}`}
+                                onClick={() =>
+                                  void toggleReaction(msg.id, p.emoji)
+                                }
+                              >
+                                {p.emoji} {p.soLuong}
+                              </button>
+                            ))}
+                            <span className="chat-flow__react-more">
+                              {REACTION_NHANH.map((em) => (
+                                <button
+                                  key={em}
+                                  type="button"
+                                  onClick={() =>
+                                    void toggleReaction(msg.id, em)
+                                  }
+                                >
+                                  {em}
+                                </button>
+                              ))}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
             )}
+          </div>
 
-            <form className="chat-v2-compose" onSubmit={guiVanBan}>
-              <div className="chat-v2-toolbar">
+          {moEmoji && (
+            <div className="chat-flow__emoji-tray">
+              {EMOJI_GUI.map((em) => (
                 <button
+                  key={em}
                   type="button"
-                  className="chat-v2-tool"
-                  onClick={() => setMoEmoji((v) => !v)}
-                  title="Emoji"
+                  onClick={() => chenEmoji(em)}
                 >
-                  😊
+                  {em}
                 </button>
-                <button
-                  type="button"
-                  className="chat-v2-tool"
-                  onClick={() => fileRef.current?.click()}
-                  title="Ảnh / file"
-                >
-                  📎
-                </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
-                  hidden
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void guiFile(f);
-                  }}
-                />
-              </div>
+              ))}
+            </div>
+          )}
+
+          <form className="chat-flow__compose" onSubmit={guiVanBan}>
+            <div className="chat-flow__compose-inner">
+              <button
+                type="button"
+                className="chat-flow__icon-btn"
+                onClick={() => setMoEmoji((v) => !v)}
+                title="Emoji"
+                aria-label="Emoji"
+              >
+                😊
+              </button>
+              <button
+                type="button"
+                className="chat-flow__icon-btn"
+                onClick={() => fileRef.current?.click()}
+                title={ct.attach}
+                aria-label={ct.attach}
+              >
+                📎
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void guiFile(f);
+                }}
+              />
               <textarea
-                rows={2}
+                className="chat-flow__field"
+                rows={1}
                 value={noiDung}
                 onChange={(e) => setNoiDung(e.target.value)}
-                placeholder="Nhập tin nhắn… (Enter gửi, Shift+Enter xuống dòng)"
+                placeholder={ct.placeholder}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -467,48 +621,71 @@ export default function ChatApp() {
                   }
                 }}
               />
-              <button type="submit" className="btn" disabled={dangGui}>
-                <IconSend /> {dangGui ? "Đang gửi…" : "Gửi"}
+              <button
+                type="submit"
+                className="chat-flow__send-btn"
+                disabled={dangGui || !noiDung.trim()}
+                aria-label={ct.send}
+              >
+                <IconSend />
               </button>
-            </form>
-          </>
-        ) : (
-          <p className="text-muted">Chọn hoặc tạo hội thoại.</p>
-        )}
-      </main>
+            </div>
+          </form>
+        </section>
+      ) : (
+        <section className="chat-flow__main chat-flow__main--idle">
+          <div className="chat-flow__idle">
+            <div className="chat-flow__idle-icon" aria-hidden>
+              ✉
+            </div>
+            <p>{ct.emptySelect}</p>
+          </div>
+        </section>
+      )}
 
       {moTimNguoi && (
         <div
-          className="chat-v2-modal-backdrop"
+          className="chat-flow__overlay"
           role="presentation"
           onClick={() => setMoTimNguoi(false)}
         >
           <div
-            className="chat-v2-modal card"
+            className="chat-flow__dialog"
             role="dialog"
+            aria-labelledby="chat-find-user-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Tìm người để chat riêng</h3>
+            <h3 id="chat-find-user-title">{ct.findPersonTitle}</h3>
             <input
-              placeholder="Tìm theo tên hoặc tên đăng nhập…"
+              placeholder={ct.searchPersonPh}
               value={tuKhoa}
               onChange={(e) => setTuKhoa(e.target.value)}
               autoFocus
             />
-            <ul className="chat-v2-user-list">
+            <ul className="chat-flow__pick-list">
               {nguoiTim.length === 0 ? (
-                <li className="text-muted">Không có kết quả.</li>
+                <li className="text-muted" style={{ padding: "8px" }}>
+                  {ct.noResults}
+                </li>
               ) : (
                 nguoiTim.map((n) => (
                   <li key={n.id}>
                     <button
                       type="button"
-                      className="chat-v2-user-item"
+                      className="chat-flow__pick-item"
                       onClick={() => void batDauChatRieng(n.id)}
                     >
-                      <strong>{n.hoTen}</strong>
+                      <span
+                        className="chat-flow__thread-av"
+                        aria-hidden
+                      >
+                        {layChuCai(n.hoTen)}
+                      </span>
                       <span>
-                        @{n.tenDangNhap} · {vaiTroNhan(n.vaiTro)}
+                        <strong>{n.hoTen}</strong>
+                        <span>
+                          @{n.tenDangNhap} · {nhanVaiTro(i18n, n.vaiTro)}
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -517,10 +694,10 @@ export default function ChatApp() {
             </ul>
             <button
               type="button"
-              className="btn btn-ghost"
+              className="chat-flow__dialog-close"
               onClick={() => setMoTimNguoi(false)}
             >
-              Đóng
+              {i18n.common.close}
             </button>
           </div>
         </div>

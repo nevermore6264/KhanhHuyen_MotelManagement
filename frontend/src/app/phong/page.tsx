@@ -17,6 +17,9 @@ import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiPhong } from "@/lib/trangThai";
+import { layLocaleTag, dinhDangTien } from "@/lib/locale";
 
 type Area = { id: string; ten: string };
 type Room = {
@@ -28,28 +31,9 @@ type Room = {
   giaHienTai?: number;
 };
 
-const dinhDangNhapTien = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return "";
-  return new Intl.NumberFormat("vi-VN").format(Number(digits));
-};
-
 const parseNhapTien = (value: string) => {
   const digits = value.replace(/\D/g, "");
   return digits ? Number(digits) : null;
-};
-
-const statusLabel = (value?: string) => {
-  switch (value) {
-    case "AVAILABLE":
-      return "Trống";
-    case "OCCUPIED":
-      return "Đang thuê";
-    case "MAINTENANCE":
-      return "Bảo trì";
-    default:
-      return value || "-";
-  }
 };
 
 const statusClass = (value?: string) => {
@@ -95,6 +79,16 @@ export default function TrangPhong() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.phong;
+  const s = tr.pages.shared;
+  const c = tr.common;
+  const localeTag = layLocaleTag(lang);
+  const dinhDangNhapTien = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "";
+    return new Intl.NumberFormat(localeTag).format(Number(digits));
+  };
 
   const areaIdTuUrl = searchParams.get("areaId");
   const locIdKhu = areaIdTuUrl?.trim() ? areaIdTuUrl.trim() : "";
@@ -134,7 +128,7 @@ export default function TrangPhong() {
     const ma = maPhong.trim();
     const giaSo = parseNhapTien(gia);
     if (!ma || !idKhu || !giaSo) {
-      setLoi("Vui lòng nhập Mã phòng, Khu và Giá phòng");
+      setLoi(s.requiredHint);
       return;
     }
     setLoi("");
@@ -146,13 +140,11 @@ export default function TrangPhong() {
         giaHienTai: giaSo,
         khuVuc: idKhu ? { id: idKhu } : null,
       });
-      notify("Thêm phòng thành công", "success");
+      notify(p.okAdd, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Thêm phòng thất bại";
+        ax?.response?.status === 403 ? s.noPermission : p.errAdd;
       setLoi(thongBao);
       notify(thongBao, "error");
       return;
@@ -163,9 +155,6 @@ export default function TrangPhong() {
     setHienThiTaoMoi(false);
     tai();
   };
-
-  const dinhDangSo = (value?: number) =>
-    value == null ? "" : new Intl.NumberFormat("vi-VN").format(value);
 
   const batDauSua = (phong: Room) => {
     setPhanTuDangSua(phong);
@@ -186,7 +175,7 @@ export default function TrangPhong() {
     const ma = maPhongSua.trim();
     const giaSo = parseNhapTien(giaSua);
     if (!ma || !idKhuSua || !giaSo) {
-      setLoiSua("Vui lòng nhập Mã phòng, Khu và Giá phòng");
+      setLoiSua(s.requiredHint);
       return;
     }
     setLoiSua("");
@@ -198,13 +187,11 @@ export default function TrangPhong() {
         giaHienTai: giaSo,
         khuVuc: idKhuSua ? { id: idKhuSua } : null,
       });
-      notify("Cập nhật phòng thành công", "success");
+      notify(p.okUpdate, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại";
+        ax?.response?.status === 403 ? s.noPermission : p.errUpdate;
       setLoiSua(thongBao);
       notify(thongBao, "error");
       return;
@@ -228,7 +215,7 @@ export default function TrangPhong() {
 
   const yeuCauXoa = (phong: Room) => {
     if (isLockedStatus(phong.trangThai)) {
-      notify("Phòng đang cho thuê/bảo trì, không thể xóa", "error");
+      notify(p.cannotDelete, "error");
       return;
     }
     setIdXacNhanXoa(phong.id);
@@ -239,22 +226,20 @@ export default function TrangPhong() {
     if (idXacNhanXoa == null) return;
     const phong = danhSachPhong.find((r) => r.id === idXacNhanXoa);
     if (isLockedStatus(phong?.trangThai)) {
-      notify("Phòng đang cho thuê/bảo trì, không thể xóa", "error");
+      notify(p.cannotDelete, "error");
       setIdXacNhanXoa(null);
       setTenXacNhanXoa("");
       return;
     }
     try {
       await api.delete(`/phong/${idXacNhanXoa}`);
-      notify("Xóa phòng thành công", "success");
+      notify(p.okDelete, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       setIdXacNhanXoa(null);
       setTenXacNhanXoa("");
       const thongBao =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Xóa thất bại";
+        ax?.response?.status === 403 ? s.noPermission : p.errDelete;
       setLoi(thongBao);
       notify(thongBao, "error");
       return;
@@ -298,28 +283,28 @@ export default function TrangPhong() {
       <div className="page-shell page-table">
         <header className="page-top">
           <div className="page-top-text">
-            <h1 className="page-heading">Phòng trọ</h1>
-            <p className="page-lead">Xem và cập nhật phòng theo khu, trạng thái và giá thuê.</p>
+            <h1 className="page-heading">{p.title}</h1>
+            <p className="page-lead">{p.lead}</p>
           </div>
         </header>
         {tenKhuLoc && (
           <div className="card card-inline" style={{ marginBottom: 12 }}>
             <span>
-              Đang xem phòng thuộc khu: <strong>{tenKhuLoc}</strong>
+              {s.viewingArea} <strong>{tenKhuLoc}</strong>
             </span>
             <Link
               href="/phong"
               className="btn btn-secondary btn-sm"
               style={{ marginLeft: 12 }}
             >
-              <IconEye /> Xem tất cả phòng
+              <IconEye /> {s.viewAllRooms}
             </Link>
           </div>
         )}
         <div className="card">
           <div className="grid grid-4">
             <input
-              placeholder="Tìm kiếm theo mã, tầng, khu, trạng thái..."
+              placeholder={p.searchPh}
               value={tuKhoa}
               onChange={(e) => setTuKhoa(e.target.value)}
             />
@@ -327,31 +312,31 @@ export default function TrangPhong() {
               value={locTrangThai}
               onChange={(e) => setLocTrangThai(e.target.value)}
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="AVAILABLE">Trống</option>
-              <option value="OCCUPIED">Đang thuê</option>
-              <option value="MAINTENANCE">Bảo trì</option>
+              <option value="">{s.allStatus}</option>
+              <option value="AVAILABLE">{nhanTrangThaiPhong(tr, "AVAILABLE")}</option>
+              <option value="OCCUPIED">{nhanTrangThaiPhong(tr, "OCCUPIED")}</option>
+              <option value="MAINTENANCE">{nhanTrangThaiPhong(tr, "MAINTENANCE")}</option>
             </select>
-            <div aria-label="Lọc theo khu">
+            <div aria-label={s.filterByArea}>
               <ChonKhuCombobox
                 danhSachKhu={danhSachKhu}
                 value={locIdKhu}
                 onChange={doiLocKhu}
-                placeholderChuaChon="Tất cả khu"
-                placeholderTim="Tìm khu để lọc…"
+                placeholderChuaChon={s.allAreas}
+                placeholderTim={s.searchArea}
               />
             </div>
             {laQuanTri && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={moHopThoaiThemPhong}>
-                  <IconPlus /> Thêm phòng mới
+                  <IconPlus /> {p.addNew}
                 </button>
               </div>
             )}
           </div>
           {!laQuanTri && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              Bạn chỉ có quyền xem dữ liệu.
+              {s.viewOnly}
             </div>
           )}
         </div>
@@ -359,27 +344,27 @@ export default function TrangPhong() {
           <BangDonGian
             data={danhSachLoc}
             columns={[
-              { header: "ID", render: (r) => r.id },
-              { header: "Mã", render: (r) => r.maPhong },
-              { header: "Tầng", render: (r) => r.tang },
+              { header: s.id, render: (r) => r.id },
+              { header: p.code, render: (r) => r.maPhong },
+              { header: p.floor, render: (r) => r.tang },
               {
-                header: "Trạng thái",
+                header: p.status,
                 render: (r) => (
                   <span className={`status-badge ${statusClass(r.trangThai)}`}>
-                    {statusLabel(r.trangThai)}
+                    {nhanTrangThaiPhong(tr, r.trangThai)}
                   </span>
                 ),
               },
-              { header: "Khu", render: (r) => r.khuVuc?.ten },
+              { header: p.area, render: (r) => r.khuVuc?.ten },
               {
-                header: "Giá",
+                header: p.price,
                 render: (r) =>
-                  r.giaHienTai == null ? "" : `${dinhDangSo(r.giaHienTai)} VNĐ`,
+                  r.giaHienTai == null ? "" : dinhDangTien(r.giaHienTai, lang),
               },
               ...(laQuanTri
                 ? [
                     {
-                      header: "Thao tác",
+                      header: s.actions,
                       render: (r: Room) => {
                         const locked = isLockedStatus(r.trangThai);
                         const dangChoThue = r.trangThai === "OCCUPIED";
@@ -391,23 +376,17 @@ export default function TrangPhong() {
                               disabled={dangChoThue}
                               onClick={() => batDauSua(r)}
                               title={
-                                dangChoThue
-                                  ? "Phòng đang cho thuê, không thể chỉnh sửa"
-                                  : undefined
+                                dangChoThue ? p.cannotDelete : undefined
                               }
                             >
-                              <IconPencil /> Sửa
+                              <IconPencil /> {s.edit}
                             </button>
                             <button
                               className={`btn btn-secondary ${locked ? "btn-disabled" : ""}`}
                               onClick={() => yeuCauXoa(r)}
-                              title={
-                                locked
-                                  ? "Phòng đang cho thuê/bảo trì, không thể xóa"
-                                  : undefined
-                              }
+                              title={locked ? p.cannotDelete : undefined}
                             >
-                              <IconTrash /> Xóa
+                              <IconTrash /> {s.delete}
                             </button>
                           </div>
                         );
@@ -424,14 +403,14 @@ export default function TrangPhong() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Thêm phòng mới</h3>
-                  <p className="card-subtitle">Điền thông tin phòng</p>
+                  <h3>{p.addTitle}</h3>
+                  <p className="card-subtitle">{p.lead}</p>
                 </div>
               </div>
               <form onSubmit={tao} className="form-grid">
                 <div className="form-span-2">
                   <label className="field-label">
-                    Khu <span className="required">*</span>
+                    {p.area} <span className="required">*</span>
                   </label>
                   <ChonKhuCombobox
                     danhSachKhu={danhSachKhu}
@@ -441,43 +420,43 @@ export default function TrangPhong() {
                 </div>
                 <div>
                   <label className="field-label">
-                    Mã phòng <span className="required">*</span>
+                    {p.code} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Ví dụ: P101"
+                    placeholder={p.code}
                     value={maPhong}
                     onChange={(e) => setMaPhong(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Tầng</label>
+                  <label className="field-label">{p.floor}</label>
                   <input
-                    placeholder="Ví dụ: Tầng 1"
+                    placeholder={p.floor}
                     value={tang}
                     onChange={(e) => setTang(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">
-                    Trạng thái <span className="required">*</span>
+                    {p.status} <span className="required">*</span>
                   </label>
                   <select
                     value={trangThaiPhong}
                     onChange={(e) => setTrangThaiPhong(e.target.value)}
                     disabled
                   >
-                    <option value="AVAILABLE">Trống</option>
-                    <option value="OCCUPIED">Đang thuê</option>
-                    <option value="MAINTENANCE">Bảo trì</option>
+                    <option value="AVAILABLE">{nhanTrangThaiPhong(tr, "AVAILABLE")}</option>
+                    <option value="OCCUPIED">{nhanTrangThaiPhong(tr, "OCCUPIED")}</option>
+                    <option value="MAINTENANCE">{nhanTrangThaiPhong(tr, "MAINTENANCE")}</option>
                   </select>
                 </div>
                 <div>
                   <label className="field-label">
-                    Giá phòng <span className="required">*</span>
+                    {p.price} <span className="required">*</span>
                   </label>
                   <div className="input-suffix">
                     <input
-                      placeholder="Ví dụ: 2.500.000"
+                      placeholder={p.pricePh}
                       value={gia}
                       onChange={(e) => setGia(dinhDangNhapTien(e.target.value))}
                     />
@@ -491,10 +470,10 @@ export default function TrangPhong() {
                     type="button"
                     onClick={() => setHienThiTaoMoi(false)}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconPlus /> Thêm phòng
+                    <IconPlus /> {p.addRoom}
                   </button>
                 </div>
               </form>
@@ -507,16 +486,14 @@ export default function TrangPhong() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Chỉnh sửa phòng</h3>
-                  <p className="card-subtitle">
-                    Chọn khu trước, sau đó chỉnh sửa các thông tin khác.
-                  </p>
+                  <h3>{p.editTitle}</h3>
+                  <p className="card-subtitle">{p.lead}</p>
                 </div>
               </div>
               <div className="form-grid">
                 <div className="form-span-2">
                   <label className="field-label">
-                    Khu <span className="required">*</span>
+                    {p.area} <span className="required">*</span>
                   </label>
                   <ChonKhuCombobox
                     danhSachKhu={danhSachKhu}
@@ -527,19 +504,19 @@ export default function TrangPhong() {
                 </div>
                 <div>
                   <label className="field-label">
-                    Mã phòng <span className="required">*</span>
+                    {p.code} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Mã phòng"
+                    placeholder={p.code}
                     value={maPhongSua}
                     onChange={(e) => setMaPhongSua(e.target.value)}
                     disabled={khoaSua}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Tầng</label>
+                  <label className="field-label">{p.floor}</label>
                   <input
-                    placeholder="Tầng"
+                    placeholder={p.floor}
                     value={tangSua}
                     onChange={(e) => setTangSua(e.target.value)}
                     disabled={khoaSua}
@@ -547,24 +524,24 @@ export default function TrangPhong() {
                 </div>
                 <div>
                   <label className="field-label">
-                    Trạng thái <span className="required">*</span>
+                    {p.status} <span className="required">*</span>
                   </label>
                   <select
                     value={trangThaiSua}
                     onChange={(e) => setTrangThaiSua(e.target.value)}
                   >
-                    <option value="AVAILABLE">Trống</option>
-                    <option value="OCCUPIED">Đang thuê</option>
-                    <option value="MAINTENANCE">Bảo trì</option>
+                    <option value="AVAILABLE">{nhanTrangThaiPhong(tr, "AVAILABLE")}</option>
+                    <option value="OCCUPIED">{nhanTrangThaiPhong(tr, "OCCUPIED")}</option>
+                    <option value="MAINTENANCE">{nhanTrangThaiPhong(tr, "MAINTENANCE")}</option>
                   </select>
                 </div>
                 <div>
                   <label className="field-label">
-                    Giá phòng <span className="required">*</span>
+                    {p.price} <span className="required">*</span>
                   </label>
                   <div className="input-suffix">
                     <input
-                      placeholder="Giá phòng"
+                      placeholder={p.pricePh}
                       value={giaSua}
                       onChange={(e) =>
                         setGiaSua(dinhDangNhapTien(e.target.value))
@@ -575,18 +552,16 @@ export default function TrangPhong() {
                   </div>
                 </div>
                 {khoaSua && (
-                  <div className="form-error">
-                    Phòng đang cho thuê/bảo trì, chỉ cho phép đổi trạng thái.
-                  </div>
+                  <div className="form-error">{p.cannotDelete}</div>
                 )}
                 {loiSua && <div className="form-error">{loiSua}</div>}
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={huySua}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={luuSua}>
-                  <IconCheck /> Lưu
+                  <IconCheck /> {c.save}
                 </button>
               </div>
             </div>
@@ -596,17 +571,17 @@ export default function TrangPhong() {
         {idXacNhanXoa != null && (
           <div className="modal-backdrop">
             <div className="modal-card">
-              <h3>Xác nhận xóa</h3>
+              <h3>{s.confirmDelete}</h3>
               <p>
-                Bạn có chắc muốn xóa phòng{" "}
-                <strong>{tenXacNhanXoa || "này"}</strong>?
+                {p.confirmDeleteRoom}{" "}
+                <strong>{tenXacNhanXoa || s.thisItem}</strong>?
               </p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={huyXoa}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={xacNhanXoa}>
-                  <IconTrash /> Xóa
+                  <IconTrash /> {s.delete}
                 </button>
               </div>
             </div>

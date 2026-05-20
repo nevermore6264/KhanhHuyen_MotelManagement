@@ -13,6 +13,7 @@ import {
 import api from "@/lib/api";
 import { getRole, getToken } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 type Tenant = {
@@ -72,24 +73,37 @@ const normalizeTenant = (item: TenantApi): Tenant => ({
       : undefined,
 });
 
-const validateTenant = (data: {
-  fullName: string;
-  phone: string;
-  idNumber: string;
-  address: string;
-  email: string;
-}) => {
-  if (!data.fullName.trim()) return "Vui lòng nhập họ tên";
-  if (!data.phone.trim()) return "Vui lòng nhập số điện thoại";
-  if (!/^\d{9,11}$/.test(data.phone.trim())) return "SĐT không hợp lệ";
-  if (!data.idNumber.trim()) return "Vui lòng nhập CCCD/CMND";
-  if (!/^\d{9,12}$/.test(data.idNumber.trim())) return "CCCD/CMND không hợp lệ";
-  if (!data.address.trim()) return "Vui lòng nhập địa chỉ";
+type TenantValidateMsg = {
+  errFullName: string;
+  errPhone: string;
+  errPhoneInvalid: string;
+  errIdNumber: string;
+  errIdNumberInvalid: string;
+  errAddress: string;
+  errEmailInvalid: string;
+};
+
+const validateTenant = (
+  m: TenantValidateMsg,
+  data: {
+    fullName: string;
+    phone: string;
+    idNumber: string;
+    address: string;
+    email: string;
+  },
+) => {
+  if (!data.fullName.trim()) return m.errFullName;
+  if (!data.phone.trim()) return m.errPhone;
+  if (!/^\d{9,11}$/.test(data.phone.trim())) return m.errPhoneInvalid;
+  if (!data.idNumber.trim()) return m.errIdNumber;
+  if (!/^\d{9,12}$/.test(data.idNumber.trim())) return m.errIdNumberInvalid;
+  if (!data.address.trim()) return m.errAddress;
   if (
     data.email.trim() &&
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
   ) {
-    return "Email không hợp lệ";
+    return m.errEmailInvalid;
   }
   return "";
 };
@@ -104,9 +118,16 @@ type TrangThaiXemAnh = {
 function KhoiZoomMotAnh({
   imageUrl,
   title,
+  labels,
 }: {
   imageUrl: string;
   title: string;
+  labels: {
+    zoomOutAria: string;
+    zoomInAria: string;
+    zoomReset: string;
+    zoomHint: string;
+  };
 }) {
   const [scalePct, setScalePct] = useState(100);
 
@@ -133,7 +154,7 @@ function KhoiZoomMotAnh({
               <button
                 type="button"
                 className="btn btn-sm tenant-zoom-btn tenant-zoom-out"
-                aria-label="Thu nhỏ"
+                aria-label={labels.zoomOutAria}
                 onClick={() => api.zoomOut(0.15)}
               >
                 −
@@ -142,7 +163,7 @@ function KhoiZoomMotAnh({
               <button
                 type="button"
                 className="btn btn-sm tenant-zoom-btn tenant-zoom-in"
-                aria-label="Phóng to"
+                aria-label={labels.zoomInAria}
                 onClick={() => api.zoomIn(0.15)}
               >
                 +
@@ -152,7 +173,7 @@ function KhoiZoomMotAnh({
                 className="btn btn-sm tenant-zoom-btn tenant-zoom-reset"
                 onClick={() => api.resetTransform(200)}
               >
-                Gốc
+                {labels.zoomReset}
               </button>
             </div>
             <div className="tenant-rzp-viewport">
@@ -168,9 +189,7 @@ function KhoiZoomMotAnh({
                 />
               </TransformComponent>
             </div>
-            <p className="tenant-zoom-hint">
-              Lăn chuột để zoom và kéo ảnh để di chuyển
-            </p>
+            <p className="tenant-zoom-hint">{labels.zoomHint}</p>
           </>
         )}
       </TransformWrapper>
@@ -229,6 +248,19 @@ export default function TrangKhachThue() {
   const isTenant = role === "TENANT";
   const isRoleReady = role !== null;
   const { notify } = useToast();
+  const { t: tr } = useCaiDat();
+  const p = tr.pages.khachThue;
+  const s = tr.pages.shared;
+  const c = tr.common;
+  const valMsg: TenantValidateMsg = {
+    errFullName: s.errFullName,
+    errPhone: s.errPhone,
+    errPhoneInvalid: s.errPhoneInvalid,
+    errIdNumber: s.errIdNumber,
+    errIdNumberInvalid: s.errIdNumberInvalid,
+    errAddress: s.errAddress,
+    errEmailInvalid: s.errEmailInvalid,
+  };
 
   const load = async () => {
     const token = getToken();
@@ -260,7 +292,7 @@ export default function TrangKhachThue() {
           if (res.data) {
             setTenants([normalizeTenant(res.data as TenantApi)]);
             setUsers([]);
-            notify("Bạn chỉ có thể xem thông tin của chính mình.", "info");
+            notify(s.viewOwnOnly, "info");
             return;
           }
         } catch {
@@ -268,9 +300,7 @@ export default function TrangKhachThue() {
         }
       }
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền xem danh sách khách thuê"
-          : "Tải dữ liệu khách thuê thất bại";
+        err?.response?.status === 403 ? p.errLoadList : p.errLoad;
       notify(message, "error");
     }
   };
@@ -286,7 +316,7 @@ export default function TrangKhachThue() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    const message = validateTenant({
+    const message = validateTenant(valMsg, {
       fullName,
       phone,
       idNumber,
@@ -323,15 +353,15 @@ export default function TrangKhachThue() {
           userId: userId.trim() ? userId.trim() : null,
         });
       }
-      notify("Thêm khách thuê thành công", "success");
+      notify(p.okAdd, "success");
     } catch (err: any) {
       const data = err?.response?.data;
       const msg =
         err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
+          ? s.noPermission
           : typeof data === "string"
             ? data
-            : "Thêm khách thuê thất bại";
+            : p.errAdd;
       setError(msg);
       notify(msg, "error");
       return;
@@ -395,7 +425,7 @@ export default function TrangKhachThue() {
 
   const saveEdit = async () => {
     if (!editing) return;
-    const message = validateTenant({
+    const message = validateTenant(valMsg, {
       fullName: editFullName,
       phone: editPhone,
       idNumber: editIdNumber,
@@ -430,12 +460,10 @@ export default function TrangKhachThue() {
           user: editUserId.trim() ? { id: editUserId.trim() } : null,
         });
       }
-      notify("Cập nhật khách thuê thành công", "success");
+      notify(p.okUpdate, "success");
     } catch (err: any) {
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Cập nhật thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errUpdate;
       setEditError(message);
       notify(message, "error");
       return;
@@ -509,14 +537,12 @@ export default function TrangKhachThue() {
     if (confirmId == null) return;
     try {
       await api.delete(`/khach-thue/${confirmId}`);
-      notify("Xóa khách thuê thành công", "success");
+      notify(p.okDelete, "success");
     } catch (err: any) {
       setConfirmId(null);
       setConfirmName("");
       const message =
-        err?.response?.status === 403
-          ? "Bạn không có quyền thao tác"
-          : "Xóa thất bại";
+        err?.response?.status === 403 ? s.noPermission : p.errDelete;
       setError(message);
       notify(message, "error");
       return;
@@ -551,11 +577,11 @@ export default function TrangKhachThue() {
     e.preventDefault();
     const trimmedUsername = newUsername.trim();
     if (!trimmedUsername) {
-      setNewUserError("Vui lòng nhập tên đăng nhập");
+      setNewUserError(s.errUsername);
       return;
     }
     if (!newPassword.trim()) {
-      setNewUserError("Vui lòng nhập mật khẩu");
+      setNewUserError(s.errPassword);
       return;
     }
     setNewUserError("");
@@ -580,19 +606,19 @@ export default function TrangKhachThue() {
         setEditUserId(String(newId));
         setShowEditUserPicker(false);
       }
-      notify("Tạo tài khoản thành công", "success");
+      notify(p.okAccount, "success");
       closeCreateUserForm();
     } catch (err: any) {
       const status = err?.response?.status;
       const data = err?.response?.data;
       const message =
         status === 403
-          ? "Bạn không có quyền thao tác"
+          ? s.noPermission
           : typeof data === "string"
             ? data
             : typeof data?.message === "string"
               ? data.message
-              : "Tạo tài khoản thất bại";
+              : s.errCreateAccount;
       setNewUserError(message);
       notify(message, "error");
     }
@@ -633,27 +659,25 @@ export default function TrangKhachThue() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Khách thuê</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <div className="grid grid-2">
             <input
-              placeholder="Tìm kiếm theo tên, SĐT, CCCD, email..."
+              placeholder={p.searchPh}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             {isAdmin && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn" onClick={() => setShowCreate(true)}>
-                  <IconPlus /> Thêm khách thuê
+                  <IconPlus /> {p.addNew}
                 </button>
               </div>
             )}
           </div>
           {isRoleReady && !isAdmin && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              {isTenant
-                ? "Bạn chỉ có thể xem thông tin của chính mình."
-                : "Bạn chỉ có quyền xem dữ liệu."}
+              {isTenant ? s.viewOwnOnly : s.viewOnly}
             </div>
           )}
         </div>
@@ -661,12 +685,12 @@ export default function TrangKhachThue() {
           <BangDonGian
             data={filtered}
             columns={[
-              { header: "ID", render: (t) => t.id },
-              { header: "Họ tên", render: (t) => t.fullName },
-              { header: "SĐT", render: (t) => t.phone },
-              { header: "CCCD", render: (t) => t.idNumber },
+              { header: s.id, render: (t) => t.id },
+              { header: s.fullName, render: (t) => t.fullName },
+              { header: s.phone, render: (t) => t.phone },
+              { header: s.idNumber, render: (t) => t.idNumber },
               {
-                header: "Chân dung",
+                header: p.portrait,
                 render: (t) =>
                   t.portraitImagePath ? (
                     <button
@@ -676,14 +700,14 @@ export default function TrangKhachThue() {
                         setAnhPreview({ tenant: t, kind: "portrait" })
                       }
                     >
-                      Xem
+                      {s.view}
                     </button>
                   ) : (
                     <span style={{ color: "#94a3b8" }}>—</span>
                   ),
               },
               {
-                header: "Ảnh CCCD",
+                header: p.idCardCol,
                 render: (t) =>
                   t.idCardImagePath ? (
                     <button
@@ -693,27 +717,27 @@ export default function TrangKhachThue() {
                         setAnhPreview({ tenant: t, kind: "idCard" })
                       }
                     >
-                      Xem
+                      {s.view}
                     </button>
                   ) : (
                     <span style={{ color: "#94a3b8" }}>—</span>
                   ),
               },
-              { header: "Tài khoản", render: (t) => t.user?.username },
+              { header: s.account, render: (t) => t.user?.username },
               ...(isAdmin
                 ? [
                     {
-                      header: "Thao tác",
+                      header: s.actions,
                       render: (t: Tenant) => (
                         <div className="table-actions">
                           <button className="btn" onClick={() => startEdit(t)}>
-                            <IconPencil /> Sửa
+                            <IconPencil /> {s.edit}
                           </button>
                           <button
                             className="btn btn-secondary"
                             onClick={() => askRemove(t)}
                           >
-                            <IconTrash /> Xóa
+                            <IconTrash /> {s.delete}
                           </button>
                         </div>
                       ),
@@ -740,26 +764,38 @@ export default function TrangKhachThue() {
               <div className="card-header tenant-view-header-only">
                 <h3 id="tenant-view-title">
                   {anhPreview.kind === "portrait"
-                    ? "Ảnh chân dung"
-                    : "Ảnh CCCD/CMND"}
+                    ? p.portraitPhoto
+                    : p.idCardPhoto}
                 </h3>
               </div>
               {anhPreview.kind === "portrait" ? (
                 anhPreview.tenant.portraitImagePath ? (
                   <KhoiZoomMotAnh
                     imageUrl={anhPreview.tenant.portraitImagePath}
-                    title="Ảnh chân dung"
+                    title={p.portraitPhoto}
+                    labels={{
+                      zoomOutAria: p.zoomOutAria,
+                      zoomInAria: p.zoomInAria,
+                      zoomReset: p.zoomReset,
+                      zoomHint: p.zoomHint,
+                    }}
                   />
                 ) : (
-                  <p className="tenant-view-empty">Chưa có ảnh</p>
+                  <p className="tenant-view-empty">{p.noPhoto}</p>
                 )
               ) : anhPreview.tenant.idCardImagePath ? (
                 <KhoiZoomMotAnh
                   imageUrl={anhPreview.tenant.idCardImagePath}
-                  title="Ảnh CCCD/CMND"
+                  title={p.idCardPhoto}
+                  labels={{
+                    zoomOutAria: p.zoomOutAria,
+                    zoomInAria: p.zoomInAria,
+                    zoomReset: p.zoomReset,
+                    zoomHint: p.zoomHint,
+                  }}
                 />
               ) : (
-                <p className="tenant-view-empty">Chưa có ảnh</p>
+                <p className="tenant-view-empty">{p.noPhoto}</p>
               )}
               <div className="modal-actions">
                 <button
@@ -767,7 +803,7 @@ export default function TrangKhachThue() {
                   className="btn btn-secondary"
                   onClick={() => setAnhPreview(null)}
                 >
-                  <IconTimes /> Đóng
+                  <IconTimes /> {c.close}
                 </button>
               </div>
             </div>
@@ -779,61 +815,61 @@ export default function TrangKhachThue() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Thêm khách thuê</h3>
-                  <p className="card-subtitle">Điền thông tin khách thuê</p>
+                  <h3>{p.addTitle}</h3>
+                  <p className="card-subtitle">{p.addSub}</p>
                 </div>
               </div>
               <form onSubmit={create} className="form-grid">
                 <div>
                   <label className="field-label">
-                    Họ tên <span className="required">*</span>
+                    {s.fullName} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Nguyễn Văn A"
+                    placeholder={p.fullNamePh}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">
-                    SĐT <span className="required">*</span>
+                    {s.phone} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="0987xxxxxx"
+                    placeholder={p.phonePh}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">
-                    CCCD/CMND <span className="required">*</span>
+                    {s.idNumber} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="0123456789"
+                    placeholder={p.idNumberPh}
                     value={idNumber}
                     onChange={(e) => setIdNumber(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Email</label>
+                  <label className="field-label">{s.email}</label>
                   <input
-                    placeholder="email@example.com"
+                    placeholder={p.emailPh}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">
-                    Địa chỉ <span className="required">*</span>
+                    {s.address} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Địa chỉ"
+                    placeholder={p.addressPh}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Ảnh chân dung</label>
+                  <label className="field-label">{p.portraitPhoto}</label>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
@@ -842,12 +878,12 @@ export default function TrangKhachThue() {
                   />
                   {portraitPreview && (
                     <div className="upload-preview">
-                      <img src={portraitPreview} alt="Chân dung" />
+                      <img src={portraitPreview} alt={p.portrait} />
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="field-label">Ảnh CCCD/CMND</label>
+                  <label className="field-label">{p.idCardPhoto}</label>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
@@ -856,15 +892,15 @@ export default function TrangKhachThue() {
                   />
                   {idCardPreview && (
                     <div className="upload-preview">
-                      <img src={idCardPreview} alt="CCCD" />
+                      <img src={idCardPreview} alt={s.idNumber} />
                     </div>
                   )}
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Gán tài khoản</label>
+                  <label className="field-label">{p.assignAccount}</label>
                   <div className="account-picker">
                     <div className="account-chip">
-                      {selectedUser?.username || "Chưa gán tài khoản"}
+                      {selectedUser?.username || p.notAssigned}
                     </div>
                     <div className="picker-actions">
                       <button
@@ -872,7 +908,7 @@ export default function TrangKhachThue() {
                         type="button"
                         onClick={() => setShowUserPicker(true)}
                       >
-                        Chọn tài khoản
+                        {p.selectAccount}
                       </button>
                       {userId && (
                         <button
@@ -880,7 +916,7 @@ export default function TrangKhachThue() {
                           type="button"
                           onClick={() => setUserId("")}
                         >
-                          Bỏ chọn
+                          {p.clearSelection}
                         </button>
                       )}
                     </div>
@@ -901,10 +937,10 @@ export default function TrangKhachThue() {
                       setShowCreate(false);
                     }}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconPlus /> Thêm khách thuê
+                    <IconPlus /> {p.addNew}
                   </button>
                 </div>
               </form>
@@ -917,14 +953,14 @@ export default function TrangKhachThue() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Chọn tài khoản</h3>
-                  <p className="card-subtitle">Tài khoản vai trò TENANT</p>
+                  <h3>{p.pickAccount}</h3>
+                  <p className="card-subtitle">{p.pickAccountSub}</p>
                 </div>
               </div>
               <div className="form-grid">
                 <div className="picker-search-row">
                   <input
-                    placeholder="Tìm theo tên tài khoản..."
+                    placeholder={p.searchAccountPh}
                     value={userQuery}
                     onChange={(e) => setUserQuery(e.target.value)}
                   />
@@ -933,14 +969,12 @@ export default function TrangKhachThue() {
                     className="btn"
                     onClick={() => openCreateUserForm("create")}
                   >
-                    Tạo tài khoản
+                    {p.createAccount}
                   </button>
                 </div>
                 <div className="picker-list">
                   {filteredUsers.length === 0 && (
-                    <div className="empty-state">
-                      Không có tài khoản phù hợp
-                    </div>
+                    <div className="empty-state">{p.noMatchingAccounts}</div>
                   )}
                   {filteredUsers.map((u) => (
                     <button
@@ -963,7 +997,7 @@ export default function TrangKhachThue() {
                   className="btn btn-secondary"
                   onClick={() => setShowUserPicker(false)}
                 >
-                  Đóng
+                  {c.close}
                 </button>
               </div>
             </div>
@@ -973,58 +1007,58 @@ export default function TrangKhachThue() {
         {editing && (
           <div className="modal-backdrop">
             <div className="modal-card form-card">
-              <h3>Chỉnh sửa khách thuê</h3>
+              <h3>{p.editTitle}</h3>
               <div className="form-grid">
                 <div>
                   <label className="field-label">
-                    Họ tên <span className="required">*</span>
+                    {s.fullName} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Họ tên"
+                    placeholder={s.fullName}
                     value={editFullName}
                     onChange={(e) => setEditFullName(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">
-                    SĐT <span className="required">*</span>
+                    {s.phone} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="SĐT"
+                    placeholder={s.phone}
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="field-label">
-                    CCCD/CMND <span className="required">*</span>
+                    {s.idNumber} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="CCCD/CMND"
+                    placeholder={s.idNumber}
                     value={editIdNumber}
                     onChange={(e) => setEditIdNumber(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Email</label>
+                  <label className="field-label">{s.email}</label>
                   <input
-                    placeholder="Email"
+                    placeholder={s.email}
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                   />
                 </div>
                 <div className="form-span-2">
                   <label className="field-label">
-                    Địa chỉ <span className="required">*</span>
+                    {s.address} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Địa chỉ"
+                    placeholder={p.addressPh}
                     value={editAddress}
                     onChange={(e) => setEditAddress(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Ảnh chân dung</label>
+                  <label className="field-label">{p.portraitPhoto}</label>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
@@ -1042,18 +1076,18 @@ export default function TrangKhachThue() {
                         src={
                           editPortraitPreview ?? editing.portraitImagePath ?? ""
                         }
-                        alt="Chân dung"
+                        alt={p.portrait}
                       />
                     )}
                     {!editPortraitPreview && !editing.portraitImagePath && (
                       <span style={{ opacity: 0.75, fontSize: "0.9rem" }}>
-                        Chưa có ảnh — chọn file để thêm
+                        {p.noPhotoHint}
                       </span>
                     )}
                   </div>
                 </div>
                 <div>
-                  <label className="field-label">Ảnh CCCD/CMND</label>
+                  <label className="field-label">{p.idCardPhoto}</label>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/gif,image/webp"
@@ -1067,21 +1101,21 @@ export default function TrangKhachThue() {
                           editIdCardPreview ?? editing.idCardImagePath ?? "id"
                         }
                         src={editIdCardPreview ?? editing.idCardImagePath ?? ""}
-                        alt="CCCD/CMND"
+                        alt={p.idCardPhoto}
                       />
                     )}
                     {!editIdCardPreview && !editing.idCardImagePath && (
                       <span style={{ opacity: 0.75, fontSize: "0.9rem" }}>
-                        Chưa có ảnh — chọn file để thêm
+                        {p.noPhotoHint}
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="form-span-2">
-                  <label className="field-label">Gán tài khoản</label>
+                  <label className="field-label">{p.assignAccount}</label>
                   <div className="account-picker">
                     <div className="account-chip">
-                      {selectedEditUser?.username || "Chưa gán tài khoản"}
+                      {selectedEditUser?.username || p.notAssigned}
                     </div>
                     <div className="picker-actions">
                       <button
@@ -1089,7 +1123,7 @@ export default function TrangKhachThue() {
                         type="button"
                         onClick={() => setShowEditUserPicker(true)}
                       >
-                        Chọn tài khoản
+                        {p.selectAccount}
                       </button>
                       {editUserId && (
                         <button
@@ -1097,7 +1131,7 @@ export default function TrangKhachThue() {
                           type="button"
                           onClick={() => setEditUserId("")}
                         >
-                          Bỏ chọn
+                          {p.clearSelection}
                         </button>
                       )}
                     </div>
@@ -1107,10 +1141,10 @@ export default function TrangKhachThue() {
               </div>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelEdit}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={saveEdit}>
-                  <IconCheck /> Lưu
+                  <IconCheck /> {c.save}
                 </button>
               </div>
             </div>
@@ -1122,14 +1156,14 @@ export default function TrangKhachThue() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Chọn tài khoản</h3>
-                  <p className="card-subtitle">Tài khoản vai trò TENANT</p>
+                  <h3>{p.pickAccount}</h3>
+                  <p className="card-subtitle">{p.pickAccountSub}</p>
                 </div>
               </div>
               <div className="form-grid">
                 <div className="picker-search-row">
                   <input
-                    placeholder="Tìm theo tên tài khoản..."
+                    placeholder={p.searchAccountPh}
                     value={editUserQuery}
                     onChange={(e) => setEditUserQuery(e.target.value)}
                   />
@@ -1138,14 +1172,12 @@ export default function TrangKhachThue() {
                     className="btn"
                     onClick={() => openCreateUserForm("edit")}
                   >
-                    <IconPlus /> Tạo tài khoản
+                    <IconPlus /> {p.createAccount}
                   </button>
                 </div>
                 <div className="picker-list">
                   {filteredEditUsers.length === 0 && (
-                    <div className="empty-state">
-                      Không có tài khoản phù hợp
-                    </div>
+                    <div className="empty-state">{p.noMatchingAccounts}</div>
                   )}
                   {filteredEditUsers.map((u) => (
                     <button
@@ -1168,7 +1200,7 @@ export default function TrangKhachThue() {
                   className="btn btn-secondary"
                   onClick={() => setShowEditUserPicker(false)}
                 >
-                  <IconTimes /> Đóng
+                  <IconTimes /> {c.close}
                 </button>
               </div>
             </div>
@@ -1180,19 +1212,17 @@ export default function TrangKhachThue() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Tạo tài khoản</h3>
-                  <p className="card-subtitle">
-                    Tài khoản mới với vai trò TENANT
-                  </p>
+                  <h3>{p.createAccount}</h3>
+                  <p className="card-subtitle">{p.createAccountSub}</p>
                 </div>
               </div>
               <form onSubmit={submitCreateUser} className="form-grid">
                 <div>
                   <label className="field-label">
-                    Tên đăng nhập <span className="required">*</span>
+                    {s.username} <span className="required">*</span>
                   </label>
                   <input
-                    placeholder="Ví dụ: tenant2"
+                    placeholder={p.usernamePh}
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
                     autoComplete="username"
@@ -1200,11 +1230,11 @@ export default function TrangKhachThue() {
                 </div>
                 <div>
                   <label className="field-label">
-                    Mật khẩu <span className="required">*</span>
+                    {s.password} <span className="required">*</span>
                   </label>
                   <input
                     type="password"
-                    placeholder="Nhập mật khẩu"
+                    placeholder={p.passwordPh}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     autoComplete="new-password"
@@ -1219,10 +1249,10 @@ export default function TrangKhachThue() {
                     className="btn btn-secondary"
                     onClick={closeCreateUserForm}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button type="submit" className="btn">
-                    <IconPlus /> Tạo tài khoản
+                    <IconPlus /> {p.createAccount}
                   </button>
                 </div>
               </form>
@@ -1233,17 +1263,17 @@ export default function TrangKhachThue() {
         {confirmId != null && (
           <div className="modal-backdrop">
             <div className="modal-card">
-              <h3>Xác nhận xóa</h3>
+              <h3>{s.confirmDelete}</h3>
               <p>
-                Bạn có chắc muốn xóa khách thuê{" "}
-                <strong>{confirmName || "này"}</strong>?
+                {p.confirmDelete}{" "}
+                <strong>{confirmName || s.thisItem}</strong>?
               </p>
               <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={cancelRemove}>
-                  <IconTimes /> Hủy
+                  <IconTimes /> {c.cancel}
                 </button>
                 <button className="btn" onClick={confirmRemove}>
-                  <IconTrash /> Xóa
+                  <IconTrash /> {s.delete}
                 </button>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import React from "react";
 import VoUngDung from "@/components/VoUngDung";
+import Script from "next/script";
 
 export const metadata = {
   title: "iTro — Quản lý nhà trọ thông minh",
@@ -19,6 +20,9 @@ export default function RootLayout({
   return (
     <html lang="vi" data-theme="light" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <Script id="cai-dat-ban-dau" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem("motel_theme");var l=localStorage.getItem("motel_lang");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");if(l==="en")document.documentElement.setAttribute("lang","en");}catch(e){}})();`}
+        </Script>
         <main className="main-content">
           <VoUngDung>{children}</VoUngDung>
         </main>

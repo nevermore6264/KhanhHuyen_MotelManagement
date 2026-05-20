@@ -12,6 +12,8 @@ import {
 } from "@/components/Icons";
 import api, { API_ORIGIN } from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { dinhDangTien as dinhDangTienLocale } from "@/lib/locale";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 
 type Area = { id: string; name: string };
@@ -100,11 +102,6 @@ async function taiAnhChiSo(id: string, file: File) {
   });
 }
 
-const dinhDangTien = (n?: number | null) => {
-  if (n == null || isNaN(n)) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
-};
-
 const tongTienDienNuoc = (r: MeterReading) => {
   const d = Number(r.tienDien ?? 0);
   const n = Number(r.tienNuoc ?? 0);
@@ -149,6 +146,12 @@ export default function TrangChiSoDienNuoc() {
   const [suaNuocMoi, setSuaNuocMoi] = useState("");
   const [loiSuaChiSo, setLoiSuaChiSo] = useState("");
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.chiSo;
+  const s = tr.pages.shared;
+  const c = tr.common;
+  const dinhDangTien = (n?: number | null) =>
+    n == null || isNaN(n) ? "—" : dinhDangTienLocale(Math.round(Number(n)), lang);
 
   const tai = async () => {
     const [resChiSo, resPhong, resKhu] = await Promise.all([
@@ -308,7 +311,7 @@ export default function TrangChiSoDienNuoc() {
       if (fileAnh && idMoi) {
         await taiAnhChiSo(idMoi, fileAnh);
       }
-      notify("Lưu chỉ số thành công", "success");
+      notify(p.okSave, "success");
       setIdPhong("");
       setThang("");
       setNam("");
@@ -332,7 +335,7 @@ export default function TrangChiSoDienNuoc() {
           : status === 400
             ? msgLoi ||
               "Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước; phòng phải có hợp đồng hiệu lực trong kỳ."
-            : "Lưu chỉ số thất bại";
+            : p.errSave;
       setLoi(thongBao);
       notify(thongBao, "error");
     }
@@ -359,7 +362,7 @@ export default function TrangChiSoDienNuoc() {
         dienMoi: Number(suaDienMoi || 0),
         nuocMoi: Number(suaNuocMoi || 0),
       });
-      notify("Đã cập nhật chỉ số", "success");
+      notify(p.okUpdate, "success");
       dongModalSuaChiSo();
       tai();
     } catch (err: unknown) {
@@ -379,7 +382,7 @@ export default function TrangChiSoDienNuoc() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Nhập chỉ số điện nước</h2>
+        <h2>{p.title}</h2>
         <div className="card meter-picker-card">
           <div className="card-header meter-picker-card-header">
             <div className="meter-picker-heading">
@@ -389,7 +392,7 @@ export default function TrangChiSoDienNuoc() {
                   ? "Chỉ phòng đang có hợp đồng hiệu lực — chọn khu để xem danh sách"
                   : phongDangChon
                     ? `Đang chọn: ${tenKhuVaPhong(phongDangChon)}`
-                    : "Đã thu gọn — mở rộng để đổi khu hoặc phòng"}
+                    : p.filterCollapsed}
               </p>
             </div>
             <button
@@ -411,8 +414,8 @@ export default function TrangChiSoDienNuoc() {
                   danhSachKhu={danhSachKhuCombo}
                   value={idKhu}
                   onChange={setIdKhu}
-                  placeholderChuaChon="Tất cả khu"
-                  placeholderTim="Tìm theo tên khu…"
+                  placeholderChuaChon={s.allAreas}
+                  placeholderTim={s.searchArea}
                 />
               </div>
               {phongTheoKhu.length === 0 ? (
@@ -464,7 +467,7 @@ export default function TrangChiSoDienNuoc() {
                 <div className="chart-title">Các tháng trước</div>
                 <div className="history-list">
                   {lichSuPhong.length === 0 && (
-                    <div className="history-empty">Chưa có dữ liệu.</div>
+                    <div className="history-empty">{p.noData}</div>
                   )}
                   {lichSuPhong.map((r) => (
                     <div key={r.id} className="history-row">
@@ -552,7 +555,7 @@ export default function TrangChiSoDienNuoc() {
                 {loi && <div className="form-error">{loi}</div>}
                 <div className="form-actions">
                   <button className="btn" type="submit">
-                    <IconCheck /> Lưu chỉ số
+                    <IconCheck /> {p.save}
                   </button>
                 </div>
               </form>
@@ -615,7 +618,7 @@ export default function TrangChiSoDienNuoc() {
                 render: (r: MeterReading) => `${r.month}/${r.year}`,
               },
               {
-                header: "Điện (cũ → mới)",
+                header: p.elecCol,
                 render: (r: MeterReading) =>
                   `${r.oldElectric} → ${r.newElectric}`,
               },

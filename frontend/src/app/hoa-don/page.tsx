@@ -14,6 +14,14 @@ import { taiFileTuApi } from "@/lib/taiFile";
 import api from "@/lib/api";
 import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiHoaDon } from "@/lib/trangThai";
+import {
+  dinhDangTien,
+  dinhDangNgay,
+  dinhDangSo,
+  layLocaleTag,
+} from "@/lib/locale";
 import type { Invoice, RawJson, Room, Tenant } from "@/lib/mapHoaDonApi";
 import {
   chuanHoaKhachThueTuApi,
@@ -22,22 +30,6 @@ import {
   mapHoaDonFromApi,
 } from "@/lib/mapHoaDonApi";
 
-const formatMoney = (n?: number | null) => {
-  if (n == null || isNaN(Number(n))) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(Math.round(Number(n)))} VNĐ`;
-};
-
-const formatChiSo = (n?: number) =>
-  n != null && Number.isFinite(n)
-    ? new Intl.NumberFormat("vi-VN").format(n)
-    : "—";
-
-
-const dinhDangNhapTien = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return "";
-  return new Intl.NumberFormat("vi-VN").format(Number(digits));
-};
 
 const parseNhapTien = (value: string) => {
   const digits = value.replace(/\D/g, "");
@@ -49,29 +41,6 @@ const tenantOptionLabel = (t: Tenant) => {
   const name = t.fullName || `Khách ${t.id}`;
   const extra = t.phone || t.idNumber;
   return extra ? `${name} — ${extra}` : name;
-};
-
-const formatReminderDate = (dateStr?: string | null) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
-
-const invoiceStatusLabel = (value?: string) => {
-  switch (value) {
-    case "UNPAID":
-      return "Chưa thanh toán";
-    case "PARTIAL":
-      return "Thanh toán một phần";
-    case "PAID":
-      return "Đã thanh toán";
-    default:
-      return value || "-";
-  }
 };
 
 const invoiceStatusBadge = (value?: string) => {
@@ -111,6 +80,22 @@ export default function TrangHoaDon() {
   const canRemind = (isAdmin || role === "STAFF") && !isTenant;
   const canSuaChiTiet = (isAdmin || role === "STAFF") && !isTenant;
   const { notify } = useToast();
+  const { t: tr, lang } = useCaiDat();
+  const p = tr.pages.hoaDon;
+  const s = tr.pages.shared;
+  const c = tr.common;
+
+  const formatMoney = (n?: number | null) => {
+    if (n == null || isNaN(Number(n))) return "—";
+    return dinhDangTien(Math.round(Number(n)), lang);
+  };
+  const formatChiSo = (n?: number) =>
+    n != null && Number.isFinite(n) ? dinhDangSo(n, lang) : "—";
+  const dinhDangNhapTien = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "";
+    return new Intl.NumberFormat(layLocaleTag(lang)).format(Number(digits));
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -125,7 +110,7 @@ export default function TrangHoaDon() {
           channel: "email",
         },
       );
-      notify(res.data?.message || "Đã gửi nhắc nợ thành công.", "success");
+      notify(res.data?.message || p.okReminder, "success");
       load();
     } catch (err: unknown) {
       const ax = err as {
@@ -133,9 +118,7 @@ export default function TrangHoaDon() {
       };
       const message =
         ax?.response?.data?.message ||
-        (ax?.response?.status === 403
-          ? "Bạn không có quyền gửi nhắc nợ."
-          : "Gửi nhắc nợ thất bại.");
+        (ax?.response?.status === 403 ? p.errReminderPerm : p.errReminder);
       notify(message, "error");
     } finally {
       setRemindingId(null);
@@ -174,9 +157,7 @@ export default function TrangHoaDon() {
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const message =
-        ax?.response?.status === 403
-          ? "Bạn không có quyền xem danh sách hóa đơn"
-          : "Tải dữ liệu hóa đơn thất bại";
+        ax?.response?.status === 403 ? p.errViewList : p.errLoad;
       notify(message, "error");
     }
   };
@@ -226,11 +207,11 @@ export default function TrangHoaDon() {
             soTien: parseNhapTien(r.soTien) ?? 0,
           })),
       });
-      notify("Đã lưu chi tiết hóa đơn.", "success");
+      notify(p.okSaveDetail, "success");
       await load();
       setViewDetailInvoice(null);
     } catch {
-      notify("Lưu chi tiết thất bại.", "error");
+      notify(p.errSaveDetail, "error");
     } finally {
       setDangLuuChiTiet(false);
     }
@@ -242,7 +223,7 @@ export default function TrangHoaDon() {
       const res = await api.post<{ message?: string; created?: number }>(
         "/hoa-don/sinh",
       );
-      notify(res.data?.message ?? "Đã chạy sinh hóa đơn.", "success");
+      notify(res.data?.message ?? p.okGenerate, "success");
       load();
     } catch (err: unknown) {
       const ax = err as {
@@ -250,9 +231,7 @@ export default function TrangHoaDon() {
       };
       const msg =
         ax?.response?.data?.message ||
-        (ax?.response?.status === 403
-          ? "Bạn không có quyền thao tác."
-          : "Sinh hóa đơn thất bại.");
+        (ax?.response?.status === 403 ? s.noPermission : p.errGenerate);
       notify(msg, "error");
     } finally {
       setGenerating(false);
@@ -262,20 +241,15 @@ export default function TrangHoaDon() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Hóa đơn</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <div>
-            <h3>Danh sách hóa đơn</h3>
-            <p className="card-subtitle">Theo dõi thanh toán theo kỳ.</p>
+            <h3>{p.listTitle}</h3>
+            <p className="card-subtitle">{p.listLead}</p>
           </div>
           {!isTenant && (
             <div className="invoice-job-note">
-              <span>
-                Hóa đơn được <strong>sinh tự động</strong> bởi hệ thống (job
-                chạy đầu mỗi tháng) theo hợp đồng đang active và số điện nước.
-                Nhập chỉ số điện nước tại mục <strong>Điện nước</strong>, hệ
-                thống sẽ cập nhật tiền vào hóa đơn tương ứng.
-              </span>
+              <span>{p.autoGenNote}</span>
               {mounted && (isAdmin || role === "STAFF") && (
                 <button
                   type="button"
@@ -284,10 +258,10 @@ export default function TrangHoaDon() {
                   disabled={generating}
                 >
                   {generating ? (
-                    "Đang sinh…"
+                    p.generating
                   ) : (
                     <>
-                      <IconRefresh /> Sinh hóa đơn ngay
+                      <IconRefresh /> {p.generateNow}
                     </>
                   )}
                 </button>
@@ -296,17 +270,13 @@ export default function TrangHoaDon() {
           )}
           {!isAdmin && (
             <div className="form-error" style={{ marginTop: 12 }}>
-              {isTenant
-                ? "Bạn chỉ có thể xem hóa đơn của chính mình."
-                : "Bạn chỉ có quyền xem dữ liệu."}
+              {isTenant ? p.viewOwn : s.viewOnly}
             </div>
           )}
         </div>
         <div className="card">
           <p className="text-muted mb-3" style={{ fontSize: "0.9rem" }}>
-            {isTenant
-              ? "Hóa đơn của bạn theo kỳ (tháng/năm)."
-              : "Danh sách hóa đơn theo phòng và kỳ. Dùng bộ lọc để tìm nhanh."}
+            {isTenant ? p.tenantLead : p.adminLead}
           </p>
           {isAdmin && !isTenant && (
             <div
@@ -314,24 +284,30 @@ export default function TrangHoaDon() {
               style={{ marginBottom: 16, maxWidth: 500 }}
             >
               <div>
-                <label className="field-label">Lọc theo trạng thái</label>
+                <label className="field-label">{p.filterStatus}</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
-                  <option value="">Tất cả</option>
-                  <option value="UNPAID">Chưa thanh toán</option>
-                  <option value="PARTIAL">Thanh toán một phần</option>
-                  <option value="PAID">Đã thanh toán</option>
+                  <option value="">{c.all}</option>
+                  <option value="UNPAID">
+                    {nhanTrangThaiHoaDon(tr, "UNPAID")}
+                  </option>
+                  <option value="PARTIAL">
+                    {nhanTrangThaiHoaDon(tr, "PARTIAL")}
+                  </option>
+                  <option value="PAID">
+                    {nhanTrangThaiHoaDon(tr, "PAID")}
+                  </option>
                 </select>
               </div>
               <div>
-                <label className="field-label">Lọc theo phòng</label>
+                <label className="field-label">{p.filterRoom}</label>
                 <select
                   value={filterRoomId}
                   onChange={(e) => setFilterRoomId(e.target.value)}
                 >
-                  <option value="">Tất cả phòng</option>
+                  <option value="">{p.allRooms}</option>
                   {rooms.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.code}
@@ -344,15 +320,15 @@ export default function TrangHoaDon() {
           <BangDonGian
             data={filteredInvoices}
             columns={[
-              { header: "Phòng", render: (i: Invoice) => i.room?.code ?? "—" },
+              { header: p.room, render: (i: Invoice) => i.room?.code ?? "—" },
               {
-                header: "Khách thuê",
+                header: p.tenant,
                 render: (i: Invoice) => {
                   const list = khachCuaHoaDon(i);
                   if (!list.length) {
                     return (
-                      <span className="text-muted" title="Hóa đơn không gắn hợp đồng active trong kỳ, hoặc phòng chưa có khách đại diện.">
-                        Chưa có khách trong kỳ
+                      <span className="text-muted" title={p.noTenantHint}>
+                        {p.noTenantInPeriod}
                       </span>
                     );
                   }
@@ -377,11 +353,11 @@ export default function TrangHoaDon() {
                 },
               },
               {
-                header: "Kỳ",
+                header: p.period,
                 render: (i: Invoice) => `${i.month}/${i.year}`,
               },
               {
-                header: "Tổng",
+                header: p.total,
                 render: (i: Invoice) => (
                   <span
                     style={{
@@ -399,28 +375,28 @@ export default function TrangHoaDon() {
                         setViewDetailInvoice(i);
                         khoiTaoDongChiTietTuHoaDon(i);
                       }}
-                      title="Xem chi tiết các khoản"
+                      title={p.viewDetailTitle}
                     >
-                      <IconEye /> Xem chi tiết
+                      <IconEye /> {p.viewDetail}
                     </button>
                   </span>
                 ),
               },
               {
-                header: "Trạng thái",
+                header: p.status,
                 render: (i: Invoice) => (
                   <span
                     className={`status-badge ${invoiceStatusBadge(i.status)}`}
                   >
-                    {invoiceStatusLabel(i.status)}
+                    {nhanTrangThaiHoaDon(tr, i.status)}
                   </span>
                 ),
               },
               {
-                header: "Đã nhắc nợ",
+                header: p.reminded,
                 render: (i: Invoice) => {
                   const emailAt = i.lastReminderEmailAt
-                    ? formatReminderDate(i.lastReminderEmailAt)
+                    ? dinhDangNgay(i.lastReminderEmailAt, lang)
                     : "";
                   const emailCount = i.reminderEmailCount ?? 0;
                   const hasAny = emailAt || emailCount > 0;
@@ -436,7 +412,9 @@ export default function TrangHoaDon() {
                     >
                       {emailAt && (
                         <span style={{ whiteSpace: "nowrap" }}>
-                          Email: lần {emailCount || 1} ({emailAt})
+                          {p.emailReminderMeta
+                            .replace("{count}", String(emailCount || 1))
+                            .replace("{date}", emailAt)}
                         </span>
                       )}
                       <button
@@ -445,7 +423,7 @@ export default function TrangHoaDon() {
                         style={{ marginTop: 4, padding: "2px 8px" }}
                         onClick={() => setViewReminderInvoice(i)}
                       >
-                        Xem nội dung đã gửi
+                        {p.viewReminderSent}
                       </button>
                     </span>
                   );
@@ -454,7 +432,7 @@ export default function TrangHoaDon() {
               ...(canRemind
                 ? [
                     {
-                      header: "Nhắc nợ",
+                      header: p.remind,
                       render: (i: Invoice) => {
                         const unpaid =
                           i.status === "UNPAID" || i.status === "PARTIAL";
@@ -477,14 +455,14 @@ export default function TrangHoaDon() {
                               disabled={!unpaid || !hasEmail || loading}
                               title={
                                 !unpaid
-                                  ? "Chỉ nhắc hóa đơn chưa thanh toán"
+                                  ? p.remindUnpaidOnly
                                   : !hasEmail
-                                    ? "Khách thuê chưa có email"
-                                    : "Gửi nhắc nợ qua email"
+                                    ? p.remindNoEmail
+                                    : p.remindViaEmail
                               }
                               onClick={() => sendReminder(i.id)}
                             >
-                              {loading ? "..." : "Email"}
+                              {loading ? "..." : p.emailReminder}
                             </button>
                           </span>
                         );
@@ -501,10 +479,14 @@ export default function TrangHoaDon() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Chi tiết các khoản</h3>
+                  <h3>{p.detailTitle}</h3>
                   <p className="card-subtitle">
-                    Hóa đơn phòng {viewDetailInvoice.room?.code} —{" "}
-                    {viewDetailInvoice.month}/{viewDetailInvoice.year}
+                    {p.detailSub
+                      .replace("{room}", viewDetailInvoice.room?.code ?? "—")
+                      .replace(
+                        "{period}",
+                        `${viewDetailInvoice.month}/${viewDetailInvoice.year}`,
+                      )}
                   </p>
                 </div>
               </div>
@@ -524,7 +506,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Tiền phòng</span>
+                  <span>{p.roomRent}</span>
                   <strong>{formatMoney(viewDetailInvoice.roomCost)}</strong>
                 </div>
                 <div
@@ -536,7 +518,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số điện cũ</span>
+                  <span>{p.electricOld}</span>
                   <strong>{formatChiSo(viewDetailInvoice.electricOld)}</strong>
                 </div>
                 <div
@@ -548,7 +530,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số điện mới</span>
+                  <span>{p.electricNew}</span>
                   <strong>{formatChiSo(viewDetailInvoice.electricNew)}</strong>
                 </div>
                 <div
@@ -560,7 +542,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Tiền điện</span>
+                  <span>{p.electricCost}</span>
                   <strong>
                     {formatMoney(viewDetailInvoice.electricityCost)}
                   </strong>
@@ -574,7 +556,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số nước cũ</span>
+                  <span>{p.waterOld}</span>
                   <strong>{formatChiSo(viewDetailInvoice.waterOld)}</strong>
                 </div>
                 <div
@@ -586,7 +568,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Số nước mới</span>
+                  <span>{p.waterNew}</span>
                   <strong>{formatChiSo(viewDetailInvoice.waterNew)}</strong>
                 </div>
                 <div
@@ -598,7 +580,7 @@ export default function TrangHoaDon() {
                     borderBottom: "1px solid #e2e8f0",
                   }}
                 >
-                  <span>Tiền nước</span>
+                  <span>{p.waterCost}</span>
                   <strong>{formatMoney(viewDetailInvoice.waterCost)}</strong>
                 </div>
                 {viewDetailInvoice.lineItems &&
@@ -629,21 +611,20 @@ export default function TrangHoaDon() {
                     color: "#102a5c",
                   }}
                 >
-                  <span>Tổng</span>
+                  <span>{p.total}</span>
                   <strong>{formatMoney(viewDetailInvoice.total)}</strong>
                 </div>
               </div>
               {canSuaChiTiet && (
                 <div style={{ marginTop: 20 }}>
                   <h4 style={{ margin: "0 0 8px", fontSize: "1rem" }}>
-                    Chỉnh sửa các khoản thêm
+                    {p.editExtraTitle}
                   </h4>
                   <p
                     className="card-subtitle"
                     style={{ marginBottom: 10, fontSize: "0.85rem" }}
                   >
-                    Thêm dòng (giữ xe, wifi, sửa chữa…). Lưu sẽ thay toàn bộ
-                    danh sách phụ trên hóa đơn.
+                    {p.editExtraHint}
                   </p>
                   <table
                     style={{
@@ -655,10 +636,10 @@ export default function TrangHoaDon() {
                     <thead>
                       <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
                         <th style={{ textAlign: "left", padding: "6px 4px" }}>
-                          Tên khoản
+                          {p.lineName}
                         </th>
                         <th style={{ textAlign: "left", padding: "6px 4px" }}>
-                          Số tiền
+                          {p.lineAmount}
                         </th>
                         <th style={{ width: 72 }} />
                       </tr>
@@ -681,13 +662,13 @@ export default function TrangHoaDon() {
                                   ),
                                 );
                               }}
-                              placeholder="VD: Tiền giữ xe"
+                              placeholder={p.lineNamePh}
                             />
                           </td>
                           <td style={{ padding: "6px 4px", minWidth: 160 }}>
                             <div className="input-suffix">
                               <input
-                                placeholder="Ví dụ: 100.000"
+                                placeholder={p.lineAmountPh}
                                 inputMode="numeric"
                                 autoComplete="off"
                                 style={{ width: "100%", minWidth: 0 }}
@@ -715,7 +696,7 @@ export default function TrangHoaDon() {
                                 )
                               }
                             >
-                              Xóa
+                              {c.delete}
                             </button>
                           </td>
                         </tr>
@@ -733,7 +714,7 @@ export default function TrangHoaDon() {
                       ])
                     }
                   >
-                    <IconPlus /> Thêm dòng
+                    <IconPlus /> {p.addLine}
                   </button>
                 </div>
               )}
@@ -745,10 +726,10 @@ export default function TrangHoaDon() {
                     void taiFileTuApi(
                       `/hoa-don/${viewDetailInvoice.id}/xuat-pdf`,
                       `hoa-don-${viewDetailInvoice.id}.pdf`,
-                    ).catch(() => notify("Tải PDF thất bại.", "error"))
+                    ).catch(() => notify(p.errDownloadPdf, "error"))
                   }
                 >
-                  <IconDownload /> Tải PDF hóa đơn
+                  <IconDownload /> {p.downloadPdf}
                 </button>
                 {canSuaChiTiet && (
                   <button
@@ -757,7 +738,7 @@ export default function TrangHoaDon() {
                     disabled={dangLuuChiTiet}
                     onClick={() => void luuChiTietHoaDon()}
                   >
-                    {dangLuuChiTiet ? "Đang lưu…" : "Lưu chi tiết"}
+                    {dangLuuChiTiet ? c.saving : p.saveDetail}
                   </button>
                 )}
                 <button
@@ -765,7 +746,7 @@ export default function TrangHoaDon() {
                   className="btn btn-secondary"
                   onClick={() => setViewDetailInvoice(null)}
                 >
-                  <IconTimes /> Đóng
+                  <IconTimes /> {c.close}
                 </button>
               </div>
             </div>
@@ -777,10 +758,14 @@ export default function TrangHoaDon() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Nội dung nhắc nợ đã gửi</h3>
+                  <h3>{p.reminderTitle}</h3>
                   <p className="card-subtitle">
-                    Hóa đơn phòng {viewReminderInvoice.room?.code} —{" "}
-                    {viewReminderInvoice.month}/{viewReminderInvoice.year}
+                    {p.detailSub
+                      .replace("{room}", viewReminderInvoice.room?.code ?? "—")
+                      .replace(
+                        "{period}",
+                        `${viewReminderInvoice.month}/${viewReminderInvoice.year}`,
+                      )}
                   </p>
                 </div>
               </div>
@@ -790,12 +775,18 @@ export default function TrangHoaDon() {
                 {viewReminderInvoice.lastReminderEmailAt && (
                   <div>
                     <div className="field-label" style={{ marginBottom: 6 }}>
-                      Email — lần thứ{" "}
-                      {viewReminderInvoice.reminderEmailCount ?? 1} (gửi{" "}
-                      {formatReminderDate(
-                        viewReminderInvoice.lastReminderEmailAt,
-                      )}
-                      )
+                      {p.reminderEmailLabel
+                        .replace(
+                          "{count}",
+                          String(viewReminderInvoice.reminderEmailCount ?? 1),
+                        )
+                        .replace(
+                          "{date}",
+                          dinhDangNgay(
+                            viewReminderInvoice.lastReminderEmailAt,
+                            lang,
+                          ),
+                        )}
                     </div>
                     <div
                       className="readonly-field"
@@ -806,13 +797,13 @@ export default function TrangHoaDon() {
                       }}
                     >
                       {viewReminderInvoice.lastReminderEmailMessage?.trim() ||
-                        "Không lưu nội dung."}
+                        p.reminderNoContent}
                     </div>
                   </div>
                 )}
                 {!viewReminderInvoice.lastReminderEmailAt && (
                   <p className="card-subtitle">
-                    Chưa có lịch sử nhắc nợ (dữ liệu cũ).
+                    {p.reminderNoHistory}
                   </p>
                 )}
               </div>
@@ -822,7 +813,7 @@ export default function TrangHoaDon() {
                   className="btn btn-secondary"
                   onClick={() => setViewReminderInvoice(null)}
                 >
-                  <IconTimes /> Đóng
+                  <IconTimes /> {c.close}
                 </button>
               </div>
             </div>

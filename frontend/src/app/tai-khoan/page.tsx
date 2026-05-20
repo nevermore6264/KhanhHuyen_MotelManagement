@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import api from "@/lib/api";
-import { getRole, getToken, setAuth } from "@/lib/auth";
+import { getName, getRole, getToken, setAuth } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { IconCheck } from "@/components/Icons";
+import { nhanVaiTro } from "@/lib/trangThai";
 
 type HoSoCaNhan = {
   id?: string;
@@ -20,18 +23,59 @@ type HoSoCaNhan = {
   diaChi?: string;
 };
 
-const vaiTroLabel = (v?: string) => {
+const vaiTroBadgeClass = (v?: string) => {
   switch (v) {
     case "ADMIN":
-      return "Quản trị";
+      return "profile-badge--admin";
     case "STAFF":
-      return "Nhân viên";
+      return "profile-badge--staff";
     case "TENANT":
-      return "Khách thuê";
+      return "profile-badge--tenant";
     default:
-      return v || "—";
+      return "";
   }
 };
+
+const layChuCaiDau = (ten: string) => {
+  const parts = ten.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const IconUserProfile = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const IconLock = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
 
 export default function TrangHoSoCaNhan() {
   const [hoSo, setHoSo] = useState<HoSoCaNhan | null>(null);
@@ -47,8 +91,15 @@ export default function TrangHoSoCaNhan() {
   const [dangLuuHoSo, setDangLuuHoSo] = useState(false);
   const [dangDoiMk, setDangDoiMk] = useState(false);
   const { notify } = useToast();
+  const { t } = useCaiDat();
+  const ac = t.account;
 
   const laKhachThue = hoSo?.vaiTro === "TENANT" && !!hoSo?.khachThueId;
+
+  const chuCaiAvatar = useMemo(
+    () => layChuCaiDau(hoTen || hoSo?.hoTen || getName() || ""),
+    [hoTen, hoSo?.hoTen],
+  );
 
   const taiHoSo = useCallback(async () => {
     setDangTai(true);
@@ -62,7 +113,7 @@ export default function TrangHoSoCaNhan() {
       setSoGiayTo(p.soGiayTo ?? "");
       setDiaChi(p.diaChi ?? "");
     } catch {
-      notify("Không tải được hồ sơ cá nhân.", "error");
+      notify(ac.errLoad, "error");
     } finally {
       setDangTai(false);
     }
@@ -75,7 +126,7 @@ export default function TrangHoSoCaNhan() {
   const luuHoSo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hoTen.trim()) {
-      notify("Họ tên không được để trống.", "error");
+      notify(ac.errName, "error");
       return;
     }
     setDangLuuHoSo(true);
@@ -97,10 +148,10 @@ export default function TrangHoSoCaNhan() {
           setAuth(token, role, p.hoTen ?? hoTen.trim());
         }
       }
-      notify(data.message ?? "Đã cập nhật hồ sơ.", "success");
+      notify(data.message ?? ac.okProfile, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
-      notify(ax?.response?.data?.message ?? "Cập nhật hồ sơ thất bại.", "error");
+      notify(ax?.response?.data?.message ?? ac.errProfile, "error");
     } finally {
       setDangLuuHoSo(false);
     }
@@ -109,11 +160,11 @@ export default function TrangHoSoCaNhan() {
   const doiMatKhau = async (e: React.FormEvent) => {
     e.preventDefault();
     if (matKhauMoi.length < 6) {
-      notify("Mật khẩu mới tối thiểu 6 ký tự.", "error");
+      notify(ac.errPwLen, "error");
       return;
     }
     if (matKhauMoi !== xacNhan) {
-      notify("Xác nhận mật khẩu không khớp.", "error");
+      notify(ac.errPwMatch, "error");
       return;
     }
     setDangDoiMk(true);
@@ -125,12 +176,12 @@ export default function TrangHoSoCaNhan() {
       setMatKhauCu("");
       setMatKhauMoi("");
       setXacNhan("");
-      notify("Đã đổi mật khẩu thành công.", "success");
+      notify(ac.okPw, "success");
     } catch (err: unknown) {
       const ax = err as { response?: { data?: { message?: string } } };
       notify(
         ax?.response?.data?.message ??
-          "Đổi mật khẩu thất bại. Kiểm tra mật khẩu hiện tại.",
+          ac.errPw,
         "error",
       );
     } finally {
@@ -140,132 +191,255 @@ export default function TrangHoSoCaNhan() {
 
   return (
     <TrangBaoVe>
-      <div className="page-shell page-account">
-        <h2>Hồ sơ cá nhân</h2>
-        <p className="text-muted" style={{ marginTop: -8, marginBottom: 20 }}>
-          Xem và cập nhật thông tin tài khoản của bạn.
-        </p>
+      <div className="page-shell page-profile">
+        <header className="profile-hero">
+          <div className="profile-hero__orb" aria-hidden />
+          <div className="profile-hero__avatar" aria-hidden>
+            {chuCaiAvatar}
+          </div>
+          <div className="profile-hero__body">
+            <h1 className="profile-hero__title">{ac.title}</h1>
+            <p className="profile-hero__lead">{ac.lead}</p>
+            {!dangTai && hoSo && (
+              <div className="profile-hero__meta">
+                <span
+                  className={`profile-badge profile-badge--role ${vaiTroBadgeClass(hoSo.vaiTro)}`}
+                >
+                  {nhanVaiTro(t, hoSo.vaiTro)}
+                </span>
+                <span
+                  className={`profile-badge ${
+                    hoSo.kichHoat !== false
+                      ? "profile-badge--active"
+                      : "profile-badge--inactive"
+                  }`}
+                >
+                  {hoSo.kichHoat !== false ? ac.active : ac.locked}
+                </span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <Link href="/cai-dat" className="profile-quick-link">
+          <div>
+            <strong>{ac.settingsTitle}</strong>
+            <span>{ac.settingsHint}</span>
+          </div>
+          <span className="profile-quick-link__arrow" aria-hidden>
+            →
+          </span>
+        </Link>
 
         {dangTai ? (
-          <p className="text-muted">Đang tải hồ sơ…</p>
+          <div className="profile-loading">
+            <div className="profile-skeleton profile-skeleton--aside" />
+            <div className="profile-skeleton profile-skeleton--main" />
+          </div>
         ) : (
-          <div className="grid" style={{ gap: 24, maxWidth: 560 }}>
-            <div className="card">
-              <h3 style={{ marginTop: 0 }}>Thông tin chung</h3>
-              <form onSubmit={luuHoSo} className="grid">
-                <div>
-                  <label className="field-label">Tên đăng nhập</label>
-                  <input
-                    value={hoSo?.tenDangNhap ?? ""}
-                    readOnly
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Vai trò</label>
-                  <input
-                    value={vaiTroLabel(hoSo?.vaiTro)}
-                    readOnly
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Họ và tên</label>
-                  <input
-                    value={hoTen}
-                    onChange={(e) => setHoTen(e.target.value)}
-                    placeholder="Nhập họ tên đầy đủ"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Số điện thoại</label>
-                  <input
-                    value={soDienThoai}
-                    onChange={(e) => setSoDienThoai(e.target.value)}
-                    placeholder="VD: 0901234567"
-                  />
-                </div>
-                <div>
-                  <label className="field-label">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="email@example.com"
-                  />
-                </div>
+          <div className="profile-layout">
+            <aside className="profile-aside">
+              <div className="profile-aside__avatar-lg" aria-hidden>
+                {chuCaiAvatar}
+              </div>
+              <p className="profile-aside__name">
+                {hoTen.trim() || hoSo?.hoTen || "—"}
+              </p>
+              <p className="profile-aside__user">@{hoSo?.tenDangNhap || "—"}</p>
+              <div className="profile-aside__badges">
+                <span
+                  className={`profile-badge profile-badge--role ${vaiTroBadgeClass(hoSo?.vaiTro)}`}
+                >
+                  {nhanVaiTro(t, hoSo?.vaiTro)}
+                </span>
+              </div>
+              <ul className="profile-info-list">
+                <li>
+                  <span>{ac.username}</span>
+                  <strong>{hoSo?.tenDangNhap || "—"}</strong>
+                </li>
+                <li>
+                  <span>{ac.email}</span>
+                  <strong>{email.trim() || t.common.notSet}</strong>
+                </li>
+                <li>
+                  <span>{ac.phone}</span>
+                  <strong>{soDienThoai.trim() || t.common.notSet}</strong>
+                </li>
                 {laKhachThue && (
                   <>
-                    <div>
-                      <label className="field-label">Số CCCD / CMND</label>
-                      <input
-                        value={soGiayTo}
-                        onChange={(e) => setSoGiayTo(e.target.value)}
-                        placeholder="Số giấy tờ tùy thân"
-                      />
-                    </div>
-                    <div>
-                      <label className="field-label">Địa chỉ</label>
-                      <input
-                        value={diaChi}
-                        onChange={(e) => setDiaChi(e.target.value)}
-                        placeholder="Địa chỉ thường trú / liên hệ"
-                      />
-                    </div>
+                    <li>
+                      <span>{ac.idDoc}</span>
+                      <strong>{soGiayTo.trim() || t.common.notSet}</strong>
+                    </li>
+                    <li>
+                      <span>{ac.address}</span>
+                      <strong>{diaChi.trim() || t.common.notSet}</strong>
+                    </li>
                   </>
                 )}
-                <button className="btn" type="submit" disabled={dangLuuHoSo}>
-                  <IconCheck /> {dangLuuHoSo ? "Đang lưu…" : "Lưu hồ sơ"}
-                </button>
-              </form>
-            </div>
+              </ul>
+            </aside>
 
-            <div className="card">
-              <h3 style={{ marginTop: 0 }}>Đổi mật khẩu</h3>
-              <p className="text-muted" style={{ fontSize: "0.9rem" }}>
-                Đổi mật khẩu khi đã đăng nhập (khác với quên mật khẩu qua email).
-              </p>
-              <form onSubmit={doiMatKhau} className="grid">
-                <div>
-                  <label className="field-label">Mật khẩu hiện tại</label>
-                  <input
-                    type="password"
-                    value={matKhauCu}
-                    onChange={(e) => setMatKhauCu(e.target.value)}
-                    placeholder="Nhập mật khẩu hiện tại"
-                    required
-                    autoComplete="current-password"
-                  />
+            <div className="profile-main">
+              <section className="profile-card">
+                <div className="profile-card__head">
+                  <div>
+                    <h2 className="profile-card__title">{ac.general}</h2>
+                    <p className="profile-card__hint">{ac.generalHint}</p>
+                  </div>
+                  <div className="profile-card__icon" aria-hidden>
+                    <IconUserProfile />
+                  </div>
                 </div>
-                <div>
-                  <label className="field-label">Mật khẩu mới</label>
-                  <input
-                    type="password"
-                    value={matKhauMoi}
-                    onChange={(e) => setMatKhauMoi(e.target.value)}
-                    placeholder="Tối thiểu 6 ký tự"
-                    required
-                    minLength={6}
-                    autoComplete="new-password"
-                  />
+                <form onSubmit={luuHoSo} className="profile-form-grid">
+                  <div className="profile-field">
+                    <label htmlFor="profile-username">{ac.username}</label>
+                    <input
+                      id="profile-username"
+                      value={hoSo?.tenDangNhap ?? ""}
+                      readOnly
+                      disabled
+                    />
+                  </div>
+                  <div className="profile-field">
+                    <label htmlFor="profile-role">{ac.role}</label>
+                    <input
+                      id="profile-role"
+                      value={nhanVaiTro(t, hoSo?.vaiTro)}
+                      readOnly
+                      disabled
+                    />
+                  </div>
+                  <div className="profile-field profile-field--full">
+                    <label htmlFor="profile-name">{ac.fullName}</label>
+                    <input
+                      id="profile-name"
+                      value={hoTen}
+                      onChange={(e) => setHoTen(e.target.value)}
+                      placeholder={ac.fullNamePh}
+                      required
+                    />
+                  </div>
+                  <div className="profile-field">
+                    <label htmlFor="profile-phone">{ac.phone}</label>
+                    <input
+                      id="profile-phone"
+                      value={soDienThoai}
+                      onChange={(e) => setSoDienThoai(e.target.value)}
+                      placeholder={ac.phonePh}
+                    />
+                  </div>
+                  <div className="profile-field">
+                    <label htmlFor="profile-email">{ac.email}</label>
+                    <input
+                      id="profile-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  {laKhachThue && (
+                    <>
+                      <div className="profile-field">
+                        <label htmlFor="profile-id">{ac.idDoc}</label>
+                        <input
+                          id="profile-id"
+                          value={soGiayTo}
+                          onChange={(e) => setSoGiayTo(e.target.value)}
+                          placeholder={ac.idPh}
+                        />
+                      </div>
+                      <div className="profile-field profile-field--full">
+                        <label htmlFor="profile-address">{ac.address}</label>
+                        <input
+                          id="profile-address"
+                          value={diaChi}
+                          onChange={(e) => setDiaChi(e.target.value)}
+                          placeholder={ac.addressPh}
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="profile-form-actions">
+                    <button className="btn" type="submit" disabled={dangLuuHoSo}>
+                      <IconCheck />{" "}
+                      {dangLuuHoSo ? t.common.saving : ac.saveProfile}
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              <section className="profile-card profile-card--password">
+                <div className="profile-card__head">
+                  <div>
+                    <h2 className="profile-card__title">{ac.security}</h2>
+                    <p className="profile-card__hint">{ac.securityHint}</p>
+                  </div>
+                  <div className="profile-card__icon" aria-hidden>
+                    <IconLock />
+                  </div>
                 </div>
-                <div>
-                  <label className="field-label">Xác nhận mật khẩu mới</label>
-                  <input
-                    type="password"
-                    value={xacNhan}
-                    onChange={(e) => setXacNhan(e.target.value)}
-                    placeholder="Nhập lại mật khẩu mới"
-                    required
-                    minLength={6}
-                    autoComplete="new-password"
-                  />
+                <form onSubmit={doiMatKhau} className="profile-form-grid">
+                  <div className="profile-field profile-field--full">
+                    <label htmlFor="profile-pw-old">{ac.currentPw}</label>
+                    <input
+                      id="profile-pw-old"
+                      type="password"
+                      value={matKhauCu}
+                      onChange={(e) => setMatKhauCu(e.target.value)}
+                      placeholder={ac.currentPwPh}
+                      required
+                      autoComplete="current-password"
+                    />
+                  </div>
+                  <div className="profile-field">
+                    <label htmlFor="profile-pw-new">{ac.newPw}</label>
+                    <input
+                      id="profile-pw-new"
+                      type="password"
+                      value={matKhauMoi}
+                      onChange={(e) => setMatKhauMoi(e.target.value)}
+                      placeholder={ac.newPwPh}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="profile-field">
+                    <label htmlFor="profile-pw-confirm">{ac.confirmPw}</label>
+                    <input
+                      id="profile-pw-confirm"
+                      type="password"
+                      value={xacNhan}
+                      onChange={(e) => setXacNhan(e.target.value)}
+                      placeholder={ac.confirmPwPh}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="profile-form-actions">
+                    <button
+                      className="btn btn-secondary"
+                      type="submit"
+                      disabled={dangDoiMk}
+                    >
+                      <IconCheck />{" "}
+                      {dangDoiMk ? ac.changingPw : ac.changePw}
+                    </button>
+                  </div>
+                </form>
+                <div className="profile-security-tips">
+                  <strong>{ac.tipsTitle}</strong>
+                  <ul>
+                    <li>{ac.tip1}</li>
+                    <li>{ac.tip2}</li>
+                    <li>{ac.tip3}</li>
+                  </ul>
                 </div>
-                <button className="btn btn-secondary" type="submit" disabled={dangDoiMk}>
-                  <IconCheck /> {dangDoiMk ? "Đang đổi…" : "Đổi mật khẩu"}
-                </button>
-              </form>
+              </section>
             </div>
           </div>
         )}

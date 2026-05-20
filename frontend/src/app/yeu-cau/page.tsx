@@ -7,21 +7,9 @@ import api from "@/lib/api";
 import { IconSend, IconEye, IconTimes } from "@/components/Icons";
 import { useToast } from "@/components/NhaCungCapToast";
 import { chuanHoaYeuCau, type YeuCauHang } from "@/lib/chuanHoaYeuCau";
-
-const statusLabel = (value?: string) => {
-  switch (value) {
-    case "OPEN":
-      return "Mới";
-    case "IN_PROGRESS":
-      return "Đang xử lý";
-    case "RESOLVED":
-      return "Đã xử lý";
-    case "CLOSED":
-      return "Đã đóng";
-    default:
-      return value || "—";
-  }
-};
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiYeuCau } from "@/lib/trangThai";
+import { layLocaleTag } from "@/lib/locale";
 
 const statusClass = (value?: string) => {
   switch (value) {
@@ -38,11 +26,11 @@ const statusClass = (value?: string) => {
   }
 };
 
-const formatNgay = (iso?: string) => {
+const formatNgay = (iso?: string, locale = "vi-VN") => {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("vi-VN", {
+  return d.toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -52,6 +40,12 @@ const formatNgay = (iso?: string) => {
 };
 
 export default function TrangYeuCau() {
+  const { t: tr, lang } = useCaiDat();
+  const localeTag = layLocaleTag(lang);
+  const p = tr.pages.yeuCau;
+  const pStaff = tr.pages.yeuCauHoTro;
+  const s = tr.pages.shared;
+  const c = tr.common;
   const [tieuDe, setTieuDe] = useState("");
   const [moTa, setMoTa] = useState("");
   const [thongBao, setThongBao] = useState("");
@@ -67,9 +61,9 @@ export default function TrangYeuCau() {
       setDanhSach(arr.map(chuanHoaYeuCau));
     } catch {
       setDanhSach([]);
-      notify("Không tải được danh sách yêu cầu.", "error");
+      notify(pStaff.errLoad, "error");
     }
-  }, [notify]);
+  }, [notify, pStaff.errLoad]);
 
   useEffect(() => {
     tai();
@@ -79,7 +73,7 @@ export default function TrangYeuCau() {
     e.preventDefault();
     const td = tieuDe.trim();
     if (!td) {
-      notify("Vui lòng nhập tiêu đề.", "error");
+      notify(p.errTitle, "error");
       return;
     }
     setDangGui(true);
@@ -91,11 +85,11 @@ export default function TrangYeuCau() {
       });
       setTieuDe("");
       setMoTa("");
-      setThongBao("Đã gửi yêu cầu hỗ trợ.");
-      notify("Đã gửi yêu cầu.", "success");
+      setThongBao(p.okSend);
+      notify(p.okSend, "success");
       await tai();
     } catch {
-      notify("Gửi yêu cầu thất bại. Thử lại sau.", "error");
+      notify(p.errSend, "error");
     } finally {
       setDangGui(false);
     }
@@ -104,7 +98,7 @@ export default function TrangYeuCau() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Gửi yêu cầu hỗ trợ</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <form onSubmit={gui} className="grid">
             <input
@@ -120,7 +114,7 @@ export default function TrangYeuCau() {
               rows={4}
             />
             <button className="btn" type="submit" disabled={dangGui}>
-              <IconSend /> {dangGui ? "Đang gửi…" : "Gửi yêu cầu"}
+              <IconSend /> {dangGui ? c.loading : p.send}
             </button>
             {thongBao && <div className="text-muted">{thongBao}</div>}
           </form>
@@ -131,12 +125,12 @@ export default function TrangYeuCau() {
             Danh sách yêu cầu của bạn
           </h3>
           {danhSach.length === 0 ? (
-            <p className="text-muted">Chưa có yêu cầu nào.</p>
+            <p className="text-muted">{p.empty}</p>
           ) : (
             <BangDonGian
               data={danhSach}
               columns={[
-                { header: "ID", render: (r) => r.id },
+                { header: s.id, render: (r) => r.id },
                 {
                   header: "Tiêu đề",
                   render: (r) => (
@@ -153,13 +147,13 @@ export default function TrangYeuCau() {
                     <span
                       className={`status-badge ${statusClass(r.trangThai)}`}
                     >
-                      {statusLabel(r.trangThai)}
+                      {nhanTrangThaiYeuCau(tr, r.trangThai)}
                     </span>
                   ),
                 },
                 {
                   header: "Ngày gửi",
-                  render: (r) => formatNgay(r.ngayTao),
+                  render: (r) => formatNgay(r.ngayTao, localeTag),
                 },
                 {
                   header: "",
@@ -196,7 +190,8 @@ export default function TrangYeuCau() {
               <strong>{xemMoTa.tieuDe}</strong>
             </p>
             <p className="text-muted" style={{ fontSize: 14 }}>
-              {formatNgay(xemMoTa.ngayTao)} · {statusLabel(xemMoTa.trangThai)}
+              {formatNgay(xemMoTa.ngayTao, localeTag)} ·{" "}
+              {nhanTrangThaiYeuCau(tr, xemMoTa.trangThai)}
             </p>
             <p style={{ whiteSpace: "pre-wrap" }}>
               {xemMoTa.moTa?.trim() ? xemMoTa.moTa : "Không có mô tả."}
@@ -207,7 +202,7 @@ export default function TrangYeuCau() {
                 className="btn btn-secondary"
                 onClick={() => setXemMoTa(null)}
               >
-                <IconTimes /> Đóng
+                <IconTimes /> {c.close}
               </button>
             </div>
           </div>

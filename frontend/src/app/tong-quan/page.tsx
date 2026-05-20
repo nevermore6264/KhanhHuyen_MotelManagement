@@ -6,17 +6,31 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  BarElement,
   ArcElement,
   LineElement,
   PointElement,
   Tooltip,
   Legend,
 } from "chart.js";
-import { Doughnut, Line } from "react-chartjs-2";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import { IconReceipt, IconFile, IconHome, IconPlus } from "@/components/Icons";
 import api from "@/lib/api";
 import { getName, getRole } from "@/lib/auth";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { thayMauChuoi } from "@/lib/i18n";
+import {
+  dinhDangNgay,
+  dinhDangSo,
+  dinhDangThangNam,
+  dinhDangTien,
+  layLocaleTag,
+} from "@/lib/locale";
+import {
+  nhanPhuongThucThanhToan,
+  nhanTrangThaiHopDong,
+} from "@/lib/trangThai";
 import { chuanHoaDanhSachHopDongTuApi } from "@/lib/chuanHoaHopDongTuApi";
 import {
   chuanHoaThanhToanTuApi,
@@ -26,6 +40,7 @@ import {
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  BarElement,
   ArcElement,
   LineElement,
   PointElement,
@@ -63,38 +78,8 @@ type Contract = {
   status?: string;
 };
 
-const paymentMethodLabel = (value?: string) => {
-  switch (value) {
-    case "CASH":
-      return "Tiền mặt";
-    case "TRANSFER":
-      return "Chuyển khoản";
-    default:
-      return value || "-";
-  }
-};
-
-const contractStatusLabel = (value?: string) => {
-  switch (value) {
-    case "ACTIVE":
-      return "Đang hiệu lực";
-    case "ENDED":
-      return "Đã kết thúc";
-    case "TERMINATED":
-      return "Đã hủy";
-    default:
-      return value || "-";
-  }
-};
-
-const SLOGAN_DASHBOARD = [
-  "iTro — Nhà trọ gọn gàng",
-  "Thuê an tâm",
-  "Thanh toán dễ dàng",
-];
-
-function MarqueeSloganDashboard() {
-  const items = [...SLOGAN_DASHBOARD, ...SLOGAN_DASHBOARD, ...SLOGAN_DASHBOARD];
+function MarqueeSloganDashboard({ slogans }: { slogans: readonly string[] }) {
+  const items = [...slogans, ...slogans, ...slogans];
   return (
     <div className="dashboard-slogan-marquee" aria-hidden>
       <div className="dashboard-slogan-track">
@@ -112,16 +97,6 @@ function MarqueeSloganDashboard() {
     </div>
   );
 }
-
-const formatDateDMY = (dateStr?: string) => {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
 
 const IconDoc = () => (
   <svg
@@ -214,10 +189,16 @@ export default function TrangTongQuan() {
     null,
   );
   const [unpaidInvoices, setUnpaidInvoices] = useState<HoaDonNo[]>([]);
+  const [revenueYearTotal, setRevenueYearTotal] = useState(0);
   const [dangTai, setDangTai] = useState(true);
   const [myContracts, setMyContracts] = useState<Contract[]>([]);
   const [myPayments, setMyPayments] = useState<PaymentRow[]>([]);
 
+  const { t, lang } = useCaiDat();
+  const dp = t.dashboardPro;
+  const db = t.dashboard;
+  const td = t.tenantDash;
+  const localeTag = layLocaleTag(lang);
   const role = mounted ? getRole() : null;
   const isTenant = role === "TENANT";
   const tenNguoiDung = mounted ? getName() : null;
@@ -291,6 +272,7 @@ export default function TrangTongQuan() {
             revenue: Number(m.revenue || 0),
           })),
         );
+        setRevenueYearTotal(Number(revYearRes.data.total || 0));
         const hd = hoaDonRes.data;
         setInvoiceSummary({
           month: Number(hd.month || thang),
@@ -344,20 +326,23 @@ export default function TrangTongQuan() {
     load();
   }, [mounted, isTenant, kyBaoCao]);
 
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat("vi-VN").format(value);
+  const formatNumber = (value: number) => dinhDangSo(value, lang);
+  const formatMoney = (value: number) => dinhDangTien(value, lang, { short: true });
 
   const goiYHomNay = useMemo(() => {
     const list: { text: string; href?: string; uuTien?: "warn" | "ok" }[] = [];
     if (vacant > 0) {
       list.push({
-        text: `Có ${formatNumber(vacant)} phòng trống — cập nhật trạng thái hoặc đăng tin.`,
+        text: thayMauChuoi(dp.tips.vacant, { n: formatNumber(vacant) }),
         href: "/phong",
       });
     }
     if (unpaidCount > 0) {
       list.push({
-        text: `${formatNumber(unpaidCount)} hóa đơn chưa thanh toán (${formatNumber(debt)} đ).`,
+        text: thayMauChuoi(dp.tips.debt, {
+          n: formatNumber(unpaidCount),
+          amount: formatNumber(debt),
+        }),
         href: "/hoa-don",
         uuTien: "warn",
       });
@@ -367,29 +352,79 @@ export default function TrangTongQuan() {
       occupancy.occupancyRatePercent < 75
     ) {
       list.push({
-        text: `Tỷ lệ lấp đầy ${occupancy.occupancyRatePercent}% — cần tăng tốc cho thuê.`,
+        text: thayMauChuoi(dp.tips.occupancy, {
+          pct: occupancy.occupancyRatePercent,
+        }),
         href: "/phong",
       });
     }
     if (occupancy.maintenance > 0) {
       list.push({
-        text: `${formatNumber(occupancy.maintenance)} phòng đang bảo trì.`,
+        text: thayMauChuoi(dp.tips.maintenance, {
+          n: formatNumber(occupancy.maintenance),
+        }),
         href: "/phong",
       });
     }
     if (list.length === 0) {
       list.push({
-        text: "Vận hành ổn định — nhập chỉ số điện nước đầu tháng.",
+        text: dp.tips.stable,
         href: "/chi-so-dien-nuoc",
         uuTien: "ok",
       });
     }
     return list;
-  }, [vacant, unpaidCount, debt, occupancy]);
+  }, [vacant, unpaidCount, debt, occupancy, dp, lang]);
+
+  const barChartData = useMemo(
+    () => ({
+      labels: [db.vacant, db.debt, db.revenue],
+      datasets: [
+        {
+          label: dp.quickOverview,
+          data: [vacant, debt, revenue],
+          backgroundColor: ["#fcd34d", "#ea580c", "#059669"],
+          borderRadius: 8,
+          maxBarThickness: 52,
+        },
+      ],
+    }),
+    [vacant, debt, revenue, db.vacant, db.debt, db.revenue, dp.quickOverview],
+  );
+
+  const barChartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx: { parsed: { y: number } }) =>
+              `${formatNumber(ctx.parsed.y)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#78716c", font: { size: 11 } },
+        },
+        y: {
+          grid: { color: "rgba(28, 25, 23, 0.06)" },
+          ticks: {
+            color: "#78716c",
+            callback: (value: number | string) => formatNumber(Number(value)),
+          },
+        },
+      },
+    }),
+    [lang],
+  );
 
   const doughnutData = useMemo(
     () => ({
-      labels: ["Phòng trống", "Đang thuê", "Bảo trì"],
+      labels: [dp.vacant, dp.occupied, dp.maintenance],
       datasets: [
         {
           data: [
@@ -397,12 +432,12 @@ export default function TrangTongQuan() {
             occupancy.occupied,
             occupancy.maintenance,
           ],
-          backgroundColor: ["#bae6fd", "#0ea5e9", "#94a3b8"],
+          backgroundColor: ["#fcd34d", "#7c3aed", "#a8a29e"],
           borderWidth: 0,
         },
       ],
     }),
-    [occupancy],
+    [occupancy, dp.vacant, dp.occupied, dp.maintenance, lang],
   );
 
   const lineData = useMemo(() => {
@@ -420,23 +455,39 @@ export default function TrangTongQuan() {
       labels,
       datasets: [
         {
-          label: "Doanh thu",
+          label: dp.revenueChartLabel,
           data: series,
-          borderColor: "#0284c7",
-          backgroundColor: "rgba(14, 165, 233, 0.15)",
+          borderColor: "#ea580c",
+          backgroundColor: "rgba(234, 88, 12, 0.08)",
           tension: 0.35,
           fill: true,
-          pointRadius: 3,
+          pointRadius: 4,
+          pointBackgroundColor: "#ffffff",
+          pointBorderColor: "#ea580c",
+          pointBorderWidth: 2,
+          pointHoverRadius: 5,
+          borderWidth: 2,
         },
       ],
     };
-  }, [revenueByMonth]);
+  }, [revenueByMonth, dp.revenueChartLabel]);
 
   const doughnutOptions = useMemo(
     () => ({
       responsive: true,
-      plugins: { legend: { position: "bottom" as const } },
-      cutout: "65%",
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: "bottom" as const,
+          labels: {
+            boxWidth: 10,
+            padding: 14,
+            font: { size: 11, family: "'Nunito', system-ui, sans-serif" },
+            color: "#64748b",
+          },
+        },
+      },
+      cutout: "72%",
     }),
     [],
   );
@@ -444,17 +495,86 @@ export default function TrangTongQuan() {
   const lineOptions = useMemo(
     () => ({
       responsive: true,
-      plugins: { legend: { display: false } },
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0f172a",
+          titleFont: { size: 12, weight: "600" as const },
+          bodyFont: { size: 12 },
+          padding: 10,
+          cornerRadius: 6,
+        },
+      },
       scales: {
-        x: { grid: { display: false } },
-        y: {
+        x: {
+          grid: { display: false },
           ticks: {
-            callback: (value: any) => formatNumber(Number(value)),
+            color: "#64748b",
+            font: { size: 11 },
           },
+          border: { display: false },
+        },
+        y: {
+          grid: { color: "rgba(15, 23, 42, 0.06)" },
+          ticks: {
+            color: "#64748b",
+            font: { size: 11 },
+            callback: (value: number | string) => formatNumber(Number(value)),
+          },
+          border: { display: false },
         },
       },
     }),
     [],
+  );
+
+  const tyLeThuTien = useMemo(() => {
+    if (!invoiceSummary || invoiceSummary.sumTotal <= 0) return 0;
+    return Math.round((invoiceSummary.sumPaid / invoiceSummary.sumTotal) * 100);
+  }, [invoiceSummary]);
+
+  const doanhThuBinhQuanPhong = useMemo(() => {
+    if (occupancy.occupied <= 0) return 0;
+    return Math.round(revenue / occupancy.occupied);
+  }, [revenue, occupancy.occupied]);
+
+  const doanhThuThangTruoc = useMemo(() => {
+    const thangTruoc = kyBaoCao.thang === 1 ? 12 : kyBaoCao.thang - 1;
+    return revenueByMonth.find((m) => m.month === thangTruoc)?.revenue ?? 0;
+  }, [revenueByMonth, kyBaoCao.thang]);
+
+  const xuHuongDoanhThu = useMemo(() => {
+    if (doanhThuThangTruoc <= 0) return null;
+    return Math.round(
+      ((revenue - doanhThuThangTruoc) / doanhThuThangTruoc) * 100,
+    );
+  }, [revenue, doanhThuThangTruoc]);
+
+  const diemVanHanh = useMemo(() => {
+    const occ = occupancy.occupancyRatePercent;
+    const thu = tyLeThuTien;
+    const noDebt =
+      unpaidCount === 0 ? 100 : Math.max(0, 100 - unpaidCount * 8);
+    return Math.min(100, Math.round(occ * 0.45 + thu * 0.35 + noDebt * 0.2));
+  }, [occupancy.occupancyRatePercent, tyLeThuTien, unpaidCount]);
+
+  const tyLeHoaDon = (count: number) =>
+    invoiceSummary && invoiceSummary.countTotal > 0
+      ? Math.round((count / invoiceSummary.countTotal) * 100)
+      : 0;
+
+  const TAC_VU_NHANH = useMemo(
+    () => [
+      { href: "/khu-vuc", ...dp.tasks.zones },
+      { href: "/phong", ...dp.tasks.rooms },
+      { href: "/hop-dong", ...dp.tasks.contracts },
+      { href: "/hoa-don", ...dp.tasks.invoices },
+      { href: "/khach-thue", ...dp.tasks.tenants },
+      { href: "/chi-so-dien-nuoc", ...dp.tasks.utilities },
+      { href: "/bao-cao", ...dp.tasks.reports },
+    ],
+    [dp.tasks, lang],
   );
 
   if (mounted && isTenant) {
@@ -463,22 +583,22 @@ export default function TrangTongQuan() {
       <div className="page-shell page-dashboard">
           <div className="dashboard-hero">
             <div>
-              <h2>Tổng quan của tôi</h2>
-              <p>Hợp đồng thuê và thanh toán.</p>
+              <h2>{td.title}</h2>
+              <p>{td.lead}</p>
               <div className="hero-actions">
                 <Link className="btn" href="/thanh-toan-cua-toi">
-                  <IconReceipt /> Đến thanh toán
+                  <IconReceipt /> {td.goPayments}
                 </Link>
                 <Link className="btn btn-secondary" href="/hop-dong-cua-toi">
-                  <IconFile /> Xem hợp đồng
+                  <IconFile /> {td.viewContract}
                 </Link>
               </div>
             </div>
             <div className="hero-pill hero-pill-clock">
-              <span>{mounted ? now.toLocaleDateString("vi-VN") : "—"}</span>
+              <span>{mounted ? now.toLocaleDateString(localeTag) : "—"}</span>
               <span className="hero-pill-time" suppressHydrationWarning>
                 {mounted
-                  ? now.toLocaleTimeString("vi-VN", {
+                  ? now.toLocaleTimeString(localeTag, {
                       hour: "2-digit",
                       minute: "2-digit",
                       second: "2-digit",
@@ -491,15 +611,9 @@ export default function TrangTongQuan() {
 
           <div className="dashboard-slogan-marquee" aria-hidden>
             <div className="dashboard-slogan-track">
-              <span>
-                🏠 Ngôi nhà thứ hai — Thuê an tâm, thanh toán dễ dàng ·{" "}
-              </span>
-              <span>
-                🏠 Ngôi nhà thứ hai — Thuê an tâm, thanh toán dễ dàng ·{" "}
-              </span>
-              <span>
-                🏠 Ngôi nhà thứ hai — Thuê an tâm, thanh toán dễ dàng ·{" "}
-              </span>
+              <span>{td.marquee}</span>
+              <span>{td.marquee}</span>
+              <span>{td.marquee}</span>
             </div>
           </div>
 
@@ -509,26 +623,26 @@ export default function TrangTongQuan() {
                 <span className="card-title-icon">
                   <IconDoc />
                 </span>
-                Hợp đồng của tôi
+                {td.myContracts}
               </h3>
               {myContracts.length === 0 ? (
-                <p className="text-muted">Chưa có hợp đồng.</p>
+                <p className="text-muted">{td.noContracts}</p>
               ) : (
                 <ul className="dashboard-contract-list">
                   {myContracts.map((c) => (
                     <li key={c.id}>
                       <span className="contract-room">
-                        Phòng {c.room?.code ?? "—"}
+                        {td.room} {c.room?.code ?? "—"}
                       </span>
                       <span className="contract-dates">
-                        {formatDateDMY(c.startDate)} –{" "}
-                        {formatDateDMY(c.endDate)}
+                        {dinhDangNgay(c.startDate, lang)} –{" "}
+                        {dinhDangNgay(c.endDate, lang)}
                       </span>
                       <span className="contract-status">
-                        {contractStatusLabel(c.status)}
+                        {nhanTrangThaiHopDong(t, c.status)}
                       </span>
                       <Link href="/hop-dong-cua-toi" className="link-small">
-                        Xem chi tiết
+                        {td.viewDetail}
                       </Link>
                     </li>
                   ))}
@@ -539,7 +653,7 @@ export default function TrangTongQuan() {
                   href="/hop-dong-cua-toi"
                   className="btn btn-secondary btn-sm"
                 >
-                  Xem tất cả hợp đồng
+                  {td.allContracts}
                 </Link>
               </div>
             </div>
@@ -549,14 +663,14 @@ export default function TrangTongQuan() {
                 <span className="card-title-icon">
                   <IconUser />
                 </span>
-                Bên cho thuê
+                {td.landlord}
               </h3>
               <p className="text-muted" style={{ marginBottom: 8 }}>
-                Đội ngũ nhà trọ luôn sẵn sàng hỗ trợ bạn về hợp đồng hoặc thanh toán.
+                {td.landlordHint}
               </p>
               <div className="dashboard-tenant-card-actions">
                 <Link href="/yeu-cau" className="btn btn-secondary btn-sm">
-                  Gửi yêu cầu hỗ trợ
+                  {td.sendRequest}
                 </Link>
               </div>
             </div>
@@ -568,19 +682,19 @@ export default function TrangTongQuan() {
                 <span className="card-title-icon">
                   <IconReceipt />
                 </span>
-                Lịch sử thanh toán gần đây
+                {td.recentPayments}
               </h3>
               {myPayments.length === 0 ? (
-                <p className="text-muted">Chưa có giao dịch thanh toán.</p>
+                <p className="text-muted">{td.noPayments}</p>
               ) : (
                 <div className="dashboard-payment-list-wrap">
                   <table className="dashboard-payment-table">
                     <thead>
                       <tr>
-                        <th>Kỳ</th>
-                        <th>Số tiền</th>
-                        <th>Hình thức</th>
-                        <th>Ngày thanh toán</th>
+                        <th>{td.period}</th>
+                        <th>{td.amount}</th>
+                        <th>{td.method}</th>
+                        <th>{td.paidAt}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -588,16 +702,20 @@ export default function TrangTongQuan() {
                         <tr key={p.id}>
                           <td>
                             {p.invoice
-                              ? `Tháng ${p.invoice.month}/${p.invoice.year}`
+                              ? dinhDangThangNam(
+                                  p.invoice.month,
+                                  p.invoice.year,
+                                  lang,
+                                )
                               : "—"}
                           </td>
                           <td>
                             {Number.isFinite(p.amount)
-                              ? `${formatNumber(p.amount)} đ`
+                              ? formatMoney(p.amount)
                               : "—"}
                           </td>
-                          <td>{paymentMethodLabel(p.method)}</td>
-                          <td>{formatDateDMY(p.paidAt)}</td>
+                          <td>{nhanPhuongThucThanhToan(t, p.method)}</td>
+                          <td>{dinhDangNgay(p.paidAt, lang)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -612,7 +730,7 @@ export default function TrangTongQuan() {
                   href="/thanh-toan-cua-toi"
                   className="btn btn-secondary btn-sm"
                 >
-                  Xem tất cả thanh toán
+                  {td.allPayments}
                 </Link>
               </div>
             </div>
@@ -622,128 +740,84 @@ export default function TrangTongQuan() {
     );
   }
 
-  const tyLeHoaDon = (count: number) =>
-    invoiceSummary && invoiceSummary.countTotal > 0
-      ? Math.round((count / invoiceSummary.countTotal) * 100)
-      : 0;
-
   return (
     <TrangBaoVe>
-      <div className="page-shell page-dashboard page-dashboard--admin">
-        <div className="dashboard-hero dashboard-hero--rich">
-          <div className="dashboard-hero__main">
-            <span className="dashboard-hero__badge">
-              Báo cáo tháng {kyBaoCao.thang}/{kyBaoCao.nam}
+      <div className="page-shell page-dashboard page-dashboard--studio">
+        <header className="dash-studio-bar">
+          <div className="dash-studio-bar__main">
+            <span className="dash-studio-bar__period">
+              {dp.monthLabel} {kyBaoCao.thang} · {kyBaoCao.nam}
             </span>
-            <h2 className="page-heading">
-              Chào {tenNguoiDung?.trim() || "bạn"} 👋
+            <h2 className="dash-studio-bar__title">
+              {dp.greeting}
+              {tenNguoiDung?.trim() ? `, ${tenNguoiDung.trim()}` : ""}
             </h2>
-            <p className="page-lead">
-              Tổng quan vận hành nhà trọ — phòng, hóa đơn, doanh thu và công nợ
-              trên một màn hình.
-            </p>
-            <div className="dashboard-hero__chips">
-              <span className="dash-chip">
-                <strong>{formatNumber(occupancy.totalRooms)}</strong> phòng
+            <p className="dash-studio-bar__lead">{dp.lead}</p>
+          </div>
+          <aside className="dash-studio-bar__aside">
+            <div className="dash-studio-bar__clock">
+              <span className="dash-studio-bar__date">
+                {mounted ? now.toLocaleDateString(localeTag) : "—"}
               </span>
-              <span className="dash-chip">
-                Lấp đầy{" "}
-                <strong>{occupancy.occupancyRatePercent}%</strong>
-              </span>
-              <span className="dash-chip dash-chip--warn">
-                Nợ <strong>{formatNumber(unpaidCount)}</strong> HĐ
+              <span className="dash-studio-bar__time" suppressHydrationWarning>
+                {mounted
+                  ? now.toLocaleTimeString(localeTag, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
+                    })
+                  : "—:—:—"}
               </span>
             </div>
-            <div className="hero-actions">
-              <Link className="btn" href="/phong">
-                <IconHome /> Quản lý phòng
-              </Link>
-              <Link className="btn btn-secondary" href="/hoa-don">
-                <IconReceipt /> Hóa đơn
-              </Link>
-              <Link className="btn btn-secondary" href="/bao-cao">
-                <IconChart /> Báo cáo
-              </Link>
+            <div
+              className="dash-studio-bar__health"
+              style={
+                { "--health-pct": diemVanHanh } as import("react").CSSProperties
+              }
+            >
+              <div className="dash-studio-bar__health-ring">
+                <span>{diemVanHanh}</span>
+              </div>
+              <div className="dash-studio-bar__health-text">
+                <strong>{dp.opsScore}</strong>
+                <span>
+                  {diemVanHanh >= 80
+                    ? dp.opsExcellent
+                    : diemVanHanh >= 60
+                      ? dp.opsGood
+                      : dp.opsWarn}
+                </span>
+              </div>
             </div>
+          </aside>
+          <div className="dash-studio-bar__actions">
+            <Link className="btn" href="/phong">
+              <IconHome /> {dp.manageRooms}
+            </Link>
+            <Link className="btn btn-secondary" href="/hop-dong">
+              <IconPlus /> {dp.createContract}
+            </Link>
+            <Link className="btn btn-secondary" href="/hoa-don">
+              <IconReceipt /> {dp.collectInvoices}
+            </Link>
+            <Link className="btn btn-secondary" href="/bao-cao">
+              <IconChart /> {dp.reports}
+            </Link>
           </div>
-          <div className="hero-pill hero-pill-clock">
-            <span>{mounted ? now.toLocaleDateString("vi-VN") : "—"}</span>
-            <span className="hero-pill-time" suppressHydrationWarning>
-              {mounted
-                ? now.toLocaleTimeString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: false,
-                  })
-                : "—:—:—"}
-            </span>
-          </div>
-        </div>
+        </header>
 
-        <MarqueeSloganDashboard />
+        <MarqueeSloganDashboard slogans={dp.slogans} />
 
-        <div
-          className={`stat-grid stat-grid--rich${dangTai ? " stat-grid--loading" : ""}`}
-        >
+        <div className={`stat-grid stat-grid--studio${dangTai ? " stat-grid--loading" : ""}`}>
           <div className="card stat-card accent-rose">
             <div className="stat-icon">
               <IconHome />
             </div>
             <div>
-              <div className="stat-label">Tổng phòng</div>
-              <div className="stat-value">
-                {formatNumber(occupancy.totalRooms)}
-              </div>
-              <div className="stat-note">Toàn hệ thống</div>
-            </div>
-          </div>
-          <div className="card stat-card accent-sky">
-            <div className="stat-icon">
-              <IconUser />
-            </div>
-            <div>
-              <div className="stat-label">Đang thuê</div>
-              <div className="stat-value">
-                {formatNumber(occupancy.occupied)}
-              </div>
-              <div className="stat-note">
-                {occupancy.occupancyRatePercent}% lấp đầy
-              </div>
-            </div>
-          </div>
-          <div className="card stat-card accent-peach">
-            <div className="stat-icon">
-              <IconHome />
-            </div>
-            <div>
-              <div className="stat-label">Phòng trống</div>
+              <div className="stat-label">{db.vacant}</div>
               <div className="stat-value">{formatNumber(vacant)}</div>
-              <div className="stat-note">Sẵn sàng cho thuê</div>
-            </div>
-          </div>
-          <div className="card stat-card accent-pink">
-            <div className="stat-icon">
-              <IconChart />
-            </div>
-            <div>
-              <div className="stat-label">Bảo trì</div>
-              <div className="stat-value">
-                {formatNumber(occupancy.maintenance)}
-              </div>
-              <div className="stat-note">Tạm ngưng</div>
-            </div>
-          </div>
-          <div className="card stat-card accent-rose">
-            <div className="stat-icon">
-              <IconChart />
-            </div>
-            <div>
-              <div className="stat-label">Doanh thu tháng</div>
-              <div className="stat-value">{formatNumber(revenue)} đ</div>
-              <div className="stat-note">
-                Tháng {kyBaoCao.thang}/{kyBaoCao.nam}
-              </div>
+              <div className="stat-note">{dp.vacantNote}</div>
             </div>
           </div>
           <div className="card stat-card accent-pink">
@@ -751,74 +825,234 @@ export default function TrangTongQuan() {
               <IconWallet />
             </div>
             <div>
-              <div className="stat-label">Công nợ</div>
-              <div className="stat-value">{formatNumber(debt)} đ</div>
+              <div className="stat-label">{db.debt}</div>
+              <div className="stat-value">{formatMoney(debt)}</div>
+              <div className="stat-note">{dp.debtNote}</div>
+            </div>
+          </div>
+          <div className="card stat-card accent-peach">
+            <div className="stat-icon">
+              <IconChart />
+            </div>
+            <div>
+              <div className="stat-label">{db.revenue}</div>
+              <div className="stat-value">{formatMoney(revenue)}</div>
+              <div className="stat-note">{dp.revenueNote}</div>
+            </div>
+          </div>
+          <div className="card stat-card accent-sky">
+            <div className="stat-icon">
+              <IconChart />
+            </div>
+            <div>
+              <div className="stat-label">{db.occupancy}</div>
+              <div className="stat-value">{occupancy.occupancyRatePercent}%</div>
               <div className="stat-note">
-                {formatNumber(unpaidCount)} hóa đơn chưa TT
+                {formatNumber(occupancy.occupied)}/{formatNumber(occupancy.totalRooms)}{" "}
+                {dp.roomsRented}
               </div>
             </div>
           </div>
         </div>
 
+        <section
+          className={`dash-studio-bento${dangTai ? " dash-spotlight--loading" : ""}`}
+        >
+        <div className={`dash-spotlight${dangTai ? " dash-spotlight--loading" : ""}`}>
+          <article className="dash-spotlight__card dash-spotlight__card--revenue">
+            <span className="dash-spotlight__eyebrow">{dp.revenueMonth}</span>
+            <p className="dash-spotlight__value">
+              {formatNumber(revenue)}
+              <small>đ</small>
+            </p>
+            <p className="dash-spotlight__meta">
+              {xuHuongDoanhThu != null ? (
+                <span
+                  className={
+                    xuHuongDoanhThu >= 0
+                      ? "dash-trend dash-trend--up"
+                      : "dash-trend dash-trend--down"
+                  }
+                >
+                  {xuHuongDoanhThu >= 0 ? "+" : "−"}
+                  {Math.abs(xuHuongDoanhThu)}% {dp.vsLastMonth}
+                </span>
+              ) : (
+                <span>
+                  {dinhDangThangNam(kyBaoCao.thang, kyBaoCao.nam, lang)}
+                </span>
+              )}
+            </p>
+            <p className="dash-spotlight__sub">
+              {dp.yearTotal} {kyBaoCao.nam}: <strong>{formatMoney(revenueYearTotal)}</strong>
+            </p>
+          </article>
+          <article className="dash-spotlight__card dash-spotlight__card--collect">
+            <span className="dash-spotlight__eyebrow">{dp.collectionRate}</span>
+            <p className="dash-spotlight__value">
+              {tyLeThuTien}
+              <small>%</small>
+            </p>
+            <p className="dash-spotlight__meta">
+              {invoiceSummary
+                ? `${formatNumber(invoiceSummary.countPaid)}/${formatNumber(invoiceSummary.countTotal)} ${dp.invoicesPaid}`
+                : "—"}
+            </p>
+            <div className="dash-spotlight__bar">
+              <span style={{ width: `${tyLeThuTien}%` }} />
+            </div>
+          </article>
+          <article className="dash-spotlight__card dash-spotlight__card--occ">
+            <span className="dash-spotlight__eyebrow">{dp.occupancyAvg}</span>
+            <p className="dash-spotlight__value">
+              {occupancy.occupancyRatePercent}
+              <small>%</small>
+            </p>
+            <p className="dash-spotlight__meta">
+              {formatNumber(occupancy.occupied)} / {formatNumber(occupancy.totalRooms)} {dp.roomsRented}
+            </p>
+            <p className="dash-spotlight__sub">
+              {dp.avgPerRoom}: <strong>{formatMoney(doanhThuBinhQuanPhong)}</strong>
+            </p>
+          </article>
+        </div>
+
+        <div
+          className={`dash-kpi-grid${dangTai ? " dash-kpi-grid--loading" : ""}`}
+        >
+          {[
+            {
+              href: "/phong",
+              accent: "blue",
+              icon: <IconHome />,
+              label: dp.totalRooms,
+              value: formatNumber(occupancy.totalRooms),
+              note: `${formatNumber(vacant)} ${dp.vacant} · ${formatNumber(occupancy.maintenance)} ${dp.maintenance}`,
+            },
+            {
+              href: "/phong",
+              accent: "sky",
+              icon: <IconUser />,
+              label: dp.occupied,
+              value: formatNumber(occupancy.occupied),
+              note: `${occupancy.occupancyRatePercent}% ${dp.fillRate}`,
+            },
+            {
+              href: "/hoa-don",
+              accent: "green",
+              icon: <IconReceipt />,
+              label: dp.collectedMonth,
+              value: invoiceSummary
+                ? formatMoney(invoiceSummary.sumPaid)
+                : "—",
+              note: invoiceSummary
+                ? `${formatNumber(invoiceSummary.countPaid)} ${dp.invoices}`
+                : "—",
+            },
+            {
+              href: "/hoa-don",
+              accent: "amber",
+              icon: <IconWallet />,
+              label: t.dashboard.debt,
+              value: formatMoney(debt),
+              note: `${formatNumber(unpaidCount)} ${dp.unpaidInvoices}`,
+            },
+            {
+              href: "/hop-dong",
+              accent: "violet",
+              icon: <IconFile />,
+              label: dp.vacant,
+              value: formatNumber(vacant),
+              note: dp.vacantReady,
+            },
+            {
+              href: "/chi-so-dien-nuoc",
+              accent: "slate",
+              icon: <IconChart />,
+              label: dp.utilities,
+              value: dp.enter,
+              note: dp.utilitiesHint,
+            },
+          ].map((kpi) => (
+            <Link
+              key={kpi.label}
+              href={kpi.href}
+              className={`dash-kpi dash-kpi--${kpi.accent}`}
+            >
+              <div className="dash-kpi__icon">{kpi.icon}</div>
+              <div className="dash-kpi__body">
+                <span className="dash-kpi__label">{kpi.label}</span>
+                <span className="dash-kpi__value">{kpi.value}</span>
+                <span className="dash-kpi__note">{kpi.note}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+        </section>
+
         <div className="dashboard-mid">
           <section className="card dash-panel dash-panel--invoice">
             <div className="dash-panel__head">
               <div>
-                <h3 className="dash-panel__title">Hóa đơn tháng</h3>
+                <h3 className="dash-panel__title">{dp.invoiceMonth}</h3>
                 <p className="dash-panel__sub">
                   {invoiceSummary
-                    ? `Tháng ${invoiceSummary.month}/${invoiceSummary.year}`
-                    : `Tháng ${kyBaoCao.thang}/${kyBaoCao.nam}`}
+                    ? dinhDangThangNam(
+                        invoiceSummary.month,
+                        invoiceSummary.year,
+                        lang,
+                      )
+                    : dinhDangThangNam(kyBaoCao.thang, kyBaoCao.nam, lang)}
                 </p>
               </div>
               <Link href="/hoa-don" className="dash-panel__link">
-                Xem tất cả →
+                {dp.viewAll} →
               </Link>
             </div>
             {invoiceSummary ? (
               <>
                 <div className="dash-invoice-metrics">
                   <div className="dash-metric">
-                    <span className="dash-metric__label">Tổng HĐ</span>
+                    <span className="dash-metric__label">{dp.totalInv}</span>
                     <span className="dash-metric__value">
                       {formatNumber(invoiceSummary.countTotal)}
                     </span>
                     <span className="dash-metric__money">
-                      {formatNumber(invoiceSummary.sumTotal)} đ
+                      {formatMoney(invoiceSummary.sumTotal)}
                     </span>
                   </div>
                   <div className="dash-metric dash-metric--paid">
-                    <span className="dash-metric__label">Đã thanh toán</span>
+                    <span className="dash-metric__label">{dp.paid}</span>
                     <span className="dash-metric__value">
                       {formatNumber(invoiceSummary.countPaid)}
                     </span>
                     <span className="dash-metric__money">
-                      {formatNumber(invoiceSummary.sumPaid)} đ
+                      {formatMoney(invoiceSummary.sumPaid)}
                     </span>
                   </div>
                   <div className="dash-metric dash-metric--unpaid">
-                    <span className="dash-metric__label">Chưa thanh toán</span>
+                    <span className="dash-metric__label">{dp.unpaid}</span>
                     <span className="dash-metric__value">
                       {formatNumber(invoiceSummary.countUnpaid)}
                     </span>
                     <span className="dash-metric__money">
-                      {formatNumber(invoiceSummary.sumUnpaid)} đ
+                      {formatMoney(invoiceSummary.sumUnpaid)}
                     </span>
                   </div>
                   <div className="dash-metric dash-metric--partial">
-                    <span className="dash-metric__label">Thanh toán một phần</span>
+                    <span className="dash-metric__label">{dp.partial}</span>
                     <span className="dash-metric__value">
                       {formatNumber(invoiceSummary.countPartial)}
                     </span>
                     <span className="dash-metric__money">
-                      {formatNumber(invoiceSummary.sumPartial)} đ
+                      {formatMoney(invoiceSummary.sumPartial)}
                     </span>
                   </div>
                 </div>
                 <div className="dash-progress-list">
                   <div className="dash-progress">
                     <div className="dash-progress__row">
-                      <span>Đã TT</span>
+                      <span>{dp.paidShort}</span>
                       <span>{tyLeHoaDon(invoiceSummary.countPaid)}%</span>
                     </div>
                     <div className="dash-progress__bar">
@@ -832,7 +1066,7 @@ export default function TrangTongQuan() {
                   </div>
                   <div className="dash-progress">
                     <div className="dash-progress__row">
-                      <span>Chưa TT</span>
+                      <span>{dp.unpaidShort}</span>
                       <span>{tyLeHoaDon(invoiceSummary.countUnpaid)}%</span>
                     </div>
                     <div className="dash-progress__bar">
@@ -846,7 +1080,7 @@ export default function TrangTongQuan() {
                   </div>
                   <div className="dash-progress">
                     <div className="dash-progress__row">
-                      <span>Một phần</span>
+                      <span>{dp.partialShort}</span>
                       <span>{tyLeHoaDon(invoiceSummary.countPartial)}%</span>
                     </div>
                     <div className="dash-progress__bar">
@@ -861,18 +1095,18 @@ export default function TrangTongQuan() {
                 </div>
               </>
             ) : (
-              <p className="dash-empty">Chưa có dữ liệu hóa đơn tháng này.</p>
+              <p className="dash-empty">{dp.noInvoiceData}</p>
             )}
           </section>
 
           <section className="card dash-panel dash-panel--rooms">
             <div className="dash-panel__head">
               <div>
-                <h3 className="dash-panel__title">Tình trạng phòng</h3>
-                <p className="dash-panel__sub">Phân bổ theo trạng thái</p>
+                <h3 className="dash-panel__title">{dp.roomStatus}</h3>
+                <p className="dash-panel__sub">{dp.byStatus}</p>
               </div>
               <Link href="/phong" className="dash-panel__link">
-                Danh sách phòng →
+                {dp.roomList} →
               </Link>
             </div>
             <div className="dash-occupancy">
@@ -887,56 +1121,97 @@ export default function TrangTongQuan() {
                 <span className="dash-occupancy__pct">
                   {occupancy.occupancyRatePercent}%
                 </span>
-                <span className="dash-occupancy__label">Lấp đầy</span>
+                <span className="dash-occupancy__label">{dp.fillRate}</span>
               </div>
               <ul className="dash-room-breakdown">
                 <li>
                   <span className="dash-room-dot dash-room-dot--avail" />
-                  <span>Phòng trống</span>
+                  <span>{dp.vacant}</span>
                   <strong>{formatNumber(occupancy.available)}</strong>
                 </li>
                 <li>
                   <span className="dash-room-dot dash-room-dot--occ" />
-                  <span>Đang thuê</span>
+                  <span>{dp.occupied}</span>
                   <strong>{formatNumber(occupancy.occupied)}</strong>
                 </li>
                 <li>
                   <span className="dash-room-dot dash-room-dot--maint" />
-                  <span>Bảo trì</span>
+                  <span>{dp.maintenance}</span>
                   <strong>{formatNumber(occupancy.maintenance)}</strong>
                 </li>
               </ul>
             </div>
-            <div className="chart-canvas chart-canvas--compact">
-              <Doughnut data={doughnutData} options={doughnutOptions} />
+            <div className="dash-room-bars">
+              {[
+                {
+                  label: dp.vacant,
+                  count: occupancy.available,
+                  pct:
+                    occupancy.totalRooms > 0
+                      ? (occupancy.available / occupancy.totalRooms) * 100
+                      : 0,
+                  cls: "avail",
+                },
+                {
+                  label: dp.occupied,
+                  count: occupancy.occupied,
+                  pct:
+                    occupancy.totalRooms > 0
+                      ? (occupancy.occupied / occupancy.totalRooms) * 100
+                      : 0,
+                  cls: "occ",
+                },
+                {
+                  label: dp.maintenance,
+                  count: occupancy.maintenance,
+                  pct:
+                    occupancy.totalRooms > 0
+                      ? (occupancy.maintenance / occupancy.totalRooms) * 100
+                      : 0,
+                  cls: "maint",
+                },
+              ].map((row) => (
+                <div key={row.label} className="dash-room-bar">
+                  <div className="dash-room-bar__row">
+                    <span>{row.label}</span>
+                    <span>
+                      {formatNumber(row.count)} ({Math.round(row.pct)}%)
+                    </span>
+                  </div>
+                  <div className="dash-room-bar__track">
+                    <span
+                      className={`dash-room-bar__fill dash-room-bar__fill--${row.cls}`}
+                      style={{ width: `${row.pct}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         </div>
 
-        <div className="quick-grid dashboard-actions-row">
+        <div className="quick-grid quick-grid--studio">
           <div className="card quick-card">
-            <div className="quick-title">Tác vụ nhanh</div>
+            <div className="quick-title">{dp.quickTasks}</div>
             <div className="quick-actions quick-actions--grid">
-              <Link href="/khu-vuc">+ Khu vực</Link>
-              <Link href="/phong">+ Phòng</Link>
-              <Link href="/khach-thue">+ Khách thuê</Link>
-              <Link href="/hop-dong">+ Hợp đồng</Link>
-              <Link href="/chi-so-dien-nuoc">+ Điện nước</Link>
-              <Link href="/yeu-cau">+ Yêu cầu</Link>
+              <Link href="/khu-vuc">{dp.quickActions.addZone}</Link>
+              <Link href="/phong">{dp.quickActions.addRoom}</Link>
+              <Link href="/khach-thue">{dp.quickActions.addTenant}</Link>
+              <Link href="/chi-so-dien-nuoc">{dp.quickActions.addUtilities}</Link>
             </div>
           </div>
           <div className="card quick-card">
-            <div className="quick-title">Gợi ý hôm nay</div>
-            <ul className="dash-insight-list">
+            <div className="quick-title">{dp.todayTips}</div>
+            <ul className="dash-studio-quick-tips">
               {goiYHomNay.map((item, i) => (
                 <li
                   key={i}
                   className={
                     item.uuTien === "warn"
-                      ? "dash-insight dash-insight--warn"
+                      ? "dash-studio-quick-tips__item--warn"
                       : item.uuTien === "ok"
-                        ? "dash-insight dash-insight--ok"
-                        : "dash-insight"
+                        ? "dash-studio-quick-tips__item--ok"
+                        : undefined
                   }
                 >
                   {item.href ? (
@@ -950,66 +1225,130 @@ export default function TrangTongQuan() {
           </div>
         </div>
 
-        <div className="chart-grid">
-          <div className="card chart-card wide-chart">
-            <div className="chart-title">Doanh thu 6 tháng gần nhất</div>
-            <p className="chart-sub">
-              Tổng doanh thu đã thu theo từng tháng (VNĐ)
-            </p>
+        <div className="overview-grid overview-grid--studio">
+          <div className="card chart-card">
+            <div className="chart-title">{dp.quickOverview}</div>
             <div className="chart-canvas">
+              <Bar data={barChartData} options={barChartOptions} />
+            </div>
+          </div>
+          <div className="card chart-card">
+            <div className="chart-title">{db.occupancyChart}</div>
+            <div className="chart-canvas chart-canvas--donut">
+              <Doughnut data={doughnutData} options={doughnutOptions} />
+            </div>
+          </div>
+        </div>
+
+        <div className="chart-grid chart-grid--studio">
+          <div className="card chart-card wide-chart dash-chart-main">
+            <div className="dash-chart-head">
+              <div>
+                <h3 className="chart-title">{dp.revenue6m}</h3>
+                <p className="chart-sub">{dp.revenueTrend}</p>
+              </div>
+              <div className="dash-chart-head__right">
+                <div className="card dash-side-stat dash-side-stat--inline">
+                  <span className="dash-side-stat__label">{dp.yearRevenue}</span>
+                  <span className="dash-side-stat__value">
+                    {formatMoney(revenueYearTotal)}
+                  </span>
+                </div>
+                <div className="dash-chart-badge">
+                  {dp.year} {kyBaoCao.nam}
+                </div>
+              </div>
+            </div>
+            <div className="chart-canvas chart-canvas--tall">
               <Line data={lineData} options={lineOptions} />
             </div>
           </div>
         </div>
 
-        <section className="card dash-panel dash-panel--debt">
+        <div className="dashboard-bottom">
+          <section className="card dash-panel dash-panel--tasks">
+            <div className="dash-panel__head">
+              <h3 className="dash-panel__title">{dp.quickTasks}</h3>
+            </div>
+            <div className="dash-task-grid">
+              {TAC_VU_NHANH.map((task) => (
+                <Link key={task.href} href={task.href} className="dash-task">
+                  <span className="dash-task__label">{task.label}</span>
+                  <span className="dash-task__desc">{task.desc}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+          <section className="card dash-panel dash-panel--insights">
+            <div className="dash-panel__head">
+              <h3 className="dash-panel__title">{dp.todayTips}</h3>
+              <span className="dash-panel__count">{goiYHomNay.length}</span>
+            </div>
+            <ul className="dash-insight-list">
+              {goiYHomNay.map((item, i) => (
+                <li
+                  key={i}
+                  className={
+                    item.uuTien === "warn"
+                      ? "dash-insight dash-insight--warn"
+                      : item.uuTien === "ok"
+                        ? "dash-insight dash-insight--ok"
+                        : "dash-insight"
+                  }
+                >
+                  <span className="dash-insight__num">{i + 1}</span>
+                  <div className="dash-insight__body">
+                    {item.href ? (
+                      <Link href={item.href}>{item.text}</Link>
+                    ) : (
+                      item.text
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <section className="card dash-panel dash-panel--debt dash-panel--debt-v2">
           <div className="dash-panel__head">
             <div>
-              <h3 className="dash-panel__title">Hóa đơn chưa thanh toán</h3>
+              <h3 className="dash-panel__title">{dp.debtTitle}</h3>
               <p className="dash-panel__sub">
                 {unpaidCount > 0
-                  ? `${formatNumber(unpaidCount)} hóa đơn · ${formatNumber(debt)} đ`
-                  : "Không có công nợ"}
+                  ? `${formatNumber(unpaidCount)} ${dp.debtMeta} ${formatMoney(debt)}`
+                  : dp.noDebt}
               </p>
             </div>
-            <Link href="/bao-cao" className="dash-panel__link">
-              Báo cáo chi tiết →
+            <Link href="/hoa-don" className="dash-panel__link">
+              {dp.handleInvoices} →
             </Link>
           </div>
           {unpaidInvoices.length > 0 ? (
-            <div className="table-wrap dash-debt-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Phòng</th>
-                    <th>Khách thuê</th>
-                    <th>Kỳ</th>
-                    <th>Số tiền</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {unpaidInvoices.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.roomCode || "—"}</td>
-                      <td>{row.tenantName || "—"}</td>
-                      <td>
-                        {row.month && row.year
-                          ? `${row.month}/${row.year}`
-                          : "—"}
-                      </td>
-                      <td>
-                        {row.total != null
-                          ? `${formatNumber(row.total)} đ`
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="dash-debt-list">
+              {unpaidInvoices.map((row, idx) => (
+                <li key={row.id} className="dash-debt-item">
+                  <span className="dash-debt-item__rank">{idx + 1}</span>
+                  <div className="dash-debt-item__main">
+                    <strong>{row.roomCode || "—"}</strong>
+                    <span>{row.tenantName || dp.unknownTenant}</span>
+                  </div>
+                  <span className="dash-debt-item__period">
+                    {row.month && row.year
+                      ? `T${row.month}/${row.year}`
+                      : "—"}
+                  </span>
+                  <span className="dash-debt-item__amount">
+                    {row.total != null
+                      ? formatMoney(row.total)
+                      : "—"}
+                  </span>
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="dash-empty dash-empty--ok">
-              Tuyệt vời — không có hóa đơn quá hạn.
+              {dp.noDebtOk}
             </p>
           )}
         </section>

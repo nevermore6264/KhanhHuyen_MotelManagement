@@ -7,21 +7,8 @@ import { IconEye, IconCheck, IconSend, IconTimes } from "@/components/Icons";
 import api from "@/lib/api";
 import { useToast } from "@/components/NhaCungCapToast";
 import { chuanHoaYeuCau, type YeuCauHang } from "@/lib/chuanHoaYeuCau";
-
-const statusLabel = (value?: string) => {
-  switch (value) {
-    case "OPEN":
-      return "Mới";
-    case "IN_PROGRESS":
-      return "Đang xử lý";
-    case "RESOLVED":
-      return "Đã xử lý";
-    case "CLOSED":
-      return "Đã đóng";
-    default:
-      return value || "-";
-  }
-};
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { nhanTrangThaiYeuCau } from "@/lib/trangThai";
 
 const statusClass = (value?: string) => {
   switch (value) {
@@ -39,6 +26,10 @@ const statusClass = (value?: string) => {
 };
 
 export default function TrangYeuCauHoTro() {
+  const { t: tr } = useCaiDat();
+  const p = tr.pages.yeuCauHoTro;
+  const s = tr.pages.shared;
+  const c = tr.common;
   const [danhSach, setDanhSach] = useState<YeuCauHang[]>([]);
   const [idDangChon, setIdDangChon] = useState("");
   const [trangThai, setTrangThai] = useState("OPEN");
@@ -52,7 +43,7 @@ export default function TrangYeuCauHoTro() {
       setDanhSach(duLieu.map(chuanHoaYeuCau));
     } catch {
       setDanhSach([]);
-      notify("Không tải được danh sách yêu cầu.", "error");
+      notify(p.errLoad, "error");
     }
   };
 
@@ -63,23 +54,21 @@ export default function TrangYeuCauHoTro() {
   const capNhatTrangThai = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idDangChon?.trim()) {
-      notify("Vui lòng nhập ID yêu cầu", "error");
+      notify(p.errId, "error");
       return;
     }
     try {
       await api.put(`/yeu-cau-ho-tro/${idDangChon.trim()}`, {
         trangThai,
       });
-      notify("Đã cập nhật trạng thái", "success");
+      notify(p.okUpdate, "success");
       setIdDangChon("");
       setTrangThai("OPEN");
       tai();
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number } };
       const thongBao =
-        ax?.response?.status === 404
-          ? "Không tìm thấy yêu cầu với ID này"
-          : "Cập nhật thất bại";
+        ax?.response?.status === 404 ? p.errNotFound : p.errUpdate;
       notify(thongBao, "error");
     }
   };
@@ -90,14 +79,14 @@ export default function TrangYeuCauHoTro() {
       tieuDe: yeuCau.tieuDe,
       moTa: yeuCau.moTa,
     });
-    notify("Đã cập nhật trạng thái xử lý", "success");
+    notify(p.okUpdateProcess, "success");
     tai();
   };
 
   const guiEmail = (yeuCau: YeuCauHang) => {
     const email = yeuCau.khachEmail;
     if (!email) {
-      notify("Thiếu email khách thuê", "error");
+      notify(p.errNoEmail, "error");
       return;
     }
     const subject = `Phản hồi sự cố #${yeuCau.id}`;
@@ -112,7 +101,7 @@ export default function TrangYeuCauHoTro() {
   return (
     <TrangBaoVe>
       <div className="page-shell page-table">
-        <h2>Yêu cầu hỗ trợ</h2>
+        <h2>{p.title}</h2>
         <div className="card">
           <form onSubmit={capNhatTrangThai} className="grid grid-3">
             <input
@@ -138,7 +127,7 @@ export default function TrangYeuCauHoTro() {
           <BangDonGian
             data={danhSach}
             columns={[
-              { header: "ID", render: (r) => r.id },
+              { header: s.id, render: (r) => r.id },
               { header: "Tiêu đề", render: (r) => r.tieuDe },
               { header: "Khách", render: (r) => r.khachTen ?? "—" },
               { header: "Phòng", render: (r) => r.maPhong ?? "—" },
@@ -146,12 +135,12 @@ export default function TrangYeuCauHoTro() {
                 header: "Trạng thái",
                 render: (r) => (
                   <span className={`status-badge ${statusClass(r.trangThai)}`}>
-                    {statusLabel(r.trangThai)}
+                    {nhanTrangThaiYeuCau(tr, r.trangThai)}
                   </span>
                 ),
               },
               {
-                header: "Thao tác",
+                header: s.actions,
                 render: (r) => (
                   <div className="table-actions">
                     <button className="btn" onClick={() => setChiTiet(r)}>
@@ -193,7 +182,7 @@ export default function TrangYeuCauHoTro() {
                   className="btn btn-secondary"
                   onClick={() => setChiTiet(null)}
                 >
-                  <IconTimes /> Đóng
+                  <IconTimes /> {c.close}
                 </button>
               </div>
             </div>

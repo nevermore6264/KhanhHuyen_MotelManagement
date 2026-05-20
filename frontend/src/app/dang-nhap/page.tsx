@@ -8,9 +8,12 @@ import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 import { IconHome } from "@/components/Icons";
 import FooterHienDai from "@/components/FooterHienDai";
+import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 
 export default function TrangDangNhap() {
   const router = useRouter();
+  const { t: tr } = useCaiDat();
+  const a = tr.pages.auth;
   const [tenDangNhap, setTenDangNhap] = useState("admin");
   const [matKhau, setMatKhau] = useState("admin123");
   const [loi, setLoi] = useState("");
@@ -33,7 +36,7 @@ export default function TrangDangNhap() {
       );
       router.replace("/tong-quan");
     } catch {
-      setLoi("Tài khoản hoặc mật khẩu không đúng. Vui lòng thử lại.");
+      setLoi(a.errLogin);
     } finally {
       setDangGui(false);
     }
@@ -48,21 +51,18 @@ export default function TrangDangNhap() {
 
       <Link href="/" className="login-back-home">
         <IconHome />
-        Quay về trang chủ
+        {a.backHome}
       </Link>
 
       <div className="login-page__main">
       <div className="login-layout">
         <section className="login-panel-hero">
           <h1>
-            Quản lý nhà trọ
+            {a.loginTitle}
             <br />
-            <span>nhẹ nhàng hơn mỗi ngày</span>
+            <span>{a.loginTitleAccent}</span>
           </h1>
-          <p>
-            iTro giúp bạn theo dõi phòng, hợp đồng, hóa đơn và trao đổi với
-            khách thuê — trên một nền tảng gọn gàng, dễ dùng.
-          </p>
+          <p>{a.loginLead}</p>
 
           <div className="login-features">
             <div className="login-feature">
@@ -70,8 +70,8 @@ export default function TrangDangNhap() {
                 🏠
               </span>
               <div>
-                <strong>Toàn cảnh một màn hình</strong>
-                <span>Phòng, khách, hợp đồng và thanh toán liên kết thống nhất.</span>
+                <strong>{a.feat1Title}</strong>
+                <span>{a.feat1Desc}</span>
               </div>
             </div>
             <div className="login-feature">
@@ -79,8 +79,8 @@ export default function TrangDangNhap() {
                 🔔
               </span>
               <div>
-                <strong>Nhắc việc tự động</strong>
-                <span>Hạn hợp đồng, hóa đơn và thông báo realtime.</span>
+                <strong>{a.feat2Title}</strong>
+                <span>{a.feat2Desc}</span>
               </div>
             </div>
             <div className="login-feature">
@@ -88,8 +88,8 @@ export default function TrangDangNhap() {
                 📊
               </span>
               <div>
-                <strong>Báo cáo rõ ràng</strong>
-                <span>Xuất Excel, PDF — đối soát nhanh từng kỳ.</span>
+                <strong>{a.feat3Title}</strong>
+                <span>{a.feat3Desc}</span>
               </div>
             </div>
           </div>
@@ -97,11 +97,13 @@ export default function TrangDangNhap() {
           <div className="login-stats-row">
             <div className="login-stat-pill">
               <strong>24/7</strong>
-              <span>Hỗ trợ vận hành</span>
+              <span>{a.support247}</span>
             </div>
             <div className="login-stat-pill">
               <strong>3</strong>
-              <span>Vai trò người dùng</span>
+              <span>
+                {tr.roles.ADMIN} · {tr.roles.STAFF} · {tr.roles.TENANT}
+              </span>
             </div>
           </div>
         </section>
@@ -117,13 +119,13 @@ export default function TrangDangNhap() {
                 className="login-card-logo"
                 priority
               />
-              <h2>Đăng nhập</h2>
-              <p>Chào mừng trở lại — nhập tài khoản để tiếp tục</p>
+              <h2>{a.signIn}</h2>
+              <p>{a.loginLead}</p>
             </header>
 
             <form onSubmit={gui} className="login-form">
               <div className="login-field">
-                <label htmlFor="username">Tài khoản</label>
+                <label htmlFor="username">{a.username}</label>
                 <div className="login-input-wrap">
                   <span className="login-input-icon" aria-hidden>
                     <svg viewBox="0 0 24 24" fill="none">
@@ -143,7 +145,7 @@ export default function TrangDangNhap() {
                   <input
                     id="username"
                     className="login-input"
-                    placeholder="Tên đăng nhập"
+                    placeholder={a.username}
                     autoComplete="username"
                     value={tenDangNhap}
                     onChange={(e) => setTenDangNhap(e.target.value)}
@@ -152,7 +154,7 @@ export default function TrangDangNhap() {
               </div>
 
               <div className="login-field">
-                <label htmlFor="password">Mật khẩu</label>
+                <label htmlFor="password">{a.password}</label>
                 <div className="login-input-wrap">
                   <span className="login-input-icon" aria-hidden>
                     <svg viewBox="0 0 24 24" fill="none">
@@ -177,7 +179,7 @@ export default function TrangDangNhap() {
                     id="password"
                     className="login-input"
                     type="password"
-                    placeholder="Mật khẩu"
+                    placeholder={a.password}
                     autoComplete="current-password"
                     value={matKhau}
                     onChange={(e) => setMatKhau(e.target.value)}
@@ -207,15 +209,15 @@ export default function TrangDangNhap() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                {dangGui ? "Đang đăng nhập…" : "Đăng nhập"}
+                {dangGui ? a.signingIn : a.signIn}
               </button>
 
               <div className="login-demo">
-                Tài khoản demo: <strong>admin / admin123</strong>
+                {a.tryDemo}: <strong>admin / admin123</strong>
               </div>
 
               <p className="login-forgot">
-                <Link href="/quen-mat-khau">Quên mật khẩu?</Link>
+                <Link href="/quen-mat-khau">{a.forgotPw}</Link>
               </p>
             </form>
           </div>
