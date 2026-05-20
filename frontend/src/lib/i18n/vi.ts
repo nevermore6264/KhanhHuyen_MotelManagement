@@ -235,6 +235,7 @@ const vi = {
       addTenant: "+ Thêm khách",
       addUtilities: "+ Nhập điện nước",
     },
+    clockLabel: "Thời gian thực",
     opsScore: "Chỉ số vận hành",
     opsExcellent: "Xuất sắc",
     opsGood: "Đạt chuẩn",

@@ -86,7 +86,7 @@ export default function TrangBangGiaDichVu() {
     const gd = parseNhapTien(giaDien);
     const gn = parseNhapTien(giaNuoc);
     if (gd == null || gn == null || !ngayHieuLuc) {
-      setLoi("Vui lòng nhập đầy đủ giá điện, giá nước và ngày hiệu lực");
+      setLoi(p.errRequired);
       return;
     }
     setLoi("");
@@ -126,7 +126,7 @@ export default function TrangBangGiaDichVu() {
     const gd = parseNhapTien(giaDienSua);
     const gn = parseNhapTien(giaNuocSua);
     if (gd == null || gn == null || !ngayHieuLucSua) {
-      setLoiSua("Vui lòng nhập đầy đủ giá điện, giá nước và ngày hiệu lực");
+      setLoiSua(p.errRequired);
       return;
     }
     setLoiSua("");
@@ -136,13 +136,13 @@ export default function TrangBangGiaDichVu() {
       giaNuoc: gn,
       hieuLucTu: ngayHieuLucSua,
     });
-    notify("Cập nhật bảng giá thành công", "success");
+    notify(p.okUpdate, "success");
     setPhanTuDangSua(null);
     tai();
   };
 
   const xoaPhanTu = async (id: string) => {
-    if (!confirm("Bạn có chắc muốn xóa bảng giá này?")) return;
+    if (!confirm(p.confirmDelete)) return;
     await api.delete(`/bang-gia-dich-vu/${id}`);
     notify(p.okDelete, "success");
     tai();
@@ -153,28 +153,22 @@ export default function TrangBangGiaDichVu() {
       <div className="page-shell page-table">
         <h2>{p.title}</h2>
         <div className="card service-price-intro">
-          <p className="service-price-intro-title">
-            Màn hình này dùng để làm gì?
-          </p>
+          <p className="service-price-intro-title">{p.introTitle}</p>
           <ul className="service-price-intro-list">
             <li>
-              <strong>Giá điện (VNĐ/kWh) và giá nước (VNĐ/m³)</strong> — Dùng để
-              tính tiền điện, nước trong hóa đơn khi bạn nhập số công tơ (ở mục{" "}
-              <strong>Ghi số điện nước</strong> hoặc khi lập hóa đơn). Hệ thống
-              sẽ chọn bảng giá có <strong>ngày hiệu lực</strong> phù hợp với
-              tháng tính tiền.
+              <strong>{p.introElecBold}</strong>
+              {p.introElecRest}
             </li>
             <li>
-              <strong>Giá phòng</strong> — Không cấu hình ở đây. Giá thuê phòng
-              được đặt theo từng phòng trong mục <strong>Phòng</strong> (khi
-              thêm/sửa phòng).
+              <strong>{p.introRoomBold}</strong>
+              {p.introRoomRest}
             </li>
           </ul>
         </div>
         <div className="card">
           <div className="grid grid-2">
             <div>
-              <h3>Bảng giá hiện hành</h3>
+              <h3>{p.currentTitle}</h3>
               <p className="card-subtitle">
                 {danhSach.length === 0 ? p.noPrice : p.noPrice}
               </p>
@@ -182,7 +176,7 @@ export default function TrangBangGiaDichVu() {
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               {laQuanTri && danhSach.length === 0 && (
                 <button className="btn" onClick={() => setHienThiTaoMoi(true)}>
-                  <IconPlus /> Thiết lập giá điện & nước
+                  <IconPlus /> {p.setupBtn}
                 </button>
               )}
             </div>
@@ -190,24 +184,24 @@ export default function TrangBangGiaDichVu() {
         </div>
         <div className="card">
           <p className="text-muted mb-3" style={{ fontSize: "0.9rem" }}>
-            Giá điện (VNĐ/kWh) và giá nước (VNĐ/m³) dùng để tính tiền theo số
-            công tơ. Giá phòng lấy theo từng phòng (cấu hình ở mục Phòng).
+            {p.tableNote}
           </p>
           <BangDonGian
             data={danhSach}
             columns={[
               { header: s.id, render: (i: ServicePrice) => i.id },
               {
-                header: "Giá điện (VNĐ/kWh)",
+                header: p.colElec,
                 render: (i: ServicePrice) => dinhDangTien(i.giaDien),
               },
               {
-                header: "Giá nước (VNĐ/m³)",
+                header: p.colWater,
                 render: (i: ServicePrice) => dinhDangTien(i.giaNuoc),
               },
               {
-                header: "Ngày hiệu lực",
-                render: (i: ServicePrice) => dinhDangNgayDMY(i.hieuLucTu, localeTag),
+                header: p.colEffective,
+                render: (i: ServicePrice) =>
+                  dinhDangNgayDMY(i.hieuLucTu, localeTag),
               },
               ...(laQuanTri
                 ? [
@@ -252,45 +246,45 @@ export default function TrangBangGiaDichVu() {
               <div className="card-header">
                 <div>
                   <h3>{p.addTitle}</h3>
-                  <p className="card-subtitle">Thiết lập giá dịch vụ</p>
+                  <p className="card-subtitle">{p.setupSub}</p>
                 </div>
               </div>
               <form onSubmit={tao} className="form-grid">
                 <div>
                   <label className="field-label">
-                    Giá điện (VNĐ/kWh) <span className="required">*</span>
+                    {p.elecLabel} <span className="required">*</span>
                   </label>
                   <div className="input-suffix">
                     <input
-                      placeholder="VD: 3.500"
+                      placeholder={p.elecPh}
                       inputMode="numeric"
                       value={giaDien}
                       onChange={(e) =>
                         setGiaDien(dinhDangNhapTien(e.target.value, localeTag))
                       }
                     />
-                    <span>VNĐ</span>
+                    <span>{p.currency}</span>
                   </div>
                 </div>
                 <div>
                   <label className="field-label">
-                    Giá nước (VNĐ/m³) <span className="required">*</span>
+                    {p.waterLabel} <span className="required">*</span>
                   </label>
                   <div className="input-suffix">
                     <input
-                      placeholder="VD: 15.000"
+                      placeholder={p.waterPh}
                       inputMode="numeric"
                       value={giaNuoc}
                       onChange={(e) =>
                         setGiaNuoc(dinhDangNhapTien(e.target.value, localeTag))
                       }
                     />
-                    <span>VNĐ</span>
+                    <span>{p.currency}</span>
                   </div>
                 </div>
                 <div>
                   <label className="field-label">
-                    Ngày hiệu lực <span className="required">*</span>
+                    {p.effectiveLabel} <span className="required">*</span>
                   </label>
                   <input
                     type="date"
@@ -321,48 +315,50 @@ export default function TrangBangGiaDichVu() {
             <div className="modal-card form-card">
               <div className="card-header">
                 <div>
-                  <h3>Sửa bảng giá</h3>
-                  <p className="card-subtitle">
-                    Cập nhật giá dịch vụ (hiệu lực từ ngày)
-                  </p>
+                  <h3>{p.editTitle}</h3>
+                  <p className="card-subtitle">{p.editSub}</p>
                 </div>
               </div>
               <form onSubmit={luuSua} className="form-grid">
                 <div>
                   <label className="field-label">
-                    Giá điện (VNĐ/kWh) <span className="required">*</span>
+                    {p.elecLabel} <span className="required">*</span>
                   </label>
                   <div className="input-suffix">
                     <input
-                      placeholder="VD: 3.500"
+                      placeholder={p.elecPh}
                       inputMode="numeric"
                       value={giaDienSua}
                       onChange={(e) =>
-                        setGiaDienSua(dinhDangNhapTien(e.target.value, localeTag))
+                        setGiaDienSua(
+                          dinhDangNhapTien(e.target.value, localeTag),
+                        )
                       }
                     />
-                    <span>VNĐ</span>
+                    <span>{p.currency}</span>
                   </div>
                 </div>
                 <div>
                   <label className="field-label">
-                    Giá nước (VNĐ/m³) <span className="required">*</span>
+                    {p.waterLabel} <span className="required">*</span>
                   </label>
                   <div className="input-suffix">
                     <input
-                      placeholder="VD: 15.000"
+                      placeholder={p.waterPh}
                       inputMode="numeric"
                       value={giaNuocSua}
                       onChange={(e) =>
-                        setGiaNuocSua(dinhDangNhapTien(e.target.value, localeTag))
+                        setGiaNuocSua(
+                          dinhDangNhapTien(e.target.value, localeTag),
+                        )
                       }
                     />
-                    <span>VNĐ</span>
+                    <span>{p.currency}</span>
                   </div>
                 </div>
                 <div>
                   <label className="field-label">
-                    Ngày hiệu lực <span className="required">*</span>
+                    {p.effectiveLabel} <span className="required">*</span>
                   </label>
                   <input
                     type="date"
@@ -380,7 +376,7 @@ export default function TrangBangGiaDichVu() {
                     <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconCheck /> Lưu thay đổi
+                    <IconCheck /> {p.saveChanges}
                   </button>
                 </div>
               </form>

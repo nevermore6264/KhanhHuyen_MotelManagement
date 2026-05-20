@@ -95,6 +95,7 @@ export default function TrangBaoCao() {
   const { notify } = useToast();
   const { t: tr, lang } = useCaiDat();
   const p = tr.pages.baoCao;
+  const s = tr.pages.shared;
   const formatMoney = (n?: number | null) =>
     n == null || isNaN(Number(n)) ? "—" : dinhDangTien(Math.round(Number(n)), lang);
   const [mounted, setMounted] = useState(false);
@@ -123,7 +124,7 @@ export default function TrangBaoCao() {
       setOccupancy(occRes.data);
       setInvoiceSummary(invSumRes.data);
     } catch (e) {
-      setError("Không tải được báo cáo. Kiểm tra quyền truy cập.");
+      setError(p.errLoad);
     } finally {
       setLoading(false);
     }
@@ -136,7 +137,7 @@ export default function TrangBaoCao() {
       await taiFileTuApi("/bao-cao/xuat-cong-no", `cong-no-${ngay}.xlsx`);
       notify(p.okDebtExcel, "success");
     } catch {
-      notify("Xuất Excel thất bại.", "error");
+      notify(p.errExportExcel, "error");
     } finally {
       setExportingDebt(false);
     }
@@ -144,7 +145,7 @@ export default function TrangBaoCao() {
 
   const xuatThuChi = async (dinhDang: "excel" | "pdf") => {
     if (!tuNgay || !denNgay || denNgay < tuNgay) {
-      notify("Khoảng ngày không hợp lệ.", "error");
+      notify(p.errDateRange, "error");
       return;
     }
     setExportingThuChi(true);
@@ -163,7 +164,7 @@ export default function TrangBaoCao() {
       }
       notify(p.okCashflow, "success");
     } catch {
-      notify("Xuất báo cáo thất bại.", "error");
+      notify(p.errExport, "error");
     } finally {
       setExportingThuChi(false);
     }
@@ -201,7 +202,7 @@ export default function TrangBaoCao() {
       <div className="page-shell page-report">
           <h2>{p.title}</h2>
           <div className="card">
-            <p className="form-error">Bạn không có quyền xem báo cáo.</p>
+            <p className="form-error">{p.noPermission}</p>
           </div>
         </div>
       </TrangBaoVe>
@@ -221,10 +222,8 @@ export default function TrangBaoCao() {
         <div className="card">
           <div className="grid grid-2">
             <div>
-              <h3>Bộ lọc kỳ</h3>
-              <p className="card-subtitle">
-                Chọn tháng/năm để xem doanh thu và báo cáo hóa đơn theo kỳ.
-              </p>
+              <h3>{p.periodFilter}</h3>
+              <p className="card-subtitle">{p.periodFilterSub}</p>
             </div>
             <div
               style={{
@@ -235,22 +234,22 @@ export default function TrangBaoCao() {
               }}
             >
               <div>
-                <label className="field-label">Tháng</label>
+                <label className="field-label">{p.month}</label>
                 <input
                   type="number"
                   min={1}
                   max={12}
-                  placeholder="Tháng"
+                  placeholder={p.month}
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
                   style={{ width: 70 }}
                 />
               </div>
               <div>
-                <label className="field-label">Năm</label>
+                <label className="field-label">{p.year}</label>
                 <input
                   type="number"
-                  placeholder="Năm"
+                  placeholder={p.year}
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
                   style={{ width: 80 }}
@@ -261,7 +260,7 @@ export default function TrangBaoCao() {
                   p.loading
                 ) : (
                   <>
-                    <IconRefresh /> Tải lại
+                    <IconRefresh /> {p.reload}
                   </>
                 )}
               </button>
@@ -270,12 +269,9 @@ export default function TrangBaoCao() {
           {error && <div className="form-error mt-2">{error}</div>}
         </div>
 
-        {}
         <div className="card">
-          <h3>Tổng quan</h3>
-          <p className="card-subtitle mb-3">
-            Doanh thu tháng chọn, phòng trống, công nợ và tình trạng phòng.
-          </p>
+          <h3>{p.overview}</h3>
+          <p className="card-subtitle mb-3">{p.overviewSub}</p>
           <div className="grid grid-4" style={{ gap: 16 }}>
             <div
               className="card"
@@ -285,7 +281,7 @@ export default function TrangBaoCao() {
               }}
             >
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                Doanh thu tháng {summary?.month}/{summary?.year}
+                {p.revenueMonth} {summary?.month}/{summary?.year}
               </div>
               <div
                 style={{
@@ -302,7 +298,7 @@ export default function TrangBaoCao() {
               style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}
             >
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                Phòng trống
+                {p.vacantRooms}
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#166534" }}>
                 {summary?.vacantRooms ?? "—"} / {summary?.totalRooms ?? "—"}
@@ -313,13 +309,13 @@ export default function TrangBaoCao() {
               style={{ background: "#fef2f2", border: "1px solid #fecaca" }}
             >
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                Công nợ (chưa thanh toán)
+                {p.debtUnpaid}
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#b91c1c" }}>
                 {formatMoney(summary?.totalDebt)}
               </div>
               <div style={{ fontSize: 12, color: "#64748b" }}>
-                {summary?.unpaidCount ?? 0} hóa đơn
+                {summary?.unpaidCount ?? 0} {p.invoiceCount}
               </div>
             </div>
             <div
@@ -327,25 +323,22 @@ export default function TrangBaoCao() {
               style={{ background: "#faf5ff", border: "1px solid #e9d5ff" }}
             >
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                Tỷ lệ lấp đầy
+                {p.occupancyRate}
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#6b21a8" }}>
                 {occupancy?.occupancyRatePercent ?? "—"}%
               </div>
               <div style={{ fontSize: 12, color: "#64748b" }}>
-                {occupancy?.occupied ?? "—"} đang thuê /{" "}
-                {occupancy?.totalRooms ?? "—"} phòng
+                {occupancy?.occupied ?? "—"} {p.occupiedOf}{" "}
+                {occupancy?.totalRooms ?? "—"} {p.roomsUnit}
               </div>
             </div>
           </div>
         </div>
 
-        {}
         <div className="card">
-          <h3>Doanh thu theo từng tháng trong năm</h3>
-          <p className="card-subtitle mb-3">
-            Chọn năm để xem doanh thu đã thu (hóa đơn đã thanh toán) từng tháng.
-          </p>
+          <h3>{p.revenueByYear}</h3>
+          <p className="card-subtitle mb-3">{p.revenueByYearSub}</p>
           <div
             style={{
               display: "flex",
@@ -359,7 +352,7 @@ export default function TrangBaoCao() {
                 className="field-label"
                 style={{ display: "block", marginBottom: 6 }}
               >
-                Năm
+                {p.year}
               </label>
               <input
                 type="number"
@@ -374,24 +367,26 @@ export default function TrangBaoCao() {
               onClick={loadRevenueYear}
               style={{ height: 38 }}
             >
-              <IconEye /> Xem
+              <IconEye /> {p.view}
             </button>
           </div>
           {revenueYear && (
             <>
               <p className="text-muted mb-2">
-                <strong>Tổng doanh thu năm {revenueYear.year}:</strong>{" "}
+                <strong>
+                  {p.yearRevenueTotal} {revenueYear.year}:
+                </strong>{" "}
                 {formatMoney(revenueYear.total)}
               </p>
               <BangDonGian
                 data={revenueYear.months || []}
                 columns={[
                   {
-                    header: "Tháng",
+                    header: p.colMonth,
                     render: (r: RevenueMonth) => r.month,
                   },
                   {
-                    header: "Doanh thu (đã thu)",
+                    header: p.colRevenueCollected,
                     render: (r: RevenueMonth) => formatMoney(r.revenue),
                   },
                 ]}
@@ -401,10 +396,8 @@ export default function TrangBaoCao() {
         </div>
 
         <div className="card">
-          <h3>Xuất báo cáo thu–chi theo ngày</h3>
-          <p className="card-subtitle mb-3">
-            Tổng hợp các khoản thanh toán đã ghi nhận trong khoảng thời gian.
-          </p>
+          <h3>{p.cashflowExport}</h3>
+          <p className="card-subtitle mb-3">{p.cashflowExportSub}</p>
           <div
             style={{
               display: "flex",
@@ -415,7 +408,7 @@ export default function TrangBaoCao() {
             }}
           >
             <div>
-              <label className="field-label">Từ ngày</label>
+              <label className="field-label">{p.fromDate}</label>
               <input
                 type="date"
                 value={tuNgay}
@@ -423,7 +416,7 @@ export default function TrangBaoCao() {
               />
             </div>
             <div>
-              <label className="field-label">Đến ngày</label>
+              <label className="field-label">{p.toDate}</label>
               <input
                 type="date"
                 value={denNgay}
@@ -451,11 +444,11 @@ export default function TrangBaoCao() {
         </div>
 
         <div className="card">
-          <h3>Chi tiết công nợ</h3>
+          <h3>{p.debtDetail}</h3>
           <p className="card-subtitle mb-3">
-            Danh sách hóa đơn chưa thanh toán. Tổng:{" "}
-            {formatMoney(debtDetail?.totalDebt)} ({debtDetail?.count ?? 0} hóa
-            đơn).
+            {p.debtDetailSub}{" "}
+            {formatMoney(debtDetail?.totalDebt)} ({debtDetail?.count ?? 0}{" "}
+            {p.debtInvoices}).
           </p>
           <button
             type="button"
@@ -469,112 +462,104 @@ export default function TrangBaoCao() {
           <BangDonGian
             data={debtDetail?.invoices ?? []}
             columns={[
-              { header: "ID", render: (r: DebtInvoice) => r.id },
+              { header: s.id, render: (r: DebtInvoice) => r.id },
               {
-                header: "Phòng",
+                header: p.roomCode,
                 render: (r: DebtInvoice) => r.roomCode ?? "—",
               },
               {
-                header: "Khách thuê",
+                header: p.tenant,
                 render: (r: DebtInvoice) => r.tenantName ?? "—",
               },
               {
-                header: "Kỳ",
+                header: p.period,
                 render: (r: DebtInvoice) => `${r.month}/${r.year}`,
               },
               {
-                header: "Số tiền",
+                header: p.amount,
                 render: (r: DebtInvoice) => formatMoney(r.total),
               },
             ]}
           />
         </div>
 
-        {}
         <div className="card">
-          <h3>Phòng trống</h3>
+          <h3>{p.vacantList}</h3>
           <p className="card-subtitle mb-3">
-            Các phòng đang trống ({vacantData?.vacantRooms ?? 0} phòng).
+            {p.vacantListSub} ({vacantData?.vacantRooms ?? 0}{" "}
+            {p.vacantCountSuffix}).
           </p>
           <BangDonGian
             data={vacantData?.rooms ?? []}
             columns={[
-              { header: "Mã phòng", render: (r: VacantRoom) => r.code },
+              { header: p.roomCode, render: (r: VacantRoom) => r.code },
               {
-                header: "Khu vực",
+                header: p.area,
                 render: (r: VacantRoom) => r.areaName ?? "—",
               },
               {
-                header: "Giá hiện tại",
+                header: p.currentPrice,
                 render: (r: VacantRoom) => formatMoney(r.currentPrice),
               },
             ]}
           />
         </div>
 
-        {}
         <div className="card">
-          <h3>Tình trạng phòng</h3>
-          <p className="card-subtitle mb-3">Thống kê theo trạng thái phòng.</p>
+          <h3>{p.roomStatus}</h3>
+          <p className="card-subtitle mb-3">{p.roomStatusSub}</p>
           <div className="grid grid-4" style={{ gap: 12 }}>
             <div>
-              <strong>Tổng phòng:</strong> {occupancy?.totalRooms ?? "—"}
+              <strong>{p.totalRooms}</strong> {occupancy?.totalRooms ?? "—"}
             </div>
             <div>
-              <strong>Đang trống (Available):</strong>{" "}
-              {occupancy?.available ?? "—"}
+              <strong>{p.available}</strong> {occupancy?.available ?? "—"}
             </div>
             <div>
-              <strong>Đang thuê (Occupied):</strong>{" "}
-              {occupancy?.occupied ?? "—"}
+              <strong>{p.occupied}</strong> {occupancy?.occupied ?? "—"}
             </div>
             <div>
-              <strong>Bảo trì (Maintenance):</strong>{" "}
-              {occupancy?.maintenance ?? "—"}
+              <strong>{p.maintenance}</strong> {occupancy?.maintenance ?? "—"}
             </div>
           </div>
           <p className="mt-2 text-muted">
-            Tỷ lệ lấp đầy:{" "}
+            {p.occupancyLabel}{" "}
             <strong>{occupancy?.occupancyRatePercent ?? "—"}%</strong>
           </p>
         </div>
 
-        {}
         <div className="card">
           <h3>
-            Báo cáo hóa đơn theo kỳ (tháng {invoiceSummary?.month}/
-            {invoiceSummary?.year})
+            {p.invoiceReport} {invoiceSummary?.month}/{invoiceSummary?.year})
           </h3>
-          <p className="card-subtitle mb-3">
-            Số lượng và tổng tiền theo trạng thái thanh toán.
-          </p>
+          <p className="card-subtitle mb-3">{p.invoiceReportSub}</p>
           <div className="grid grid-2" style={{ gap: 16 }}>
             <div>
               <h4 style={{ marginBottom: 8, fontSize: 14 }}>
-                Số lượng hóa đơn
+                {p.invoiceCountTitle}
               </h4>
               <table className="table">
                 <tbody>
                   <tr>
-                    <td>Đã thanh toán</td>
+                    <td>{p.paid}</td>
                     <td>
                       <strong>{invoiceSummary?.countPaid ?? "—"}</strong>
                     </td>
                   </tr>
                   <tr>
-                    <td>Chưa thanh toán</td>
+                    <td>{p.unpaid}</td>
                     <td>
                       <strong>{invoiceSummary?.countUnpaid ?? "—"}</strong>
                     </td>
                   </tr>
                   <tr>
-                    <td>Thanh toán một phần</td>
+                    <td>{p.partial}</td>
                     <td>
                       <strong>{invoiceSummary?.countPartial ?? "—"}</strong>
                     </td>
                   </tr>
                   <tr>
-                    <td>Tổng</td>
+                    <td>{p.total}</td>
                     <td>
                       <strong>{invoiceSummary?.countTotal ?? "—"}</strong>
                     </td>
@@ -584,30 +569,30 @@ export default function TrangBaoCao() {
             </div>
             <div>
               <h4 style={{ marginBottom: 8, fontSize: 14 }}>
-                Tổng tiền theo trạng thái
+                {p.invoiceSumTitle}
               </h4>
               <table className="table">
                 <tbody>
                   <tr>
-                    <td>Đã thanh toán</td>
+                    <td>{p.paid}</td>
                     <td>
                       <strong>{formatMoney(invoiceSummary?.sumPaid)}</strong>
                     </td>
                   </tr>
                   <tr>
-                    <td>Chưa thanh toán</td>
+                    <td>{p.unpaid}</td>
                     <td>
                       <strong>{formatMoney(invoiceSummary?.sumUnpaid)}</strong>
                     </td>
                   </tr>
                   <tr>
-                    <td>Thanh toán một phần</td>
+                    <td>{p.partial}</td>
                     <td>
                       <strong>{formatMoney(invoiceSummary?.sumPartial)}</strong>
                     </td>
                   </tr>
                   <tr>
-                    <td>Tổng tiền các hóa đơn</td>
+                    <td>{p.totalInvoiceAmount}</td>
                     <td>
                       <strong>{formatMoney(invoiceSummary?.sumTotal)}</strong>
                     </td>

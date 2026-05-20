@@ -235,6 +235,7 @@ const en = {
       addTenant: "+ Add tenant",
       addUtilities: "+ Utility readings",
     },
+    clockLabel: "Live time",
     opsScore: "Operations score",
     opsExcellent: "Excellent",
     opsGood: "On track",

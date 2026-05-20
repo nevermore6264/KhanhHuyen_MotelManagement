@@ -749,7 +749,8 @@ export default function TrangTongQuan() {
             <p className="dash-x-hero__lead">{dp.lead}</p>
           </div>
           <div className="dash-x-hero__meta">
-            <div className="dash-x-clock">
+            <div className="dash-x-clock" aria-live="polite">
+              <span className="dash-x-clock__label">{dp.clockLabel}</span>
               <span className="dash-x-clock__date">
                 {mounted ? now.toLocaleDateString(localeTag) : "—"}
               </span>

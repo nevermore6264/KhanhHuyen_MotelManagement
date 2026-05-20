@@ -363,30 +363,30 @@ export default function ChatApp() {
   );
 
   return (
-    <div className="chat-flow">
-      <aside className="chat-flow__panel">
-        <header className="chat-flow__panel-head">
-          <div className="chat-flow__panel-head-row">
+    <div className="chat-cozy">
+      <aside className="chat-cozy__panel">
+        <header className="chat-cozy__panel-head">
+          <div className="chat-cozy__panel-head-row">
             <h1>{ct.title}</h1>
             <button
               type="button"
-              className="chat-flow__new-btn"
+              className="chat-cozy__new-btn"
               onClick={() => setMoTimNguoi(true)}
               title={ct.newChat}
               aria-label={ct.newChat}
             >
-              {ct.newChat}
+              +
             </button>
           </div>
           <input
             type="search"
-            className="chat-flow__search"
+            className="chat-cozy__search"
             placeholder={ct.searchThreads}
             value={locHoiThoai}
             onChange={(e) => setLocHoiThoai(e.target.value)}
           />
         </header>
-        <ul className="chat-flow__threads">
+        <ul className="chat-cozy__threads">
           {hoiThoaiLoc.map((h) => {
             const ten = h.tenHienThi ?? h.doiTuongTen ?? ct.conversation;
             const laNhom = h.loai === "GROUP";
@@ -394,36 +394,36 @@ export default function ChatApp() {
               <li key={h.id}>
                 <button
                   type="button"
-                  className={`chat-flow__thread${h.id === hoiThoaiId ? " chat-flow__thread--on" : ""}`}
+                  className={`chat-cozy__thread${h.id === hoiThoaiId ? " chat-cozy__thread--on" : ""}`}
                   onClick={() => chonHoiThoai(h.id)}
                 >
                   <span
-                    className={`chat-flow__thread-av${laNhom ? " chat-flow__thread-av--group" : ""}`}
+                    className={`chat-cozy__thread-av${laNhom ? " chat-cozy__thread-av--group" : ""}`}
                     aria-hidden
                   >
                     {laNhom ? "👥" : layChuCai(ten)}
                   </span>
-                  <span className="chat-flow__thread-body">
-                    <span className="chat-flow__thread-top">
+                  <span className="chat-cozy__thread-body">
+                    <span className="chat-cozy__thread-top">
                       <strong>{ten}</strong>
                       {h.thoiGianTinCuoi && (
-                        <span className="chat-flow__thread-time">
+                        <span className="chat-cozy__thread-time">
                           {formatGioNgan(h.thoiGianTinCuoi, localeTag)}
                         </span>
                       )}
                     </span>
                     {laNhom && h.soThanhVien != null && (
-                      <span className="chat-flow__thread-meta">
+                      <span className="chat-cozy__thread-meta">
                         {h.soThanhVien} {ct.members}
                       </span>
                     )}
                     {!laNhom && h.doiTuongVaiTro && (
-                      <span className="chat-flow__thread-meta">
+                      <span className="chat-cozy__thread-meta">
                         {nhanVaiTro(i18n, h.doiTuongVaiTro)}
                       </span>
                     )}
                     {h.tinCuoi && (
-                      <span className="chat-flow__thread-preview">
+                      <span className="chat-cozy__thread-preview">
                         {h.tinCuoi}
                       </span>
                     )}
@@ -436,31 +436,31 @@ export default function ChatApp() {
       </aside>
 
       {hoiThoaiChon ? (
-        <section className="chat-flow__main">
-          <header className="chat-flow__top">
+        <section className="chat-cozy__main">
+          <header className="chat-cozy__top">
             <span
-              className={`chat-flow__top-av${hoiThoaiChon.loai === "GROUP" ? " chat-flow__top-av--group" : ""}`}
+              className={`chat-cozy__top-av${hoiThoaiChon.loai === "GROUP" ? " chat-cozy__top-av--group" : ""}`}
               aria-hidden
             >
               {hoiThoaiChon.loai === "GROUP"
                 ? "👥"
                 : layChuCai(tenHienThiChon)}
             </span>
-            <div className="chat-flow__top-info">
+            <div className="chat-cozy__top-info">
               <h2>{tenHienThiChon}</h2>
               <p>{moTaHeader}</p>
             </div>
-            <span className="chat-flow__top-dot">{ct.live}</span>
+            <span className="chat-cozy__top-status">{ct.live}</span>
           </header>
 
-          <div ref={cuonRef} className="chat-flow__scroll">
+          <div ref={cuonRef} className="chat-cozy__scroll">
             {tinNhan.length === 0 ? (
-              <p className="chat-flow__scroll-empty">{ct.emptyGreet}</p>
+              <p className="chat-cozy__scroll-empty">{ct.emptyGreet}</p>
             ) : (
               nhomTin.map((ngay) => (
                 <div key={ngay.key}>
-                  <div className="chat-flow__stamp-wrap">
-                    <span className="chat-flow__stamp">{ngay.label}</span>
+                  <div className="chat-cozy__stamp-wrap">
+                    <span className="chat-cozy__stamp">{ngay.label}</span>
                   </div>
                   {ngay.items.map((msg) => {
                     const mine = laCuaToi(msg);
@@ -472,24 +472,24 @@ export default function ChatApp() {
                     return (
                       <div
                         key={msg.id}
-                        className={`chat-flow__row${mine ? " chat-flow__row--out" : " chat-flow__row--in"}`}
+                        className={`chat-cozy__row${mine ? " chat-cozy__row--out" : " chat-cozy__row--in"}`}
                       >
                         {!mine && (
                           <span
-                            className="chat-flow__row-av"
+                            className="chat-cozy__row-av"
                             aria-hidden
                           >
                             {layChuCai(msg.nguoiGuiTen)}
                           </span>
                         )}
-                        <div className="chat-flow__bubble-wrap">
+                        <div className="chat-cozy__bubble-wrap">
                           {showName && (
-                            <span className="chat-flow__sender">
+                            <span className="chat-cozy__sender">
                               {msg.nguoiGuiTen ?? "—"}
                             </span>
                           )}
                           <div
-                            className={`chat-flow__bubble${coMedia ? " chat-flow__bubble--file" : ""}`}
+                            className={`chat-cozy__bubble${coMedia ? " chat-cozy__bubble--file" : ""}`}
                           >
                             {msg.loai === "IMAGE" && msg.duongDanFile && (
                               <a
@@ -498,7 +498,7 @@ export default function ChatApp() {
                                 rel="noreferrer"
                               >
                                 <img
-                                  className="chat-flow__img"
+                                  className="chat-cozy__img"
                                   src={urlFile(msg.duongDanFile)}
                                   alt={msg.tenFile ?? ct.imageAlt}
                                 />
@@ -509,7 +509,7 @@ export default function ChatApp() {
                                 href={urlFile(msg.duongDanFile)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="chat-flow__file-link"
+                                className="chat-cozy__file-link"
                               >
                                 📎 {msg.tenFile ?? ct.downloadFile}
                                 {msg.kichThuocFile != null && (
@@ -524,16 +524,16 @@ export default function ChatApp() {
                             {msg.noiDung && <span>{msg.noiDung}</span>}
                           </div>
                           {msg.thoiGianGui && (
-                            <time className="chat-flow__meta-time">
+                            <time className="chat-cozy__meta-time">
                               {formatGioNgan(msg.thoiGianGui, localeTag)}
                             </time>
                           )}
-                          <div className="chat-flow__reacts">
+                          <div className="chat-cozy__reacts">
                             {(msg.phanHoi ?? []).map((p) => (
                               <button
                                 key={p.emoji}
                                 type="button"
-                                className={`chat-flow__react-chip${p.cuaToi ? " chat-flow__react-chip--on" : ""}`}
+                                className={`chat-cozy__react-chip${p.cuaToi ? " chat-cozy__react-chip--on" : ""}`}
                                 onClick={() =>
                                   void toggleReaction(msg.id, p.emoji)
                                 }
@@ -541,7 +541,7 @@ export default function ChatApp() {
                                 {p.emoji} {p.soLuong}
                               </button>
                             ))}
-                            <span className="chat-flow__react-more">
+                            <span className="chat-cozy__react-more">
                               {REACTION_NHANH.map((em) => (
                                 <button
                                   key={em}
@@ -565,7 +565,7 @@ export default function ChatApp() {
           </div>
 
           {moEmoji && (
-            <div className="chat-flow__emoji-tray">
+            <div className="chat-cozy__emoji-tray">
               {EMOJI_GUI.map((em) => (
                 <button
                   key={em}
@@ -578,11 +578,11 @@ export default function ChatApp() {
             </div>
           )}
 
-          <form className="chat-flow__compose" onSubmit={guiVanBan}>
-            <div className="chat-flow__compose-inner">
+          <form className="chat-cozy__compose" onSubmit={guiVanBan}>
+            <div className="chat-cozy__compose-inner">
               <button
                 type="button"
-                className="chat-flow__icon-btn"
+                className="chat-cozy__icon-btn"
                 onClick={() => setMoEmoji((v) => !v)}
                 title="Emoji"
                 aria-label="Emoji"
@@ -591,7 +591,7 @@ export default function ChatApp() {
               </button>
               <button
                 type="button"
-                className="chat-flow__icon-btn"
+                className="chat-cozy__icon-btn"
                 onClick={() => fileRef.current?.click()}
                 title={ct.attach}
                 aria-label={ct.attach}
@@ -609,7 +609,7 @@ export default function ChatApp() {
                 }}
               />
               <textarea
-                className="chat-flow__field"
+                className="chat-cozy__field"
                 rows={1}
                 value={noiDung}
                 onChange={(e) => setNoiDung(e.target.value)}
@@ -623,7 +623,7 @@ export default function ChatApp() {
               />
               <button
                 type="submit"
-                className="chat-flow__send-btn"
+                className="chat-cozy__send-btn"
                 disabled={dangGui || !noiDung.trim()}
                 aria-label={ct.send}
               >
@@ -633,10 +633,10 @@ export default function ChatApp() {
           </form>
         </section>
       ) : (
-        <section className="chat-flow__main chat-flow__main--idle">
-          <div className="chat-flow__idle">
-            <div className="chat-flow__idle-icon" aria-hidden>
-              ✉
+        <section className="chat-cozy__main chat-cozy__main--idle">
+          <div className="chat-cozy__idle">
+            <div className="chat-cozy__idle-icon" aria-hidden>
+              💬
             </div>
             <p>{ct.emptySelect}</p>
           </div>
@@ -645,12 +645,12 @@ export default function ChatApp() {
 
       {moTimNguoi && (
         <div
-          className="chat-flow__overlay"
+          className="chat-cozy__overlay"
           role="presentation"
           onClick={() => setMoTimNguoi(false)}
         >
           <div
-            className="chat-flow__dialog"
+            className="chat-cozy__dialog"
             role="dialog"
             aria-labelledby="chat-find-user-title"
             onClick={(e) => e.stopPropagation()}
@@ -662,7 +662,7 @@ export default function ChatApp() {
               onChange={(e) => setTuKhoa(e.target.value)}
               autoFocus
             />
-            <ul className="chat-flow__pick-list">
+            <ul className="chat-cozy__pick-list">
               {nguoiTim.length === 0 ? (
                 <li className="text-muted" style={{ padding: "8px" }}>
                   {ct.noResults}
@@ -672,11 +672,11 @@ export default function ChatApp() {
                   <li key={n.id}>
                     <button
                       type="button"
-                      className="chat-flow__pick-item"
+                      className="chat-cozy__pick-item"
                       onClick={() => void batDauChatRieng(n.id)}
                     >
                       <span
-                        className="chat-flow__thread-av"
+                        className="chat-cozy__thread-av"
                         aria-hidden
                       >
                         {layChuCai(n.hoTen)}
@@ -694,7 +694,7 @@ export default function ChatApp() {
             </ul>
             <button
               type="button"
-              className="chat-flow__dialog-close"
+              className="chat-cozy__dialog-close"
               onClick={() => setMoTimNguoi(false)}
             >
               {i18n.common.close}

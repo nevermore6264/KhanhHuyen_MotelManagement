@@ -177,20 +177,22 @@ export default function TrangChiSoDienNuoc() {
   }, [danhSachPhong, idKhu]);
 
 
+  const localeSort = lang === "en" ? "en" : "vi";
+
   const phongNhomTheoKhu = useMemo(() => {
     const nhomMap = new Map<string, { ten: string; phong: Room[] }>();
-    for (const p of phongTheoKhu) {
+    for (const phong of phongTheoKhu) {
       const kid =
-        p.area?.id != null ? String(p.area.id) : "_none";
-      const ten = (p.area?.name || "").trim() || "Chưa gán khu";
+        phong.area?.id != null ? String(phong.area.id) : "_none";
+      const ten = (phong.area?.name || "").trim() || p.unassignedArea;
       if (!nhomMap.has(kid)) {
         nhomMap.set(kid, { ten, phong: [] });
       }
-      nhomMap.get(kid)!.phong.push(p);
+      nhomMap.get(kid)!.phong.push(phong);
     }
     for (const v of nhomMap.values()) {
       v.phong.sort((a, b) =>
-        a.code.localeCompare(b.code, "vi", { numeric: true }),
+        a.code.localeCompare(b.code, localeSort, { numeric: true }),
       );
     }
     const thuTuKhu = new Map(
@@ -206,14 +208,14 @@ export default function TrangChiSoDienNuoc() {
       if (ob !== undefined) return 1;
       return nhomMap
         .get(idA)!
-        .ten.localeCompare(nhomMap.get(idB)!.ten, "vi");
+        .ten.localeCompare(nhomMap.get(idB)!.ten, localeSort);
     });
     return cap.map(([kid, v]) => ({
       khuId: kid,
       tenKhu: v.ten,
       phong: v.phong,
     }));
-  }, [phongTheoKhu, danhSachKhu]);
+  }, [phongTheoKhu, danhSachKhu, p.unassignedArea, localeSort]);
 
   const lichSuPhong = useMemo(() => {
     if (!phongDangChon) return [];
@@ -285,17 +287,17 @@ export default function TrangChiSoDienNuoc() {
   const tao = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idPhong) {
-      setLoi("Vui lòng chọn phòng");
+      setLoi(p.errPickRoom);
       return;
     }
     if (!thang || !nam) {
-      setLoi("Vui lòng nhập tháng và năm");
+      setLoi(p.errMonthYear);
       return;
     }
     const m = Number(thang);
     const y = Number(nam);
     if (!laThangChoPhep(m, y)) {
-      setLoi("Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước đó.");
+      setLoi(p.errMonthAllowed);
       return;
     }
     setLoi("");
@@ -331,10 +333,9 @@ export default function TrangChiSoDienNuoc() {
       const msgLoi = ax?.response?.data?.message;
       const thongBao =
         status === 403
-          ? "Bạn không có quyền thao tác"
+          ? s.noPermission
           : status === 400
-            ? msgLoi ||
-              "Chỉ được nhập chỉ số cho tháng hiện tại hoặc tháng trước; phòng phải có hợp đồng hiệu lực trong kỳ."
+            ? msgLoi || p.errMonthContract
             : p.errSave;
       setLoi(thongBao);
       notify(thongBao, "error");
@@ -370,10 +371,10 @@ export default function TrangChiSoDienNuoc() {
       const st = ax?.response?.status;
       const msg =
         st === 403
-          ? "Bạn không có quyền thao tác"
+          ? s.noPermission
           : st === 400
-            ? "Chỉ sửa được chỉ số tháng hiện tại hoặc tháng trước."
-            : "Cập nhật thất bại";
+            ? p.errEditMonth
+            : p.errUpdate;
       setLoiSuaChiSo(msg);
       notify(msg, "error");
     }
@@ -386,12 +387,12 @@ export default function TrangChiSoDienNuoc() {
         <div className="card meter-picker-card">
           <div className="card-header meter-picker-card-header">
             <div className="meter-picker-heading">
-              <h3>Chọn khu & phòng</h3>
+              <h3>{p.pickAreaRoom}</h3>
               <p className="card-subtitle">
                 {moChonKhuPhong
-                  ? "Chỉ phòng đang có hợp đồng hiệu lực — chọn khu để xem danh sách"
+                  ? p.pickAreaRoomSubOpen
                   : phongDangChon
-                    ? `Đang chọn: ${tenKhuVaPhong(phongDangChon)}`
+                    ? `${p.pickingRoom} ${tenKhuVaPhong(phongDangChon)}`
                     : p.filterCollapsed}
               </p>
             </div>
@@ -400,8 +401,8 @@ export default function TrangChiSoDienNuoc() {
               className="btn-toggle-meter-picker"
               onClick={() => setMoChonKhuPhong((v) => !v)}
               aria-expanded={moChonKhuPhong}
-              aria-label={moChonKhuPhong ? "Thu gọn" : "Mở rộng"}
-              title={moChonKhuPhong ? "Thu gọn" : "Mở rộng"}
+              aria-label={moChonKhuPhong ? p.collapse : p.expand}
+              title={moChonKhuPhong ? p.collapse : p.expand}
             >
               {moChonKhuPhong ? <IconChevronUp /> : <IconChevronDown />}
             </button>
@@ -409,7 +410,7 @@ export default function TrangChiSoDienNuoc() {
           {moChonKhuPhong && (
             <>
               <div className="meter-area-picker">
-                <label className="field-label">Khu vực</label>
+                <label className="field-label">{p.areaLabel}</label>
                 <ChonKhuCombobox
                   danhSachKhu={danhSachKhuCombo}
                   value={idKhu}
@@ -421,10 +422,10 @@ export default function TrangChiSoDienNuoc() {
               {phongTheoKhu.length === 0 ? (
                 <div className="room-empty room-empty-standalone">
                   {idKhu
-                    ? "Không có phòng đang cho thuê trong khu này."
+                    ? p.noRoomsInArea
                     : danhSachPhong.length === 0
-                      ? "Không có phòng đang cho thuê (chưa có hợp đồng đang hiệu lực)."
-                      : "Không có phòng trong khu này."}
+                      ? p.noActiveContracts
+                      : p.noRoomsInFilter}
                 </div>
               ) : (
                 <div className="room-list-by-area">
@@ -440,7 +441,7 @@ export default function TrangChiSoDienNuoc() {
                             onClick={() => setPhongDangChon(r)}
                           >
                             <span className="room-row-label">{r.code}</span>
-                            <span className="room-sub">Xem chỉ số</span>
+                            <span className="room-sub">{p.viewReadings}</span>
                           </button>
                         ))}
                       </div>
@@ -457,14 +458,12 @@ export default function TrangChiSoDienNuoc() {
             <div className="card-header">
               <div>
                 <h3>{tenKhuVaPhong(phongDangChon)}</h3>
-                <p className="card-subtitle">
-                  Xem lịch sử và nhập chỉ số tháng hiện tại
-                </p>
+                <p className="card-subtitle">{p.historyAndEntry}</p>
               </div>
             </div>
             <div className="meter-grid">
               <div className="meter-history">
-                <div className="chart-title">Các tháng trước</div>
+                <div className="chart-title">{p.previousMonths}</div>
                 <div className="history-list">
                   {lichSuPhong.length === 0 && (
                     <div className="history-empty">{p.noData}</div>
@@ -476,11 +475,12 @@ export default function TrangChiSoDienNuoc() {
                           {r.month}/{r.year}
                         </div>
                         <div className="history-meta">
-                          Điện: {r.oldElectric}-{r.newElectric} • Nước:{" "}
-                          {r.oldWater}-{r.newWater}
+                          {p.historyElec} {r.oldElectric}-{r.newElectric} •{" "}
+                          {p.historyWater} {r.oldWater}-{r.newWater}
                         </div>
                         <div className="history-total">
-                          Tổng: {dinhDangTien(tongTienDienNuoc(r))}
+                          {p.historyTotal}{" "}
+                          {dinhDangTien(tongTienDienNuoc(r))}
                         </div>
                       </div>
                       {coTheSuaChiSo(r) && (
@@ -489,7 +489,7 @@ export default function TrangChiSoDienNuoc() {
                           className="history-row-edit"
                           onClick={() => moModalSuaChiSo(r)}
                         >
-                          Sửa
+                          {s.edit}
                         </button>
                       )}
                     </div>
@@ -498,17 +498,17 @@ export default function TrangChiSoDienNuoc() {
               </div>
               <form onSubmit={tao} className="form-grid">
                 <div>
-                  <label className="field-label">Tháng</label>
+                  <label className="field-label">{p.month}</label>
                   <input
-                    placeholder="Tháng"
+                    placeholder={p.month}
                     value={thang}
                     onChange={(e) => setThang(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="field-label">Năm</label>
+                  <label className="field-label">{p.year}</label>
                   <input
-                    placeholder="Năm"
+                    placeholder={p.year}
                     value={nam}
                     onChange={(e) => setNam(e.target.value)}
                   />
@@ -518,32 +518,32 @@ export default function TrangChiSoDienNuoc() {
                     className="card-subtitle"
                     style={{ marginBottom: 8, fontSize: "0.9rem" }}
                   >
-                    Số điện/nước <strong>đầu kỳ</strong> lấy tự động từ{" "}
-                    <strong>số mới tháng trước</strong> (cùng phòng): điện{" "}
-                    <strong>{chiSoDauKyHienThi.dienCu}</strong>, nước{" "}
+                    {p.periodStartHint}{" "}
+                    <strong>{chiSoDauKyHienThi.dienCu}</strong>,{" "}
+                    {p.periodStartWater}{" "}
                     <strong>{chiSoDauKyHienThi.nuocCu}</strong>.
                   </p>
                 </div>
                 <div>
-                  <label className="field-label">Số điện mới</label>
+                  <label className="field-label">{p.newElec}</label>
                   <input
-                    placeholder="Số điện mới"
+                    placeholder={p.newElec}
                     value={dienMoi}
                     onChange={(e) => setDienMoi(e.target.value)}
                     inputMode="numeric"
                   />
                 </div>
                 <div>
-                  <label className="field-label">Số nước mới</label>
+                  <label className="field-label">{p.newWater}</label>
                   <input
-                    placeholder="Số nước mới"
+                    placeholder={p.newWater}
                     value={nuocMoi}
                     onChange={(e) => setNuocMoi(e.target.value)}
                     inputMode="numeric"
                   />
                 </div>
                 <div>
-                  <label className="field-label">Ảnh đồng hồ (tùy chọn)</label>
+                  <label className="field-label">{p.meterPhotoOptional}</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -569,7 +569,7 @@ export default function TrangChiSoDienNuoc() {
             style={{ marginBottom: 16, maxWidth: 400 }}
           >
             <div>
-              <label className="field-label">Lọc theo khu</label>
+              <label className="field-label">{p.filterByArea}</label>
               <select
                 value={idKhuLoc}
                 onChange={(e) => {
@@ -577,7 +577,7 @@ export default function TrangChiSoDienNuoc() {
                   setIdPhongLoc("");
                 }}
               >
-                <option value="">Tất cả khu</option>
+                <option value="">{s.allAreas}</option>
                 {danhSachKhu.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name}
@@ -586,12 +586,12 @@ export default function TrangChiSoDienNuoc() {
               </select>
             </div>
             <div>
-              <label className="field-label">Lọc theo phòng</label>
+              <label className="field-label">{p.filterByRoom}</label>
               <select
                 value={idPhongLoc}
                 onChange={(e) => setIdPhongLoc(e.target.value)}
               >
-                <option value="">Tất cả phòng</option>
+                <option value="">{p.allRooms}</option>
                 {phongTheoKhuLoc.map((r) => (
                   <option key={r.id} value={r.id}>
                     {tenKhuVaPhong(r)}
@@ -604,17 +604,17 @@ export default function TrangChiSoDienNuoc() {
             data={danhSachChiSoLoc}
             columns={[
               {
-                header: "ID",
+                header: s.id,
                 render: (r: MeterReading) => (
                   <span title={r.id}>{r.id ? `${r.id.slice(0, 8)}…` : "—"}</span>
                 ),
               },
               {
-                header: "Phòng",
+                header: p.room,
                 render: (r: MeterReading) => tenKhuVaPhong(r.room),
               },
               {
-                header: "Tháng/Năm",
+                header: p.monthYear,
                 render: (r: MeterReading) => `${r.month}/${r.year}`,
               },
               {
@@ -623,11 +623,11 @@ export default function TrangChiSoDienNuoc() {
                   `${r.oldElectric} → ${r.newElectric}`,
               },
               {
-                header: "Nước (cũ → mới)",
+                header: p.waterCol,
                 render: (r: MeterReading) => `${r.oldWater} → ${r.newWater}`,
               },
               {
-                header: "Thao tác",
+                header: s.actions,
                 render: (r: MeterReading) =>
                   coTheSuaChiSo(r) ? (
                     <button
@@ -635,7 +635,7 @@ export default function TrangChiSoDienNuoc() {
                       className="btn btn-sm meter-btn-sua"
                       onClick={() => moModalSuaChiSo(r)}
                     >
-                      <IconPencil /> Sửa
+                      <IconPencil /> {s.edit}
                     </button>
                   ) : (
                     <span style={{ color: "#94a3b8" }}>—</span>
@@ -650,23 +650,23 @@ export default function TrangChiSoDienNuoc() {
             <div className="modal-card form-card meter-sua-modal">
               <div className="card-header">
                 <div>
-                  <h3>Sửa chỉ số</h3>
+                  <h3>{p.editReading}</h3>
                   <p className="card-subtitle">
-                    {tenKhuVaPhong(chiSoSua.room)} — Tháng {chiSoSua.month}/
-                    {chiSoSua.year}
+                    {tenKhuVaPhong(chiSoSua.room)} {p.editReadingSub}{" "}
+                    {chiSoSua.month}/{chiSoSua.year}
                   </p>
                 </div>
               </div>
               <form onSubmit={luuSuaChiSo} className="form-grid">
                 <div className="form-span-2">
                   <p className="card-subtitle" style={{ fontSize: "0.9rem" }}>
-                    Số cũ lấy từ tháng trước: điện{" "}
-                    <strong>{chiSoSua.oldElectric}</strong>, nước{" "}
+                    {p.editOldHint}{" "}
+                    <strong>{chiSoSua.oldElectric}</strong>, {p.periodStartWater}{" "}
                     <strong>{chiSoSua.oldWater}</strong>.
                   </p>
                 </div>
                 <div>
-                  <label className="field-label">Số điện mới</label>
+                  <label className="field-label">{p.newElec}</label>
                   <input
                     value={suaDienMoi}
                     onChange={(e) => setSuaDienMoi(e.target.value)}
@@ -674,7 +674,7 @@ export default function TrangChiSoDienNuoc() {
                   />
                 </div>
                 <div>
-                  <label className="field-label">Số nước mới</label>
+                  <label className="field-label">{p.newWater}</label>
                   <input
                     value={suaNuocMoi}
                     onChange={(e) => setSuaNuocMoi(e.target.value)}
@@ -690,10 +690,10 @@ export default function TrangChiSoDienNuoc() {
                     className="btn btn-secondary"
                     onClick={dongModalSuaChiSo}
                   >
-                    <IconTimes /> Hủy
+                    <IconTimes /> {c.cancel}
                   </button>
                   <button className="btn" type="submit">
-                    <IconCheck /> Lưu thay đổi
+                    <IconCheck /> {p.saveChanges}
                   </button>
                 </div>
               </form>
