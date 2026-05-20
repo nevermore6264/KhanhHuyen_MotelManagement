@@ -714,7 +714,7 @@ export default function TrangLanding() {
                 <Link href="/dang-nhap" className="lp-btn-primary lp-btn-xl">
                   Bắt đầu dùng thử
                 </Link>
-                <a href="#tinh-nang" className="lp-btn-ghost">
+                <a href="#tinh-nang" className="lp-btn-ghost lp-btn-xl">
                   Xem tính năng
                 </a>
               </motion.div>
@@ -818,7 +818,14 @@ export default function TrangLanding() {
       <div className="lp-marquee-section" aria-hidden>
         <div className="lp-marquee-track">
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((t, i) => (
-            <span key={i}>{t} ·</span>
+            <span key={i} className="lp-marquee-item">
+              <span className="lp-marquee-text">{t}</span>
+              <span className="lp-marquee-sep" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.09 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.91-1.01L12 2z" />
+                </svg>
+              </span>
+            </span>
           ))}
         </div>
       </div>

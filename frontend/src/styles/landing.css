@@ -124,19 +124,32 @@ body.landing-body .main-content {
 }
 
 .lp-btn-ghost {
-  color: var(--lp-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  color: var(--lp-sky-700) !important;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 10px 18px;
-  border-radius: 8px;
-  border: 1px solid var(--lp-border);
-  transition: background 0.2s, border-color 0.2s;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  padding: 12px 22px;
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1.5px solid var(--lp-border);
+  background: #fff;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .lp-btn-ghost:hover {
-  background: #f5f5f4;
-  border-color: #d6d3d1;
+  color: var(--lp-sky-700) !important;
+  background: var(--lp-sky-50);
+  border-color: var(--lp-sky-400);
+  transform: translateY(-1px);
 }
 
 .lp-btn-primary {
@@ -144,12 +157,13 @@ body.landing-body .main-content {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   padding: 12px 22px;
   border-radius: 10px;
-  color: #fff;
-  background: linear-gradient(135deg, var(--lp-sky-600) 0%, var(--lp-sky-400) 100%);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #0ea5e9 100%);
   box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
   transition:
     transform 0.2s ease,
@@ -158,8 +172,8 @@ body.landing-body .main-content {
 }
 
 .lp-btn-primary:hover {
-  color: #fff;
-  background: linear-gradient(135deg, var(--lp-sky-500) 0%, var(--lp-sky-300) 100%);
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 55%, #38bdf8 100%);
   filter: brightness(1.04);
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(14, 165, 233, 0.45);
@@ -462,13 +476,36 @@ body.landing-body .main-content {
   animation: lp-marquee 35s linear infinite;
 }
 
-.lp-marquee-track span {
+.lp-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   white-space: nowrap;
-  padding: 0 2rem;
+}
+
+.lp-marquee-text {
+  padding: 0 0.5rem 0 2rem;
   font-size: 0.95rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.45);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+}
+
+.lp-marquee-sep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 0.25rem;
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.lp-marquee-sep svg {
+  width: 11px;
+  height: 11px;
+  opacity: 0.85;
 }
 
 @keyframes lp-marquee {

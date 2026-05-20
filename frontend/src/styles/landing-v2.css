@@ -17,6 +17,21 @@
 }
 
 body.landing-body {
+  --lp-hero-bg: #f0f9ff;
+  --lp-sky-50: #f0f9ff;
+  --lp-sky-100: #e0f2fe;
+  --lp-sky-200: #bae6fd;
+  --lp-sky-300: #7dd3fc;
+  --lp-sky-400: #38bdf8;
+  --lp-sky-500: #0ea5e9;
+  --lp-sky-600: #0284c7;
+  --lp-sky-700: #0369a1;
+  --lp-ink: #0c4a6e;
+  --lp-muted: #64748b;
+  --lp-border: #bae6fd;
+  --lp-accent: #0ea5e9;
+  --lp-accent-deep: #0284c7;
+  --lp-surface: #ffffff;
   background: #f0f9ff !important;
 }
 
@@ -856,8 +871,12 @@ body.landing-body {
   border-color: var(--lp-border);
 }
 
-.lp-marquee-track span {
-  color: var(--lp-sky-600) !important;
+.lp-marquee-text {
+  color: var(--lp-sky-700) !important;
+}
+
+.lp-marquee-sep {
+  color: var(--lp-sky-500) !important;
 }
 
 .lp-scroll-line {
