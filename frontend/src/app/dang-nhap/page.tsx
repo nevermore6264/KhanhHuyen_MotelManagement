@@ -7,6 +7,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 import { IconHome } from "@/components/Icons";
+import FooterHienDai from "@/components/FooterHienDai";
 
 export default function TrangDangNhap() {
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function TrangDangNhap() {
         Quay về trang chủ
       </Link>
 
+      <div className="login-page__main">
       <div className="login-layout">
         <section className="login-panel-hero">
           <h1>
@@ -219,10 +221,9 @@ export default function TrangDangNhap() {
           </div>
         </section>
       </div>
+      </div>
 
-      <p className="login-page-footer">
-        © 2026 iTro · Quản lý nhà trọ thông minh
-      </p>
+      <FooterHienDai variant="auth" />
     </div>
   );
 }

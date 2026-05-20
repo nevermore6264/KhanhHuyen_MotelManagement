@@ -9,16 +9,26 @@ body.login-body .main-content {
   margin: 0;
 }
 
-.login-page {
+body.login-body .login-page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 24px 0 0;
+  position: relative;
+  background: linear-gradient(145deg, #e0f2fe 0%, #f0f9ff 40%, #ffffff 100%) !important;
+  overflow-x: hidden;
+}
+
+.login-page__main {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px 32px;
-  position: relative;
-  background: linear-gradient(145deg, #e0f2fe 0%, #f0f9ff 40%, #ffffff 100%);
-  overflow: hidden;
+  width: 100%;
+  padding: 0 20px 32px;
 }
 
 .login-back-home {
@@ -386,13 +396,71 @@ body.login-body .main-content {
   text-decoration: underline;
 }
 
-.login-page-footer {
-  position: relative;
-  z-index: 1;
-  margin-top: 24px;
-  text-align: center;
-  font-size: 0.78rem;
+.login-hint {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
   color: #64748b;
+  padding: 10px 12px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border: 1px solid #e0f2fe;
+}
+
+.login-success {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-success-message {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+}
+
+.login-reset-link-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+}
+
+.login-reset-link-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.login-reset-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0284c7 !important;
+  word-break: break-all;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.login-reset-link:hover {
+  text-decoration: underline;
+  color: #0369a1 !important;
+}
+
+body.login-body .login-page .site-footer--auth {
+  margin-top: auto;
+  flex-shrink: 0;
+  width: 100%;
+  border-radius: 0;
 }
 
 @media (max-width: 900px) {

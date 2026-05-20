@@ -450,14 +450,15 @@ textarea:focus {
 }
 
 [data-page="dashboard"] .dashboard-hero .btn {
-  background: linear-gradient(135deg, var(--primary), #6b8f71) !important;
-  color: #fff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 [data-page="dashboard"] .dashboard-hero .btn-secondary {
-  background: #fff !important;
-  color: var(--primary-dark) !important;
-  border: 1.5px solid var(--border) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 [data-page="table"] .card:has(.table-wrap) {

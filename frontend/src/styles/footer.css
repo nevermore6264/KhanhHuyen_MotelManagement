@@ -11,6 +11,21 @@
   border-top: 1px solid rgba(186, 230, 253, 0.22);
 }
 
+body.login-body .site-footer--auth {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+body.login-body .site-footer--auth .site-footer__inner {
+  padding: 48px 28px 28px;
+}
+
+@media (max-width: 520px) {
+  body.login-body .site-footer--auth .site-footer__inner {
+    padding: 36px 20px 24px;
+  }
+}
+
 .site-footer__glow {
   position: absolute;
   top: -60px;

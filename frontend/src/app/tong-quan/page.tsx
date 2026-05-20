@@ -67,6 +67,32 @@ const contractStatusLabel = (value?: string) => {
   }
 };
 
+const SLOGAN_DASHBOARD = [
+  "iTro — Nhà trọ gọn gàng",
+  "Thuê an tâm",
+  "Thanh toán dễ dàng",
+];
+
+function MarqueeSloganDashboard() {
+  const items = [...SLOGAN_DASHBOARD, ...SLOGAN_DASHBOARD, ...SLOGAN_DASHBOARD];
+  return (
+    <div className="dashboard-slogan-marquee" aria-hidden>
+      <div className="dashboard-slogan-track">
+        {items.map((text, i) => (
+          <span key={i} className="dashboard-slogan-item">
+            <span className="dashboard-slogan-text">{text}</span>
+            <span className="dashboard-slogan-sep" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.09 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.91-1.01L12 2z" />
+              </svg>
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const formatDateDMY = (dateStr?: string) => {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
@@ -261,7 +287,7 @@ export default function TrangTongQuan() {
         {
           label: "Tổng quan",
           data: [vacant, debt, revenue],
-          backgroundColor: ["#7aa6ff", "#4f7cff", "#9bbcff"],
+          backgroundColor: ["#7dd3fc", "#0ea5e9", "#0284c7"],
           borderRadius: 8,
           maxBarThickness: 48,
         },
@@ -280,7 +306,7 @@ export default function TrangTongQuan() {
             occupancy.occupied,
             occupancy.maintenance,
           ],
-          backgroundColor: ["#7aa6ff", "#4f7cff", "#cbd5e1"],
+          backgroundColor: ["#bae6fd", "#0ea5e9", "#94a3b8"],
           borderWidth: 0,
         },
       ],
@@ -305,8 +331,8 @@ export default function TrangTongQuan() {
         {
           label: "Doanh thu",
           data: series,
-          borderColor: "#4f7cff",
-          backgroundColor: "rgba(79, 124, 255, 0.2)",
+          borderColor: "#0284c7",
+          backgroundColor: "rgba(14, 165, 233, 0.15)",
           tension: 0.35,
           fill: true,
           pointRadius: 3,
@@ -568,22 +594,7 @@ export default function TrangTongQuan() {
           </div>
         </div>
 
-        <div className="dashboard-slogan-marquee" aria-hidden>
-          <div className="dashboard-slogan-track">
-            <span>
-              iTro — Nhà trọ gọn gàng · Thuê an tâm · Thanh toán dễ dàng
-              ·{" "}
-            </span>
-            <span>
-              iTro — Nhà trọ gọn gàng · Thuê an tâm · Thanh toán dễ dàng
-              ·{" "}
-            </span>
-            <span>
-              iTro — Nhà trọ gọn gàng · Thuê an tâm · Thanh toán dễ dàng
-              ·{" "}
-            </span>
-          </div>
-        </div>
+        <MarqueeSloganDashboard />
 
         <div className="stat-grid">
           <div className="card stat-card accent-rose">
@@ -614,6 +625,20 @@ export default function TrangTongQuan() {
               <div className="stat-label">Doanh thu tháng</div>
               <div className="stat-value">{formatNumber(revenue)} đ</div>
               <div className="stat-note">Tháng hiện tại</div>
+            </div>
+          </div>
+          <div className="card stat-card accent-sky">
+            <div className="stat-icon">
+              <IconChart />
+            </div>
+            <div>
+              <div className="stat-label">Tỷ lệ lấp đầy</div>
+              <div className="stat-value">
+                {occupancy.occupancyRatePercent}%
+              </div>
+              <div className="stat-note">
+                {occupancy.occupied}/{occupancy.totalRooms} phòng
+              </div>
             </div>
           </div>
         </div>

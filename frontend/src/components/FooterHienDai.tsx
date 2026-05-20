@@ -2,18 +2,25 @@ import Link from "next/link";
 import Image from "next/image";
 
 type FooterHienDaiProps = {
-  variant?: "landing" | "app";
+  variant?: "landing" | "app" | "auth";
 };
 
 export default function FooterHienDai({
   variant = "landing",
 }: FooterHienDaiProps) {
   const laLanding = variant === "landing";
+  const laAuth = variant === "auth";
+
+  const classFooter = [
+    "site-footer",
+    (laLanding || laAuth) && "site-footer--landing",
+    laAuth && "site-footer--auth",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <footer
-      className={`site-footer${laLanding ? " site-footer--landing" : ""}`}
-    >
+    <footer className={classFooter}>
       <div className="site-footer__glow" aria-hidden />
 
       <div className="site-footer__inner">
@@ -32,19 +39,27 @@ export default function FooterHienDai({
           <div className="site-footer__col">
             <h4 className="site-footer__heading">Sản phẩm</h4>
             <ul className="site-footer__links">
-              {laLanding ? (
+              {laLanding || laAuth ? (
                 <>
                   <li>
-                    <a href="#tinh-nang">Tính năng</a>
+                    <a href={laAuth ? "/#tinh-nang" : "#tinh-nang"}>
+                      Tính năng
+                    </a>
                   </li>
                   <li>
-                    <a href="#cach-hoat-dong">Cách hoạt động</a>
+                    <a href={laAuth ? "/#cach-hoat-dong" : "#cach-hoat-dong"}>
+                      Cách hoạt động
+                    </a>
                   </li>
                   <li>
-                    <a href="#danh-gia">Đánh giá</a>
+                    <a href={laAuth ? "/#danh-gia" : "#danh-gia"}>
+                      Đánh giá
+                    </a>
                   </li>
                   <li>
-                    <a href="#cau-hoi">Câu hỏi</a>
+                    <a href={laAuth ? "/#cau-hoi" : "#cau-hoi"}>
+                      Câu hỏi
+                    </a>
                   </li>
                 </>
               ) : (
@@ -69,9 +84,11 @@ export default function FooterHienDai({
               <li>
                 <Link href="/dang-nhap">Đăng nhập</Link>
               </li>
-              {laLanding ? (
+              {laLanding || laAuth ? (
                 <li>
-                  <a href="#tinh-nang">Dùng thử miễn phí</a>
+                  <a href={laAuth ? "/#tinh-nang" : "#tinh-nang"}>
+                    Dùng thử miễn phí
+                  </a>
                 </li>
               ) : (
                 <li>
@@ -112,7 +129,7 @@ export default function FooterHienDai({
               </Link>
             ) : (
               <Link href="/" className="site-footer__back-top">
-                Trang chủ
+                {laAuth ? "Về trang chủ" : "Trang chủ"}
               </Link>
             )}
           </div>
