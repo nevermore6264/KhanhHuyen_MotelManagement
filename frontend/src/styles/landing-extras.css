@@ -1,0 +1,280 @@
+/* Bổ sung landing — học layout LOZIDO, palette xanh da trời iTro */
+
+/* Hero — tick nhanh */
+.lp-hero-v3-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lp-hero-v3-checks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lp-sky-700);
+}
+
+.lp-hero-v3-checks li span:first-child {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--lp-sky-100);
+  color: var(--lp-sky-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+/* Điểm nổi bật */
+.lp-highlights {
+  position: relative;
+  padding: clamp(48px, 6vw, 72px) 0;
+  background: #fff;
+  overflow: hidden;
+}
+
+.lp-highlights-head {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto clamp(28px, 4vw, 40px);
+}
+
+.lp-highlights-head h2 {
+  margin: 0 0 12px;
+  color: var(--lp-ink);
+}
+
+.lp-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.lp-highlight-card {
+  position: relative;
+  padding: 22px 20px;
+  border-radius: 18px;
+  background: var(--lp-sky-50);
+  border: 1px solid var(--lp-sky-200);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.lp-highlight-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px -12px rgba(14, 165, 233, 0.25);
+}
+
+.lp-highlight-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--lp-sky-500), var(--lp-sky-400));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.3);
+}
+
+.lp-highlight-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--lp-ink);
+  letter-spacing: -0.02em;
+}
+
+.lp-highlight-card p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--lp-muted);
+}
+
+/* Đa nền tảng */
+.lp-platforms {
+  position: relative;
+  padding: clamp(48px, 6vw, 72px) 0;
+  background: linear-gradient(180deg, var(--lp-sky-50) 0%, #fff 100%);
+  overflow: hidden;
+}
+
+.lp-platforms-head {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto 32px;
+}
+
+.lp-platforms-head .lp-section-desc {
+  margin: 12px auto 0;
+}
+
+.lp-platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.lp-platform-card {
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--lp-sky-200);
+  box-shadow: 0 12px 32px -14px rgba(14, 165, 233, 0.2);
+  transition: transform 0.35s ease;
+}
+
+.lp-platform-card:hover {
+  transform: translateY(-6px);
+}
+
+.lp-platform-icon {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.lp-platform-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--lp-ink);
+}
+
+.lp-platform-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--lp-muted);
+}
+
+/* Vì sao chọn iTro */
+.lp-why {
+  position: relative;
+  padding: clamp(48px, 6vw, 72px) 0;
+  background: #fff;
+  overflow: hidden;
+}
+
+.lp-why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.lp-why-card {
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid var(--lp-sky-200);
+  background: #fff;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.lp-why-card:hover {
+  border-color: var(--lp-sky-400);
+  box-shadow: 0 12px 32px -12px rgba(14, 165, 233, 0.2);
+}
+
+.lp-why-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--lp-sky-700);
+}
+
+.lp-why-card p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--lp-muted);
+}
+
+/* Testimonial — quy mô phòng */
+.lp-quote-rooms {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--lp-sky-700);
+  background: var(--lp-sky-100);
+  border: 1px solid var(--lp-sky-200);
+}
+
+/* Thanh liên hệ nổi */
+.lp-float-bar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--lp-sky-200);
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.lp-float-bar a {
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 999px;
+  transition: transform 0.2s ease;
+}
+
+.lp-float-bar a:hover {
+  transform: translateY(-1px);
+}
+
+.lp-float-bar__primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--lp-sky-600), var(--lp-sky-400));
+}
+
+.lp-float-bar__ghost {
+  color: var(--lp-sky-700);
+  background: var(--lp-sky-50);
+  border: 1px solid var(--lp-sky-200);
+}
+
+@media (max-width: 900px) {
+  .lp-highlights-grid,
+  .lp-platforms-grid,
+  .lp-why-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-hero-v3-checks {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-float-bar {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1024px) {
+  .lp-highlights-grid,
+  .lp-why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

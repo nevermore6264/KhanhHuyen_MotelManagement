@@ -45,70 +45,63 @@
   max-width: 1180px;
   margin: 0 auto;
   width: 100%;
-}
-
-.lp-hero-v3-head {
-  max-width: 52rem;
-  margin-bottom: clamp(28px, 4vw, 48px);
+  padding-bottom: 16px;
 }
 
 .lp-hero-v3-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
+  padding: 7px 14px;
+  border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--lp-muted);
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--lp-sky-700);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--lp-sky-200);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
 }
 
-.lp-hero-v3-eyebrow::before {
-  content: "";
-  width: 28px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--lp-sky-500), var(--lp-sky-300));
-  border-radius: 2px;
-}
-
-.lp-hero-v3-head h1 {
-  margin: 0;
-  font-size: clamp(2.6rem, 6.8vw, 4.75rem);
+.lp-hero-v3-title {
+  margin: 0 0 18px;
+  font-size: clamp(2.15rem, 5.2vw, 3.35rem);
   font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: -0.045em;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
   color: var(--lp-ink);
 }
 
-.lp-hero-v3-line {
+.lp-hero-v3-highlight {
   display: block;
-}
-
-.lp-hero-v3-line em {
-  font-style: italic;
-  font-weight: 700;
-  color: var(--lp-sky-600);
-  letter-spacing: -0.03em;
+  margin-top: 0.2em;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  background: linear-gradient(100deg, var(--lp-sky-700) 0%, var(--lp-sky-500) 55%, var(--lp-sky-400) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .lp-hero-v3-body {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.38fr);
   gap: clamp(28px, 4vw, 56px);
-  align-items: end;
+  align-items: center;
 }
 
 .lp-hero-v3-aside {
   padding-bottom: 8px;
+  max-width: 26rem;
 }
 
 .lp-hero-v3-lead {
   margin: 0 0 28px;
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: 1.02rem;
+  line-height: 1.65;
   color: var(--lp-muted);
-  max-width: 22rem;
+  max-width: 28rem;
 }
 
 .lp-hero-v3-actions {
@@ -340,8 +333,19 @@
 }
 
 .lp-hero-v3 .lp-scroll-hint {
-  margin-top: 40px;
-  color: #a8a29e;
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin-top: clamp(32px, 4vw, 48px);
+  padding-bottom: 8px;
+  color: var(--lp-muted);
+  z-index: 1;
+}
+
+.lp-hero-v3-bento {
+  position: relative;
+  z-index: 2;
 }
 
 .lp-hero-v3 .lp-scroll-line {
@@ -356,6 +360,14 @@
 
   .lp-hero-v3-body {
     grid-template-columns: 1fr;
+  }
+
+  .lp-hero-v3-aside {
+    max-width: none;
+  }
+
+  .lp-hero-v3-title {
+    max-width: none;
   }
 
   .lp-hero-v3-lead {

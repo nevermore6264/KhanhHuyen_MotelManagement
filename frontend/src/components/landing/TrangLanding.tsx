@@ -385,6 +385,91 @@ const HERO_TAGS = [
   "Chat nội bộ",
 ];
 
+const HERO_CHECKS = [
+  { mark: "✓", text: "Cài đặt < 5 phút" },
+  { mark: "✓", text: "Xuất Excel & PDF" },
+  { mark: "✓", text: "Hỗ trợ tiếng Việt" },
+  { mark: "✓", text: "3 vai trò người dùng" },
+];
+
+const HIGHLIGHTS = [
+  {
+    icon: "📨",
+    title: "Hóa đơn theo kỳ",
+    desc: "Lập và theo dõi thanh toán — không quên kỳ thu.",
+  },
+  {
+    icon: "💬",
+    title: "Chat nội bộ",
+    desc: "Khách, nhân viên trao đổi trong hệ thống — không lạc Zalo.",
+  },
+  {
+    icon: "📊",
+    title: "Báo cáo tức thì",
+    desc: "Doanh thu, lấp đầy phòng — số liệu cập nhật realtime.",
+  },
+  {
+    icon: "⚡",
+    title: "Điện nước có ảnh",
+    desc: "Nhập chỉ số, đính kèm ảnh đồng hồ — minh bạch.",
+  },
+  {
+    icon: "📋",
+    title: "Hợp đồng gắn phòng",
+    desc: "Khách, phòng, kỳ thu liên kết một chỗ.",
+  },
+  {
+    icon: "🔔",
+    title: "Thông báo realtime",
+    desc: "Nhắc việc, cảnh báo — không bỏ sót.",
+  },
+];
+
+const PLATFORMS = [
+  {
+    icon: "📱",
+    title: "Điện thoại",
+    desc: "Kiểm tra phòng, duyệt hóa đơn khi đi hiện trường.",
+  },
+  {
+    icon: "💻",
+    title: "Máy tính",
+    desc: "Báo cáo chi tiết, thao tác nhanh tại quầy.",
+  },
+  {
+    icon: "🌐",
+    title: "Trình duyệt",
+    desc: "Đăng nhập web — không cần cài thêm phần mềm.",
+  },
+];
+
+const WHY_ITRO = [
+  {
+    title: "Tiết kiệm thời gian",
+    desc: "Thay sổ tay & Excel rời — một màn hình cho cả dãy trọ.",
+  },
+  {
+    title: "Giao diện dễ dùng",
+    desc: "Bám nghiệp vụ nhà trọ, ít thao tác thừa.",
+  },
+  {
+    title: "Quản lý mọi lúc",
+    desc: "Chỉ cần trình duyệt — làm việc ở nhà hay tại trọ.",
+  },
+  {
+    title: "Không giới hạn phòng",
+    desc: "Từ vài phòng đến hàng trăm — cùng một quy trình.",
+  },
+  {
+    title: "Kết nối khách thuê",
+    desc: "Chat, hóa đơn, thông báo — khách thấy rõ, chủ yên tâm.",
+  },
+  {
+    title: "Hỗ trợ đồ án / demo",
+    desc: "Tài khoản demo sẵn — trải nghiệm đầy đủ tính năng.",
+  },
+];
+
 const PEOPLE_QUOTES: Partial<Record<string, string>> = {
   "Lan Anh": "Cuối tháng không còn nhắc từng phòng thu tiền.",
 };
@@ -482,23 +567,6 @@ export default function TrangLanding() {
         </div>
 
         <div className="lp-hero-v3-wrap">
-          <motion.header
-            className="lp-hero-v3-head"
-            initial="hidden"
-            animate="visible"
-            variants={stagger}
-          >
-            <motion.p className="lp-hero-v3-eyebrow" variants={fadeUp}>
-              Phần mềm quản lý nhà trọ
-            </motion.p>
-            <motion.h1 variants={fadeUp} custom={1}>
-              <span className="lp-hero-v3-line">Một nền tảng.</span>
-              <span className="lp-hero-v3-line">
-                <em>Cho cả chủ trọ lẫn khách thuê.</em>
-              </span>
-            </motion.h1>
-          </motion.header>
-
           <div className="lp-hero-v3-body">
             <motion.aside
               className="lp-hero-v3-aside"
@@ -506,6 +574,15 @@ export default function TrangLanding() {
               animate="visible"
               variants={stagger}
             >
+              <motion.p className="lp-hero-v3-eyebrow" variants={fadeUp}>
+                iTro · Quản lý nhà trọ
+              </motion.p>
+              <motion.h1 className="lp-hero-v3-title" variants={fadeUp} custom={1}>
+                Quản lý nhà trọ
+                <span className="lp-hero-v3-highlight">
+                  gọn trên một màn hình
+                </span>
+              </motion.h1>
               <motion.p className="lp-hero-v3-lead" variants={fadeUp} custom={2}>
                 Theo dõi phòng, hợp đồng và hóa đơn trên một màn hình — không
                 cần sổ tay, không lạc tin nhắn.
@@ -521,6 +598,14 @@ export default function TrangLanding() {
               <motion.ul className="lp-hero-v3-tags" variants={fadeUp} custom={4}>
                 {HERO_TAGS.map((t) => (
                   <li key={t}>{t}</li>
+                ))}
+              </motion.ul>
+              <motion.ul className="lp-hero-v3-checks" variants={fadeUp} custom={5}>
+                {HERO_CHECKS.map((c) => (
+                  <li key={c.text}>
+                    <span aria-hidden>{c.mark}</span>
+                    {c.text}
+                  </li>
                 ))}
               </motion.ul>
             </motion.aside>
@@ -649,6 +734,40 @@ export default function TrangLanding() {
         </motion.div>
       </section>
 
+      <section className="lp-highlights" aria-labelledby="lp-highlights-title">
+        <KhốiHinhBay />
+        <div className="lp-container">
+          <Reveal className="lp-highlights-head">
+            <span className="lp-section-label">Điểm nổi bật</span>
+            <h2 id="lp-highlights-title">
+              Những gì iTro giúp bạn mỗi ngày
+            </h2>
+            <p className="lp-section-desc" style={{ margin: "0 auto" }}>
+              Tham khảo nhanh — còn nhiều tính năng khác trong hệ thống.
+            </p>
+          </Reveal>
+          <div className="lp-highlights-grid">
+            {HIGHLIGHTS.map((h, i) => (
+              <motion.article
+                key={h.title}
+                className="lp-highlight-card"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-20px" }}
+                transition={{ delay: i * 0.06, duration: 0.45 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="lp-highlight-icon" aria-hidden>
+                  {h.icon}
+                </div>
+                <h3>{h.title}</h3>
+                <p>{h.desc}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="lp-people-section lp-people-v2">
         <KhốiHinhBay dense />
         <div className="lp-people-v2-shell">
@@ -768,6 +887,37 @@ export default function TrangLanding() {
         </div>
       </section>
 
+      <section className="lp-platforms" id="da-nen-tang">
+        <KhốiHinhBay />
+        <div className="lp-container">
+          <Reveal className="lp-platforms-head">
+            <span className="lp-section-label">Đa nền tảng</span>
+            <h2>Điện thoại · Máy tính · Trình duyệt</h2>
+            <p className="lp-section-desc">
+              Quản lý linh hoạt — không phụ thuộc một thiết bị duy nhất.
+            </p>
+          </Reveal>
+          <div className="lp-platforms-grid">
+            {PLATFORMS.map((p, i) => (
+              <motion.article
+                key={p.title}
+                className="lp-platform-card"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+              >
+                <div className="lp-platform-icon" aria-hidden>
+                  {p.icon}
+                </div>
+                <h3>{p.title}</h3>
+                <p>{p.desc}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="lp-section">
         <div className="lp-container lp-showcase">
           <Reveal>
@@ -839,17 +989,17 @@ export default function TrangLanding() {
                   </div>
                   <div
                     className="lp-mock-stat"
-                    style={{ background: "#e4f6ef" }}
+                    style={{ background: "#e0f2fe" }}
                   >
                     <div
                       className="lp-mock-stat-label"
-                      style={{ color: "#8a8199" }}
+                      style={{ color: "#64748b" }}
                     >
                       Thu tháng
                     </div>
                     <div
                       className="lp-mock-stat-val"
-                      style={{ color: "#5aab8a" }}
+                      style={{ color: "#0284c7" }}
                     >
                       120M
                     </div>
@@ -863,28 +1013,28 @@ export default function TrangLanding() {
                     className="lp-mock-bar-col"
                     style={{
                       height: "60%",
-                      background: "linear-gradient(180deg,#78716c,#57534e)",
+                      background: "linear-gradient(180deg,#bae6fd,#7dd3fc)",
                     }}
                   />
                   <div
                     className="lp-mock-bar-col"
                     style={{
                       height: "85%",
-                      background: "linear-gradient(180deg,#5eead4,#2dd4bf)",
+                      background: "linear-gradient(180deg,#38bdf8,#0ea5e9)",
                     }}
                   />
                   <div
                     className="lp-mock-bar-col"
                     style={{
                       height: "45%",
-                      background: "linear-gradient(180deg,#fdba74,#f59e0b)",
+                      background: "linear-gradient(180deg,#bae6fd,#38bdf8)",
                     }}
                   />
                   <div
                     className="lp-mock-bar-col"
                     style={{
                       height: "70%",
-                      background: "linear-gradient(180deg,#78716c,#57534e)",
+                      background: "linear-gradient(180deg,#7dd3fc,#0284c7)",
                     }}
                   />
                 </div>
@@ -954,6 +1104,34 @@ export default function TrangLanding() {
         </div>
       </section>
 
+      <section className="lp-why" id="vi-sao-itro">
+        <KhốiHinhBay dense />
+        <div className="lp-container">
+          <Reveal className="lp-highlights-head">
+            <span className="lp-section-label">Vì sao iTro</span>
+            <h2>Chọn giải pháp phù hợp chủ nhà trọ</h2>
+            <p className="lp-section-desc" style={{ margin: "0 auto" }}>
+              Hướng tới vận hành thực tế — không chỉ giao diện đẹp.
+            </p>
+          </Reveal>
+          <div className="lp-why-grid">
+            {WHY_ITRO.map((w, i) => (
+              <motion.article
+                key={w.title}
+                className="lp-why-card"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05, duration: 0.45 }}
+              >
+                <h3>{w.title}</h3>
+                <p>{w.desc}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="lp-section" id="danh-gia">
         <div className="lp-container">
           <Reveal>
@@ -969,18 +1147,21 @@ export default function TrangLanding() {
                 q: "Cuối cùng cũng không phải ghi chép sổ tay nữa. Mở app là thấy phòng trống, ai chưa đóng tiền — rất tiện.",
                 a: "Chị Huyền",
                 r: "Chủ nhà trọ, Q.7",
+                rooms: "36 phòng",
                 photo: PHOTOS.testimonials.huyen,
               },
               {
                 q: "Giao diện dễ nhìn, không sợ bấm nhầm. Chat với chủ trọ ngay trong app thay vì nhắn Zalo lạc tin.",
                 a: "Minh Anh",
                 r: "Sinh viên thuê trọ",
+                rooms: "Khách thuê",
                 photo: PHOTOS.testimonials.minh,
               },
               {
                 q: "Xuất báo cáo Excel/PDF theo tháng giúp em đối soát nhanh hơn hẳn so với làm tay.",
                 a: "Tuấn",
                 r: "Nhân viên quản lý",
+                rooms: "48 phòng",
                 photo: PHOTOS.testimonials.tuan,
               },
             ].map((t, i) => (
@@ -1003,6 +1184,7 @@ export default function TrangLanding() {
                   <div>
                     <div className="lp-quote-author">{t.a}</div>
                     <div className="lp-quote-role">{t.r}</div>
+                    <span className="lp-quote-rooms">{t.rooms}</span>
                   </div>
                 </div>
                 <p>{t.q}</p>
@@ -1147,6 +1329,15 @@ export default function TrangLanding() {
       </section>
 
       <FooterHienDai variant="landing" />
+
+      <aside className="lp-float-bar" aria-label="Liên hệ nhanh">
+        <Link href="/dang-nhap" className="lp-float-bar__primary">
+          Dùng thử
+        </Link>
+        <a href="mailto:support@itro.vn" className="lp-float-bar__ghost">
+          Liên hệ
+        </a>
+      </aside>
     </div>
   );
 }

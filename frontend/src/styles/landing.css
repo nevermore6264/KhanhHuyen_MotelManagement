@@ -5,6 +5,7 @@
 @import "./landing-hero.css";
 @import "./landing-people.css";
 @import "./landing-features.css";
+@import "./landing-extras.css";
 
 body.landing-body {
   overflow-x: hidden;
