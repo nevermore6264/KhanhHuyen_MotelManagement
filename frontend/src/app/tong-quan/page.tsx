@@ -430,7 +430,7 @@ export default function TrangTongQuan() {
             occupancy.occupied,
             occupancy.maintenance,
           ],
-          backgroundColor: ["#c7d2fe", "#6366f1", "#94a3b8"],
+          backgroundColor: ["#bae6fd", "#0ea5e9", "#94a3b8"],
           borderWidth: 0,
         },
       ],
@@ -455,13 +455,13 @@ export default function TrangTongQuan() {
         {
           label: dp.revenueChartLabel,
           data: series,
-          borderColor: "#6366f1",
-          backgroundColor: "rgba(99, 102, 241, 0.1)",
+          borderColor: "#0ea5e9",
+          backgroundColor: "rgba(14, 165, 233, 0.12)",
           tension: 0.35,
           fill: true,
           pointRadius: 4,
           pointBackgroundColor: "#ffffff",
-          pointBorderColor: "#6366f1",
+          pointBorderColor: "#0284c7",
           pointBorderWidth: 2,
           pointHoverRadius: 5,
           borderWidth: 2,
@@ -548,14 +548,6 @@ export default function TrangTongQuan() {
       ((revenue - doanhThuThangTruoc) / doanhThuThangTruoc) * 100,
     );
   }, [revenue, doanhThuThangTruoc]);
-
-  const diemVanHanh = useMemo(() => {
-    const occ = occupancy.occupancyRatePercent;
-    const thu = tyLeThuTien;
-    const noDebt =
-      unpaidCount === 0 ? 100 : Math.max(0, 100 - unpaidCount * 8);
-    return Math.min(100, Math.round(occ * 0.45 + thu * 0.35 + noDebt * 0.2));
-  }, [occupancy.occupancyRatePercent, tyLeThuTien, unpaidCount]);
 
   const tyLeHoaDon = (count: number) =>
     invoiceSummary && invoiceSummary.countTotal > 0
@@ -764,26 +756,6 @@ export default function TrangTongQuan() {
                     })
                   : "—:—:—"}
               </span>
-            </div>
-            <div
-              className="dash-x-score"
-              style={
-                { "--health-pct": diemVanHanh } as import("react").CSSProperties
-              }
-            >
-              <div className="dash-x-score__ring">
-                <span>{diemVanHanh}</span>
-              </div>
-              <div className="dash-x-score__text">
-                <strong>{dp.opsScore}</strong>
-                <span>
-                  {diemVanHanh >= 80
-                    ? dp.opsExcellent
-                    : diemVanHanh >= 60
-                      ? dp.opsGood
-                      : dp.opsWarn}
-                </span>
-              </div>
             </div>
           </div>
           <nav className="dash-x-hero__nav">

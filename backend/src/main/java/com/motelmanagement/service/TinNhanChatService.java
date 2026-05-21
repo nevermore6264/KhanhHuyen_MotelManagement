@@ -108,9 +108,8 @@ public class TinNhanChatService {
             phanHoiRepository.save(ph);
         }
         List<PhanHoiTinNhan> phanHoi = phanHoiRepository.findByTinNhanIdIn(List.of(tinNhanId));
-        DtoTinNhanChat dto = sangDto(tin, toi.getId(), phanHoi);
-        dayRealtime(tin.getHoiThoai().getId(), "REACTION", dto);
-        return dto;
+        dayRealtime(tin.getHoiThoai().getId(), "REACTION", tin);
+        return sangDto(tin, toi.getId(), phanHoi);
     }
 
     @Transactional
@@ -151,22 +150,24 @@ public class TinNhanChatService {
 
     private DtoTinNhanChat luuVaDay(TinNhan tin) {
         TinNhan daLuu = tinNhanRepository.save(tin);
-        DtoTinNhanChat dto = sangDto(daLuu, daLuu.getNguoiGui().getId(), List.of());
-        dayRealtime(daLuu.getHoiThoai().getId(), "MESSAGE", dto);
-        return dto;
+        dayRealtime(daLuu.getHoiThoai().getId(), "MESSAGE", daLuu);
+        return sangDto(daLuu, daLuu.getNguoiGui().getId(), List.of());
     }
 
-    private void dayRealtime(String hoiThoaiId, String loaiSuKien, DtoTinNhanChat dto) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("loaiSuKien", loaiSuKien);
-        payload.put("hoiThoaiId", hoiThoaiId);
-        payload.put("tinNhan", dto);
+    private void dayRealtime(String hoiThoaiId, String loaiSuKien, TinNhan tin) {
+        List<PhanHoiTinNhan> phanHoi = phanHoiRepository.findByTinNhanIdIn(List.of(tin.getId()));
         List<ThanhVienHoiThoai> thanhVien = thanhVienRepository.findByHoiThoaiId(hoiThoaiId);
         for (ThanhVienHoiThoai tv : thanhVien) {
-            messagingTemplate.convertAndSendToUser(
-                    tv.getNguoiDung().getTenDangNhap(),
-                    "/queue/chat",
-                    payload);
+            String tenDangNhap = tv.getNguoiDung().getTenDangNhap();
+            if (tenDangNhap == null || tenDangNhap.isBlank()) {
+                continue;
+            }
+            DtoTinNhanChat dto = sangDto(tin, tv.getNguoiDung().getId(), phanHoi);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("loaiSuKien", loaiSuKien);
+            payload.put("hoiThoaiId", hoiThoaiId);
+            payload.put("tinNhan", dto);
+            messagingTemplate.convertAndSendToUser(tenDangNhap, "/queue/chat", payload);
         }
     }
 

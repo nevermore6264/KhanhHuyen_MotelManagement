@@ -8,7 +8,13 @@ import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { thayMauChuoi } from "@/lib/i18n";
 import { layLocaleTag } from "@/lib/locale";
 import { nhanVaiTro } from "@/lib/trangThai";
-import { IconPlus, IconSearch, IconSend } from "@/components/Icons";
+import {
+  IconMessage,
+  IconPlus,
+  IconSearch,
+  IconSend,
+  IconUsers,
+} from "@/components/Icons";
 import { createChatClient, type ChatSocketPayload } from "@/lib/chatSocket";
 
 type HoiThoai = {
@@ -51,11 +57,6 @@ type NguoiChat = {
   tenDangNhap: string;
   vaiTro: string;
 };
-
-const EMOJI_GUI = [
-  "😀", "😂", "😍", "👍", "👎", "❤️", "🎉", "🔥", "😢", "😮", "🙏", "💯",
-  "😊", "🤔", "👏", "✨", "💪", "🥳", "😅", "🤝",
-];
 
 const REACTION_NHANH = ["👍", "❤️", "😂", "😮", "😢", "🎉"];
 
@@ -144,17 +145,15 @@ export default function ChatApp() {
   const [tinNhan, setTinNhan] = useState<TinNhan[]>([]);
   const [noiDung, setNoiDung] = useState("");
   const [dangGui, setDangGui] = useState(false);
-  const [moTimNguoi, setMoTimNguoi] = useState(false);
-  const [tuKhoa, setTuKhoa] = useState("");
   const [locHoiThoai, setLocHoiThoai] = useState("");
   const [boLocLoai, setBoLocLoai] = useState<"all" | "GROUP" | "PRIVATE">(
     "all",
   );
+  const [moTimNguoi, setMoTimNguoi] = useState(false);
+  const [tuKhoa, setTuKhoa] = useState("");
   const [nguoiTim, setNguoiTim] = useState<NguoiChat[]>([]);
-  const [moEmoji, setMoEmoji] = useState(false);
   const [userId, setUid] = useState<string | null>(null);
   const cuonRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const hoiThoaiIdRef = useRef<string | null>(null);
   const { notify } = useToast();
 
@@ -203,6 +202,12 @@ export default function ChatApp() {
     [notify],
   );
 
+  const capNhatTin = useCallback((updated: TinNhan) => {
+    setTinNhan((prev) =>
+      prev.map((t) => (t.id === updated.id ? updated : t)),
+    );
+  }, []);
+
   const timNguoi = useCallback(async (q: string) => {
     try {
       const res = await api.get("/nguoi-dung/cho-chat", {
@@ -227,10 +232,7 @@ export default function ChatApp() {
             return [...prev, tin];
           });
         } else if (payload.loaiSuKien === "REACTION" && payload.tinNhan) {
-          const tin = payload.tinNhan as TinNhan;
-          setTinNhan((prev) =>
-            prev.map((t) => (t.id === tin.id ? tin : t)),
-          );
+          capNhatTin(payload.tinNhan as TinNhan);
         } else {
           void taiTin(payload.hoiThoaiId);
         }
@@ -247,7 +249,7 @@ export default function ChatApp() {
       clearInterval(poll);
       client?.deactivate?.();
     };
-  }, [damBaoUserId, taiHoiThoai, taiTin]);
+  }, [damBaoUserId, taiHoiThoai, taiTin, capNhatTin]);
 
   useEffect(() => {
     if (hoiThoaiId) void taiTin(hoiThoaiId);
@@ -263,7 +265,6 @@ export default function ChatApp() {
 
   const chonHoiThoai = (id: string) => {
     setHoiThoaiId(id);
-    setMoEmoji(false);
   };
 
   const batDauChatRieng = async (nguoiDungId: string) => {
@@ -272,6 +273,7 @@ export default function ChatApp() {
       const ht = res.data as HoiThoai;
       await taiHoiThoai();
       setHoiThoaiId(ht.id);
+      setBoLocLoai("PRIVATE");
       setMoTimNguoi(false);
       setTuKhoa("");
     } catch (err: unknown) {
@@ -288,7 +290,6 @@ export default function ChatApp() {
     try {
       await api.post(`/hoi-thoai/${hoiThoaiId}/tin-nhan`, { noiDung: nd });
       setNoiDung("");
-      setMoEmoji(false);
       await taiTin(hoiThoaiId);
       await taiHoiThoai();
     } catch (err: unknown) {
@@ -299,39 +300,15 @@ export default function ChatApp() {
     }
   };
 
-  const guiFile = async (file: File) => {
-    if (!hoiThoaiId) return;
-    setDangGui(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      if (noiDung.trim()) fd.append("noiDung", noiDung.trim());
-      await api.post(`/hoi-thoai/${hoiThoaiId}/tin-nhan/upload`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setNoiDung("");
-      await taiTin(hoiThoaiId);
-      await taiHoiThoai();
-    } catch (err: unknown) {
-      const ax = err as { response?: { data?: { message?: string } } };
-      notify(ax?.response?.data?.message ?? ct.errUpload, "error");
-    } finally {
-      setDangGui(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  };
-
   const toggleReaction = async (tinId: string, emoji: string) => {
     try {
-      await api.post(`/hoi-thoai/tin-nhan/${tinId}/phan-hoi`, { emoji });
-      if (hoiThoaiId) await taiTin(hoiThoaiId);
+      const res = await api.post(`/hoi-thoai/tin-nhan/${tinId}/phan-hoi`, {
+        emoji,
+      });
+      capNhatTin(res.data as TinNhan);
     } catch {
       notify(ct.errReaction, "error");
     }
-  };
-
-  const chenEmoji = (emoji: string) => {
-    setNoiDung((s) => s + emoji);
   };
 
   const laCuaToi = (msg: TinNhan) => msg.nguoiGuiId === userId;
@@ -375,7 +352,7 @@ export default function ChatApp() {
         <header className="chat-pro__rail-head">
           <div className="chat-pro__brand">
             <span className="chat-pro__brand-mark" aria-hidden>
-              💬
+              <IconMessage size={22} />
             </span>
             <div>
               <h1>{ct.title}</h1>
@@ -443,7 +420,7 @@ export default function ChatApp() {
                     className={`chat-pro__thread-av${laNhom ? " chat-pro__thread-av--group" : ""}`}
                     aria-hidden
                   >
-                    {laNhom ? "👥" : layChuCai(ten)}
+                    {laNhom ? <IconUsers size={22} /> : layChuCai(ten)}
                   </span>
                   <span className="chat-pro__thread-body">
                     <span className="chat-pro__thread-top">
@@ -484,9 +461,11 @@ export default function ChatApp() {
               className={`chat-pro__top-av${hoiThoaiChon.loai === "GROUP" ? " chat-pro__top-av--group" : ""}`}
               aria-hidden
             >
-              {hoiThoaiChon.loai === "GROUP"
-                ? "👥"
-                : layChuCai(tenHienThiChon)}
+              {hoiThoaiChon.loai === "GROUP" ? (
+                <IconUsers size={22} />
+              ) : (
+                layChuCai(tenHienThiChon)
+              )}
             </span>
             <div className="chat-pro__top-info">
               <div className="chat-pro__top-title-row">
@@ -542,46 +521,48 @@ export default function ChatApp() {
                               {msg.nguoiGuiTen ?? "—"}
                             </span>
                           )}
-                          <div
-                            className={`chat-pro__bubble${coMedia ? " chat-pro__bubble--file" : ""}`}
-                          >
-                            {msg.loai === "IMAGE" && msg.duongDanFile && (
-                              <a
-                                href={urlFile(msg.duongDanFile)}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                <img
-                                  className="chat-pro__img"
-                                  src={urlFile(msg.duongDanFile)}
-                                  alt={msg.tenFile ?? ct.imageAlt}
-                                />
-                              </a>
+                          <div className="chat-pro__bubble-line">
+                            <div
+                              className={`chat-pro__bubble${coMedia ? " chat-pro__bubble--file" : ""}`}
+                            >
+                              {msg.loai === "IMAGE" && msg.duongDanFile && (
+                                <a
+                                  href={urlFile(msg.duongDanFile)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <img
+                                    className="chat-pro__img"
+                                    src={urlFile(msg.duongDanFile)}
+                                    alt={msg.tenFile ?? ct.imageAlt}
+                                  />
+                                </a>
+                              )}
+                              {msg.loai === "FILE" && msg.duongDanFile && (
+                                <a
+                                  href={urlFile(msg.duongDanFile)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="chat-pro__file-link"
+                                >
+                                  📎 {msg.tenFile ?? ct.downloadFile}
+                                  {msg.kichThuocFile != null && (
+                                    <>
+                                      {" "}
+                                      ({Math.round(msg.kichThuocFile / 1024)}{" "}
+                                      KB)
+                                    </>
+                                  )}
+                                </a>
+                              )}
+                              {msg.noiDung && <span>{msg.noiDung}</span>}
+                            </div>
+                            {msg.thoiGianGui && (
+                              <time className="chat-pro__meta-time">
+                                {formatGioNgan(msg.thoiGianGui, localeTag)}
+                              </time>
                             )}
-                            {msg.loai === "FILE" && msg.duongDanFile && (
-                              <a
-                                href={urlFile(msg.duongDanFile)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="chat-pro__file-link"
-                              >
-                                📎 {msg.tenFile ?? ct.downloadFile}
-                                {msg.kichThuocFile != null && (
-                                  <>
-                                    {" "}
-                                    ({Math.round(msg.kichThuocFile / 1024)}{" "}
-                                    KB)
-                                  </>
-                                )}
-                              </a>
-                            )}
-                            {msg.noiDung && <span>{msg.noiDung}</span>}
                           </div>
-                          {msg.thoiGianGui && (
-                            <time className="chat-pro__meta-time">
-                              {formatGioNgan(msg.thoiGianGui, localeTag)}
-                            </time>
-                          )}
                           <div className="chat-pro__reacts">
                             {(msg.phanHoi ?? []).map((p) => (
                               <button
@@ -618,50 +599,8 @@ export default function ChatApp() {
             )}
           </div>
 
-          {moEmoji && (
-            <div className="chat-pro__emoji-tray">
-              {EMOJI_GUI.map((em) => (
-                <button
-                  key={em}
-                  type="button"
-                  onClick={() => chenEmoji(em)}
-                >
-                  {em}
-                </button>
-              ))}
-            </div>
-          )}
-
           <form className="chat-pro__compose" onSubmit={guiVanBan}>
             <div className="chat-pro__compose-inner">
-              <button
-                type="button"
-                className="chat-pro__icon-btn"
-                onClick={() => setMoEmoji((v) => !v)}
-                title="Emoji"
-                aria-label="Emoji"
-              >
-                😊
-              </button>
-              <button
-                type="button"
-                className="chat-pro__icon-btn"
-                onClick={() => fileRef.current?.click()}
-                title={ct.attach}
-                aria-label={ct.attach}
-              >
-                📎
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
-                hidden
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void guiFile(f);
-                }}
-              />
               <textarea
                 className="chat-pro__field"
                 rows={1}
@@ -690,7 +629,7 @@ export default function ChatApp() {
         <section className="chat-pro__main chat-pro__main--idle">
           <div className="chat-pro__idle">
             <div className="chat-pro__idle-icon" aria-hidden>
-              💬
+              <IconMessage size={40} />
             </div>
             <p>{ct.emptySelect}</p>
           </div>
@@ -729,10 +668,7 @@ export default function ChatApp() {
                       className="chat-pro__pick-item"
                       onClick={() => void batDauChatRieng(n.id)}
                     >
-                      <span
-                        className="chat-pro__thread-av"
-                        aria-hidden
-                      >
+                      <span className="chat-pro__thread-av" aria-hidden>
                         {layChuCai(n.hoTen)}
                       </span>
                       <span>

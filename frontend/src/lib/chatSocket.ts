@@ -9,17 +9,25 @@ export type ChatSocketPayload = {
   tinNhan?: unknown;
 };
 
+const WS_URL =
+  typeof window !== "undefined" ? `${API_ORIGIN}/ws` : "";
+
 export function createChatClient(
   onMessage: (payload: ChatSocketPayload) => void,
-  onError: () => void,
+  onError?: (err: unknown) => void,
 ): Client | null {
   const token = getToken();
-  if (!token || typeof window === "undefined") return null;
+  if (!token || !WS_URL) return null;
 
   const client = new Client({
-    webSocketFactory: () => new SockJS(`${API_ORIGIN}/ws`) as WebSocket,
+    webSocketFactory: () =>
+      new SockJS(WS_URL, undefined, {
+        withCredentials: false,
+      }) as unknown as WebSocket,
     connectHeaders: { token },
     reconnectDelay: 5000,
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000,
     onConnect: () => {
       client.subscribe("/user/queue/chat", (msg) => {
         try {
@@ -30,7 +38,9 @@ export function createChatClient(
         }
       });
     },
-    onStompError: onError,
+    onStompError: (frame) => {
+      onError?.(frame);
+    },
   });
 
   return client;
