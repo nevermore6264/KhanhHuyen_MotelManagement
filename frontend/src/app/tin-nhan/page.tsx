@@ -6,7 +6,7 @@ import ChatApp from "@/components/chat/ChatApp";
 export default function TrangTinNhan() {
   return (
     <TrangBaoVe>
-      <div className="page-shell page-chat">
+      <div className="page-shell page-chat page-chat--pro">
         <ChatApp />
       </div>
     </TrangBaoVe>

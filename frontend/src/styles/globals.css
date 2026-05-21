@@ -641,7 +641,6 @@ a.btn {
   animation: dashboard-slogan-scroll 28s linear infinite;
 }
 
-/* Legacy flat spans (tenant marquee) */
 .dashboard-slogan-track > span:not(.dashboard-slogan-item) {
   white-space: nowrap;
   padding-right: 2rem;

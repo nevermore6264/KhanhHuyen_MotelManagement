@@ -316,7 +316,11 @@ const vi = {
     },
   },
   chat: {
-    title: "Tin nhắn nội bộ",
+    title: "Tin nhắn",
+    subtitle: "Trao đổi nội bộ — nhóm & chat riêng",
+    filterAll: "Tất cả",
+    filterGroup: "Nhóm",
+    filterDirect: "Riêng",
     conversations: "Hội thoại",
     newChat: "Chat mới",
     conversation: "Hội thoại",

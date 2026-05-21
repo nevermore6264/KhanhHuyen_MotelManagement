@@ -316,7 +316,11 @@ const en = {
     },
   },
   chat: {
-    title: "Internal messages",
+    title: "Messages",
+    subtitle: "Internal messaging — groups & direct",
+    filterAll: "All",
+    filterGroup: "Groups",
+    filterDirect: "Direct",
     conversations: "Conversations",
     newChat: "New chat",
     conversation: "Conversation",
