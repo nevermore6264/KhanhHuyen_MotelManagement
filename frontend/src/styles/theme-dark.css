@@ -491,9 +491,46 @@
   color: var(--text-muted) !important;
 }
 
-[data-theme="dark"] .badge,
-[data-theme="dark"] .status-badge {
-  filter: brightness(0.95);
+[data-theme="dark"] .status-badge.badge--success {
+  color: #86efac;
+  background: rgba(22, 101, 52, 0.45);
+  border-color: #22c55e;
+}
+
+[data-theme="dark"] .status-badge.badge--info {
+  color: #93c5fd;
+  background: rgba(30, 64, 175, 0.45);
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .status-badge.badge--warning {
+  color: #fcd34d;
+  background: rgba(146, 64, 14, 0.45);
+  border-color: #f59e0b;
+}
+
+[data-theme="dark"] .status-badge.badge--danger {
+  color: #fca5a5;
+  background: rgba(153, 27, 27, 0.45);
+  border-color: #ef4444;
+}
+
+[data-theme="dark"] .status-badge.badge--neutral {
+  color: #cbd5e1;
+  background: rgba(51, 65, 85, 0.55);
+  border-color: #64748b;
+}
+
+[data-theme="dark"] .status-badge.badge--purple {
+  color: #c4b5fd;
+  background: rgba(91, 33, 182, 0.45);
+  border-color: #8b5cf6;
+}
+
+[data-theme="dark"] .status-badge.badge--teal {
+  color: #5eead4;
+  background: rgba(17, 94, 89, 0.45);
+  border-color: #14b8a6;
 }
 
 [data-theme="dark"] [data-page="notifications"] .tb-page-header,

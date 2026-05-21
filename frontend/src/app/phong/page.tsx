@@ -19,6 +19,7 @@ import { useToast } from "@/components/NhaCungCapToast";
 import ChonKhuCombobox from "@/components/ChonKhuCombobox";
 import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { nhanTrangThaiPhong } from "@/lib/trangThai";
+import { classBadgePhong } from "@/lib/badgeTrangThai";
 import { layLocaleTag, dinhDangTien } from "@/lib/locale";
 
 type Area = { id: string; ten: string };
@@ -34,19 +35,6 @@ type Room = {
 const parseNhapTien = (value: string) => {
   const digits = value.replace(/\D/g, "");
   return digits ? Number(digits) : null;
-};
-
-const statusClass = (value?: string) => {
-  switch (value) {
-    case "AVAILABLE":
-      return "status-available";
-    case "OCCUPIED":
-      return "status-occupied";
-    case "MAINTENANCE":
-      return "status-maintenance";
-    default:
-      return "status-unknown";
-  }
 };
 
 const isLockedStatus = (value?: string) =>
@@ -350,7 +338,7 @@ export default function TrangPhong() {
               {
                 header: p.status,
                 render: (r) => (
-                  <span className={`status-badge ${statusClass(r.trangThai)}`}>
+                  <span className={classBadgePhong(r.trangThai)}>
                     {nhanTrangThaiPhong(tr, r.trangThai)}
                   </span>
                 ),

@@ -1805,6 +1805,60 @@ textarea:disabled:focus {
   grid-column: 1 / -1;
 }
 
+.btn-invoice-remind {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 8px 14px !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.38) !important;
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+.btn-invoice-remind svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex-shrink: 0;
+  stroke: #e0f2fe !important;
+  color: #e0f2fe !important;
+}
+
+.btn-invoice-remind:hover:not(:disabled) {
+  filter: brightness(1.07) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.45) !important;
+}
+
+.btn-invoice-remind:hover:not(:disabled) svg {
+  stroke: #fff !important;
+  color: #fff !important;
+}
+
+.btn-invoice-remind:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(15%) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.btn-invoice-remind:disabled svg {
+  stroke: rgba(255, 255, 255, 0.85) !important;
+}
+
+.btn-invoice-remind::after {
+  display: none !important;
+}
+
 .invoice-job-note {
   margin-top: 12px;
   padding: 12px 14px;
@@ -2302,9 +2356,10 @@ textarea:disabled:focus {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #1d4ed8;
-  background: #dbeafe;
-  border: 1px solid #93c5fd;
+  color: #1e40af;
+  background: #bfdbfe;
+  border: 1px solid #60a5fa;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.07);
   white-space: nowrap;
 }
 
@@ -2552,39 +2607,87 @@ table .btn {
   font-size: 13px;
 }
 
+/* —— Thẻ trạng thái (dùng classBadge* từ lib/badgeTrangThai.ts) —— */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  justify-content: center;
+  padding: 5px 12px;
   border-radius: 999px;
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.2px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
   border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.07);
+  white-space: nowrap;
 }
 
+.status-badge.badge--success {
+  color: #14532d;
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
+.status-badge.badge--info {
+  color: #1e3a8a;
+  background: #bfdbfe;
+  border-color: #60a5fa;
+}
+
+.status-badge.badge--warning {
+  color: #92400e;
+  background: #fde68a;
+  border-color: #fbbf24;
+}
+
+.status-badge.badge--danger {
+  color: #991b1b;
+  background: #fecaca;
+  border-color: #f87171;
+}
+
+.status-badge.badge--neutral {
+  color: #475569;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.status-badge.badge--purple {
+  color: #5b21b6;
+  background: #ddd6fe;
+  border-color: #a78bfa;
+}
+
+.status-badge.badge--teal {
+  color: #115e59;
+  background: #99f6e4;
+  border-color: #2dd4bf;
+}
+
+/* Tương thích cũ (tránh vỡ nếu còn class cũ) */
 .status-available {
-  color: #166534;
-  background: #dcfce7;
-  border-color: #bbf7d0;
+  color: #14532d;
+  background: #bbf7d0;
+  border-color: #4ade80;
 }
 
 .status-occupied {
   color: #1e3a8a;
-  background: #dbeafe;
-  border-color: #bfdbfe;
+  background: #bfdbfe;
+  border-color: #60a5fa;
 }
 
 .status-maintenance {
   color: #92400e;
-  background: #ffedd5;
-  border-color: #fed7aa;
+  background: #fde68a;
+  border-color: #fbbf24;
 }
 
 .status-unknown {
   color: #475569;
   background: #e2e8f0;
-  border-color: #cbd5f5;
+  border-color: #cbd5e1;
 }
 
 .meter-picker-card-header {

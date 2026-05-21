@@ -16,6 +16,10 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { nhanVaiTro } from "@/lib/trangThai";
+import {
+  classBadgeNguoiDungActive,
+  classBadgeVaiTro,
+} from "@/lib/badgeTrangThai";
 import ChonKhachThueCombobox from "@/components/ChonKhachThueCombobox";
 
 type User = {
@@ -107,22 +111,6 @@ type TenantValidateMsg = {
   errIdNumberInvalid: string;
   errAddress: string;
   errEmailInvalid: string;
-};
-
-const statusBadge = (active: boolean) =>
-  active ? "status-available" : "status-maintenance";
-
-const roleBadge = (value?: string) => {
-  switch (value) {
-    case "ADMIN":
-      return "status-occupied";
-    case "STAFF":
-      return "status-available";
-    case "TENANT":
-      return "status-maintenance";
-    default:
-      return "status-unknown";
-  }
 };
 
 const validateTenant = (
@@ -535,7 +523,7 @@ export default function TrangNguoiDung() {
               {
                 header: s.role,
                 render: (u) => (
-                  <span className={`status-badge ${roleBadge(u.role)}`}>
+                  <span className={classBadgeVaiTro(u.role)}>
                     {nhanVaiTro(tr, u.role)}
                   </span>
                 ),
@@ -543,7 +531,7 @@ export default function TrangNguoiDung() {
               {
                 header: s.status,
                 render: (u) => (
-                  <span className={`status-badge ${statusBadge(u.active)}`}>
+                  <span className={classBadgeNguoiDungActive(u.active)}>
                     {u.active ? s.active : s.locked}
                   </span>
                 ),

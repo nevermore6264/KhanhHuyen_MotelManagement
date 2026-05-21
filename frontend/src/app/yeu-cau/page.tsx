@@ -9,22 +9,8 @@ import { useToast } from "@/components/NhaCungCapToast";
 import { chuanHoaYeuCau, type YeuCauHang } from "@/lib/chuanHoaYeuCau";
 import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { nhanTrangThaiYeuCau } from "@/lib/trangThai";
+import { classBadgeYeuCau } from "@/lib/badgeTrangThai";
 import { layLocaleTag } from "@/lib/locale";
-
-const statusClass = (value?: string) => {
-  switch (value) {
-    case "OPEN":
-      return "status-occupied";
-    case "IN_PROGRESS":
-      return "status-maintenance";
-    case "RESOLVED":
-      return "status-available";
-    case "CLOSED":
-      return "status-unknown";
-    default:
-      return "status-unknown";
-  }
-};
 
 const formatNgay = (iso?: string, locale = "vi-VN") => {
   if (!iso) return "—";
@@ -145,7 +131,7 @@ export default function TrangYeuCau() {
                   header: "Trạng thái",
                   render: (r) => (
                     <span
-                      className={`status-badge ${statusClass(r.trangThai)}`}
+                      className={classBadgeYeuCau(r.trangThai)}
                     >
                       {nhanTrangThaiYeuCau(tr, r.trangThai)}
                     </span>

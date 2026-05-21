@@ -9,6 +9,7 @@ import {
   IconRefresh,
   IconPlus,
   IconDownload,
+  IconSend,
 } from "@/components/Icons";
 import { taiFileTuApi } from "@/lib/taiFile";
 import api from "@/lib/api";
@@ -23,6 +24,7 @@ import {
   layLocaleTag,
 } from "@/lib/locale";
 import type { Invoice, RawJson, Room, Tenant } from "@/lib/mapHoaDonApi";
+import { classBadgeHoaDon } from "@/lib/badgeTrangThai";
 import {
   chuanHoaKhachThueTuApi,
   chuanHoaPhongTuApi,
@@ -41,19 +43,6 @@ const tenantOptionLabel = (t: Tenant) => {
   const name = t.fullName || `Khách ${t.id}`;
   const extra = t.phone || t.idNumber;
   return extra ? `${name} — ${extra}` : name;
-};
-
-const invoiceStatusBadge = (value?: string) => {
-  switch (value) {
-    case "PAID":
-      return "status-available";
-    case "PARTIAL":
-      return "status-maintenance";
-    case "UNPAID":
-      return "status-occupied";
-    default:
-      return "status-unknown";
-  }
 };
 
 export default function TrangHoaDon() {
@@ -275,7 +264,7 @@ export default function TrangHoaDon() {
           )}
         </div>
         <div className="card">
-          <p className="text-muted mb-3" style={{ fontSize: "0.9rem" }}>
+          <p className="card-subtitle" style={{ marginBottom: 16 }}>
             {isTenant ? p.tenantLead : p.adminLead}
           </p>
           {isAdmin && !isTenant && (
@@ -386,7 +375,7 @@ export default function TrangHoaDon() {
                 header: p.status,
                 render: (i: Invoice) => (
                   <span
-                    className={`status-badge ${invoiceStatusBadge(i.status)}`}
+                    className={classBadgeHoaDon(i.status)}
                   >
                     {nhanTrangThaiHoaDon(tr, i.status)}
                   </span>
@@ -451,7 +440,7 @@ export default function TrangHoaDon() {
                           >
                             <button
                               type="button"
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-invoice-remind"
                               disabled={!unpaid || !hasEmail || loading}
                               title={
                                 !unpaid
@@ -462,7 +451,10 @@ export default function TrangHoaDon() {
                               }
                               onClick={() => sendReminder(i.id)}
                             >
-                              {loading ? "..." : p.emailReminder}
+                              <IconSend />
+                              <span>
+                                {loading ? "..." : p.emailReminder}
+                              </span>
                             </button>
                           </span>
                         );

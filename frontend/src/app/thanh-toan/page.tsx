@@ -13,6 +13,7 @@ import { nhanTrangThaiHoaDon, nhanPhuongThucThanhToan } from "@/lib/trangThai";
 import { dinhDangTien, layLocaleTag } from "@/lib/locale";
 import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
 import { khachCuaHoaDon, mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
+import { classBadgeHoaDon } from "@/lib/badgeTrangThai";
 
 function soTienThanhToan(v: unknown): number {
   if (v == null) return 0;
@@ -20,19 +21,6 @@ function soTienThanhToan(v: unknown): number {
   const n = Number(String(v).replace(/\s/g, ""));
   return Number.isFinite(n) ? n : 0;
 }
-
-const invoiceStatusBadge = (value?: string) => {
-  switch (value) {
-    case "PAID":
-      return "status-available";
-    case "PARTIAL":
-      return "status-maintenance";
-    case "UNPAID":
-      return "status-occupied";
-    default:
-      return "status-unknown";
-  }
-};
 
 export default function TrangThanhToan() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -241,7 +229,7 @@ export default function TrangThanhToan() {
                 header: hp.status,
                 render: (i: Invoice) => (
                   <span
-                    className={`status-badge ${invoiceStatusBadge(i.status)}`}
+                    className={classBadgeHoaDon(i.status)}
                   >
                     {nhanTrangThaiHoaDon(tr, i.status)}
                   </span>

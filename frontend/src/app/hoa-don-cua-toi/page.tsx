@@ -13,21 +13,9 @@ import { nhanTrangThaiHoaDon } from "@/lib/trangThai";
 import { dinhDangTien, dinhDangSo, dinhDangNgay } from "@/lib/locale";
 import type { Invoice, RawJson } from "@/lib/mapHoaDonApi";
 import { mapHoaDonFromApi } from "@/lib/mapHoaDonApi";
+import { classBadgeHoaDon } from "@/lib/badgeTrangThai";
 
 const canPay = (status?: string) => status === "UNPAID" || status === "PARTIAL";
-
-const invoiceStatusBadge = (value?: string) => {
-  switch (value) {
-    case "PAID":
-      return "status-available";
-    case "PARTIAL":
-      return "status-maintenance";
-    case "UNPAID":
-      return "status-occupied";
-    default:
-      return "status-unknown";
-  }
-};
 
 export default function TrangHoaDonCuaToi() {
   const searchParams = useSearchParams();
@@ -207,7 +195,7 @@ export default function TrangHoaDonCuaToi() {
                 header: hp.status,
                 render: (i) => (
                   <span
-                    className={`status-badge ${invoiceStatusBadge(i.status)}`}
+                    className={classBadgeHoaDon(i.status)}
                   >
                     {nhanTrangThaiHoaDon(tr, i.status)}
                   </span>

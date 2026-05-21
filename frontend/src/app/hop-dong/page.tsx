@@ -16,6 +16,7 @@ import { getRole } from "@/lib/auth";
 import { useToast } from "@/components/NhaCungCapToast";
 import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { nhanTrangThaiHopDong } from "@/lib/trangThai";
+import { classBadgeHopDong } from "@/lib/badgeTrangThai";
 import {
   dinhDangTien,
   dinhDangNgay,
@@ -59,19 +60,6 @@ function hopDongChoDocx(c: Contract): ContractForDocx {
     rent: c.rent,
   };
 }
-
-const contractStatusBadge = (value?: string) => {
-  switch (value) {
-    case "ACTIVE":
-      return "status-available";
-    case "ENDED":
-      return "status-maintenance";
-    case "TERMINATED":
-      return "status-occupied";
-    default:
-      return "status-unknown";
-  }
-};
 
 const parseCurrencyInput = (value: string) => {
   const digits = value.replace(/\D/g, "");
@@ -574,7 +562,7 @@ export default function TrangHopDong() {
                 header: p.status,
                 render: (row) => (
                   <span
-                    className={`status-badge ${contractStatusBadge(row.status)}`}
+                    className={classBadgeHopDong(row.status)}
                   >
                     {nhanTrangThaiHopDong(tr, row.status)}
                   </span>

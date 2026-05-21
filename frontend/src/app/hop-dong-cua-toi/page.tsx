@@ -14,6 +14,7 @@ import { renderAsync } from "docx-preview";
 import { useToast } from "@/components/NhaCungCapToast";
 import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { nhanTrangThaiHopDong } from "@/lib/trangThai";
+import { classBadgeHopDong } from "@/lib/badgeTrangThai";
 import { dinhDangNgay } from "@/lib/locale";
 import HopDongXemModal from "@/components/HopDongXemModal";
 
@@ -53,19 +54,6 @@ function hopDongChoDocx(c: Contract): ContractForDocx {
     rent: c.rent,
   };
 }
-
-const contractStatusBadge = (value?: string) => {
-  switch (value) {
-    case "ACTIVE":
-      return "status-available";
-    case "ENDED":
-      return "status-maintenance";
-    case "TERMINATED":
-      return "status-occupied";
-    default:
-      return "status-unknown";
-  }
-};
 
 export default function TrangHopDongCuaToi() {
   const [items, setItems] = useState<Contract[]>([]);
@@ -161,7 +149,7 @@ export default function TrangHopDongCuaToi() {
                 header: hp.status,
                 render: (row) => (
                   <span
-                    className={`status-badge ${contractStatusBadge(row.status)}`}
+                    className={classBadgeHopDong(row.status)}
                   >
                     {nhanTrangThaiHopDong(tr, row.status)}
                   </span>
