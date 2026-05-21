@@ -155,6 +155,8 @@ export default function ChatApp() {
   const [userId, setUid] = useState<string | null>(null);
   const cuonRef = useRef<HTMLDivElement>(null);
   const hoiThoaiIdRef = useRef<string | null>(null);
+  const wsKetNoiRef = useRef(false);
+  const henTaiDanhSachRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { notify } = useToast();
 
   hoiThoaiIdRef.current = hoiThoaiId;
@@ -194,19 +196,33 @@ export default function ChatApp() {
       try {
         const res = await api.get(`/hoi-thoai/${id}/tin-nhan`);
         setTinNhan(Array.isArray(res.data) ? (res.data as TinNhan[]) : []);
-        await api.put(`/hoi-thoai/${id}/da-doc`);
+        void api.put(`/hoi-thoai/${id}/da-doc`);
       } catch {
         notify(ct.errLoadMessages, "error");
       }
     },
-    [notify],
+    [notify, ct.errLoadMessages],
   );
+
+  const themTinMoi = useCallback((tin: TinNhan) => {
+    setTinNhan((prev) => {
+      if (prev.some((t) => t.id === tin.id)) return prev;
+      return [...prev, tin];
+    });
+  }, []);
 
   const capNhatTin = useCallback((updated: TinNhan) => {
     setTinNhan((prev) =>
       prev.map((t) => (t.id === updated.id ? updated : t)),
     );
   }, []);
+
+  const henTaiDanhSach = useCallback(() => {
+    if (henTaiDanhSachRef.current) clearTimeout(henTaiDanhSachRef.current);
+    henTaiDanhSachRef.current = setTimeout(() => {
+      void taiHoiThoai();
+    }, 350);
+  }, [taiHoiThoai]);
 
   const timNguoi = useCallback(async (q: string) => {
     try {
@@ -222,34 +238,50 @@ export default function ChatApp() {
   useEffect(() => {
     void damBaoUserId();
     void taiHoiThoai();
-    const client = createChatClient((payload: ChatSocketPayload) => {
-      const cur = hoiThoaiIdRef.current;
-      if (payload.hoiThoaiId && payload.hoiThoaiId === cur) {
-        if (payload.loaiSuKien === "MESSAGE" && payload.tinNhan) {
-          const tin = payload.tinNhan as TinNhan;
-          setTinNhan((prev) => {
-            if (prev.some((t) => t.id === tin.id)) return prev;
-            return [...prev, tin];
-          });
-        } else if (payload.loaiSuKien === "REACTION" && payload.tinNhan) {
-          capNhatTin(payload.tinNhan as TinNhan);
-        } else {
-          void taiTin(payload.hoiThoaiId);
+    const client = createChatClient(
+      (payload: ChatSocketPayload) => {
+        const cur = hoiThoaiIdRef.current;
+        if (payload.hoiThoaiId && payload.hoiThoaiId === cur) {
+          if (payload.loaiSuKien === "MESSAGE" && payload.tinNhan) {
+            themTinMoi(payload.tinNhan as TinNhan);
+          } else if (payload.loaiSuKien === "REACTION" && payload.tinNhan) {
+            capNhatTin(payload.tinNhan as TinNhan);
+          } else if (payload.hoiThoaiId) {
+            void taiTin(payload.hoiThoaiId);
+          }
         }
-      }
-      void taiHoiThoai();
-    }, () => {});
+        henTaiDanhSach();
+      },
+      {
+        onConnect: () => {
+          wsKetNoiRef.current = true;
+        },
+        onDisconnect: () => {
+          wsKetNoiRef.current = false;
+        },
+      },
+    );
     client?.activate();
     const poll = setInterval(() => {
+      if (wsKetNoiRef.current) return;
       const id = hoiThoaiIdRef.current;
       if (id) void taiTin(id);
       void taiHoiThoai();
-    }, 12000);
+    }, 3000);
     return () => {
+      if (henTaiDanhSachRef.current) clearTimeout(henTaiDanhSachRef.current);
       clearInterval(poll);
       client?.deactivate?.();
+      wsKetNoiRef.current = false;
     };
-  }, [damBaoUserId, taiHoiThoai, taiTin, capNhatTin]);
+  }, [
+    damBaoUserId,
+    taiHoiThoai,
+    taiTin,
+    capNhatTin,
+    themTinMoi,
+    henTaiDanhSach,
+  ]);
 
   useEffect(() => {
     if (hoiThoaiId) void taiTin(hoiThoaiId);
@@ -285,14 +317,18 @@ export default function ChatApp() {
   const guiVanBan = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const nd = noiDung.trim();
-    if (!nd || !hoiThoaiId) return;
+    if (!nd || !hoiThoaiId || dangGui) return;
     setDangGui(true);
+    setNoiDung("");
     try {
-      await api.post(`/hoi-thoai/${hoiThoaiId}/tin-nhan`, { noiDung: nd });
-      setNoiDung("");
-      await taiTin(hoiThoaiId);
-      await taiHoiThoai();
+      const res = await api.post(`/hoi-thoai/${hoiThoaiId}/tin-nhan`, {
+        noiDung: nd,
+      });
+      themTinMoi(res.data as TinNhan);
+      henTaiDanhSach();
+      void api.put(`/hoi-thoai/${hoiThoaiId}/da-doc`);
     } catch (err: unknown) {
+      setNoiDung(nd);
       const ax = err as { response?: { data?: { message?: string } } };
       notify(ax?.response?.data?.message ?? ct.errSend, "error");
     } finally {

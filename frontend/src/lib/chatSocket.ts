@@ -9,23 +9,37 @@ export type ChatSocketPayload = {
   tinNhan?: unknown;
 };
 
-const WS_URL =
-  typeof window !== "undefined" ? `${API_ORIGIN}/ws` : "";
+export type ChatSocketHandlers = {
+  onError?: (err: unknown) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+};
+
+function layWsUrl(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return `${new URL(API_ORIGIN).origin}/ws`;
+  } catch {
+    const proto = window.location.protocol === "https:" ? "https" : "http";
+    return `${proto}://${window.location.hostname}:8080/ws`;
+  }
+}
 
 export function createChatClient(
   onMessage: (payload: ChatSocketPayload) => void,
-  onError?: (err: unknown) => void,
+  handlers?: ChatSocketHandlers,
 ): Client | null {
   const token = getToken();
-  if (!token || !WS_URL) return null;
+  const wsUrl = layWsUrl();
+  if (!token || !wsUrl) return null;
 
   const client = new Client({
     webSocketFactory: () =>
-      new SockJS(WS_URL, undefined, {
+      new SockJS(wsUrl, undefined, {
         withCredentials: false,
       }) as unknown as WebSocket,
     connectHeaders: { token },
-    reconnectDelay: 5000,
+    reconnectDelay: 2000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
     onConnect: () => {
@@ -37,9 +51,16 @@ export function createChatClient(
           onMessage({});
         }
       });
+      handlers?.onConnect?.();
+    },
+    onDisconnect: () => {
+      handlers?.onDisconnect?.();
     },
     onStompError: (frame) => {
-      onError?.(frame);
+      handlers?.onError?.(frame);
+    },
+    onWebSocketClose: () => {
+      handlers?.onDisconnect?.();
     },
   });
 
