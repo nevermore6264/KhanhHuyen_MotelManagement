@@ -2607,7 +2607,6 @@ table .btn {
   font-size: 13px;
 }
 
-/* —— Thẻ trạng thái (dùng classBadge* từ lib/badgeTrangThai.ts) —— */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -2665,7 +2664,6 @@ table .btn {
   border-color: #2dd4bf;
 }
 
-/* Tương thích cũ (tránh vỡ nếu còn class cũ) */
 .status-available {
   color: #14532d;
   background: #bbf7d0;

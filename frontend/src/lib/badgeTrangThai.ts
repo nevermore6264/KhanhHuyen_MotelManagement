@@ -1,6 +1,5 @@
 const CO_SO = "status-badge";
 
-/** Phòng: trống / đang thuê / bảo trì */
 export function classBadgePhong(value?: string): string {
   switch (value) {
     case "AVAILABLE":
@@ -14,7 +13,6 @@ export function classBadgePhong(value?: string): string {
   }
 }
 
-/** Hóa đơn: đã TT / một phần / chưa TT */
 export function classBadgeHoaDon(value?: string): string {
   switch (value) {
     case "PAID":
@@ -28,7 +26,6 @@ export function classBadgeHoaDon(value?: string): string {
   }
 }
 
-/** Hợp đồng */
 export function classBadgeHopDong(value?: string): string {
   switch (value) {
     case "ACTIVE":
@@ -42,7 +39,6 @@ export function classBadgeHopDong(value?: string): string {
   }
 }
 
-/** Yêu cầu / hỗ trợ */
 export function classBadgeYeuCau(value?: string): string {
   switch (value) {
     case "OPEN":
