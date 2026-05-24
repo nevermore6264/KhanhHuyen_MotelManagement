@@ -63,8 +63,6 @@ public class FileLuuTruService {
         return "/tenant-files/" + thuMuc + "/" + tenFile;
     }
 
-    public record KetQuaLuuFile(String duongDan, String tenGoc, long kichThuoc, String loaiNoiDung) {}
-
     public KetQuaLuuFile luuFileChat(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File không hợp lệ.");

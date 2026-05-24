@@ -24,7 +24,7 @@ import com.motelmanagement.dto.YeuCauGuiTinChat;
 import com.motelmanagement.repository.PhanHoiTinNhanRepository;
 import com.motelmanagement.repository.ThanhVienHoiThoaiRepository;
 import com.motelmanagement.repository.TinNhanRepository;
-import com.motelmanagement.service.FileLuuTruService.KetQuaLuuFile;
+import com.motelmanagement.service.KetQuaLuuFile;
 
 import lombok.RequiredArgsConstructor;
 
