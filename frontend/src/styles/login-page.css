@@ -327,6 +327,16 @@ body.login-body .login-page {
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15) !important;
 }
 
+.login-page .login-input--readonly,
+.login-page .login-input--readonly:hover,
+.login-page .login-input--readonly:focus {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+  cursor: default;
+  box-shadow: none !important;
+}
+
 .login-error {
   padding: 10px 12px;
   border-radius: 8px;
