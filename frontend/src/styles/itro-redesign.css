@@ -471,7 +471,7 @@ textarea:focus {
   border-radius: var(--radius-lg) !important;
 }
 
-[data-page="table"] .card:has(.table-wrap) .table-wrap {
+[data-page="table"] .card:has(.table-wrap):not(.card--table-full) .table-wrap {
   margin: 16px -24px 0;
   width: calc(100% + 48px);
   max-width: calc(100% + 48px);
@@ -769,10 +769,11 @@ textarea:focus {
   inset: 0;
   background: rgba(12, 74, 110, 0.35);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+  z-index: 10050;
+  padding: 72px 20px 32px;
+  overflow-y: auto;
 }
 
 .chat-v2-modal {

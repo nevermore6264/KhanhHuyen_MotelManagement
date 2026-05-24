@@ -2019,16 +2019,22 @@ textarea:disabled:focus {
   inset: 0;
   background: rgba(15, 23, 42, 0.35);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 24px;
-  padding-top: 72px;
-  z-index: 1000;
+  padding: 72px 20px 32px;
+  z-index: 10050;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
   width: 100%;
   max-width: 520px;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  margin: auto 0;
+  flex-shrink: 0;
   background: #fff;
   border: 1px solid var(--blue-200);
   border-radius: 18px;
@@ -2053,8 +2059,12 @@ textarea:disabled:focus {
   margin-top: 12px;
 }
 
+.modal-backdrop.modal-backdrop--stacked {
+  z-index: 10060;
+}
+
 .modal-backdrop--contract-preview {
-  z-index: 1100;
+  z-index: 10055;
   align-items: flex-start;
   justify-content: center;
   padding: 72px 20px 28px;
@@ -2120,6 +2130,7 @@ textarea:disabled:focus {
 
 .contract-create-modal {
   max-width: min(980px, 96vw);
+  max-height: calc(100vh - 104px);
 }
 
 .contract-create-modal .card-header {
@@ -2287,7 +2298,11 @@ textarea:disabled:focus {
   min-height: 52px;
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 12px;
-  background: linear-gradient(180deg, #fff 0%, var(--bg-secondary, #f8fafc) 100%);
+  background: linear-gradient(
+    180deg,
+    #fff 0%,
+    var(--bg-secondary, #f8fafc) 100%
+  );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -2398,7 +2413,8 @@ textarea:disabled:focus {
 .hop-dong-chon-khach-head {
   display: grid;
   grid-template-columns:
-    auto minmax(0, 1fr) minmax(108px, 140px) minmax(108px, 168px) 124px;
+    auto minmax(0, 1fr) minmax(108px, 140px) minmax(108px, 168px)
+    124px;
   gap: 10px 12px;
   align-items: center;
   padding: 8px 14px 10px;
@@ -2430,7 +2446,8 @@ textarea:disabled:focus {
 .hop-dong-chon-khach-row {
   display: grid;
   grid-template-columns:
-    auto minmax(0, 1fr) minmax(108px, 140px) minmax(108px, 168px) 124px;
+    auto minmax(0, 1fr) minmax(108px, 140px) minmax(108px, 168px)
+    124px;
   gap: 10px 12px;
   align-items: center;
   padding: 12px 14px;
@@ -3154,21 +3171,95 @@ table {
   white-space: nowrap;
 }
 
-.container.hop-dong-trang-container {
-  max-width: 95vw;
-  width: 100%;
+.page-shell.hop-dong-trang-container {
+  width: 95%;
+  max-width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
-.table-wrap.table-nowrap.contracts-table-fit .table {
-  min-width: 100%;
+.table-wrap.contracts-table .table {
   width: 100%;
+  min-width: 1160px;
+  table-layout: fixed;
 }
 
-.table-wrap.table-nowrap.contracts-table-fit .table td,
-.table-wrap.table-nowrap.contracts-table-fit .table th {
+.table-wrap.contracts-table .table th,
+.table-wrap.contracts-table .table td {
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.table-wrap.contracts-table .col-phong {
+  width: 76px;
+  white-space: nowrap;
+}
+
+.table-wrap.contracts-table .col-khach {
+  width: 24%;
+  min-width: 160px;
   white-space: normal;
-  word-break: break-word;
-  vertical-align: top;
+  word-break: normal;
+  overflow-wrap: break-word;
+  line-height: 1.45;
+}
+
+.table-wrap.contracts-table .col-cccd {
+  width: 132px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-wrap.contracts-table .col-date {
+  width: 104px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-wrap.contracts-table th.col-money,
+.table-wrap.contracts-table td.col-money {
+  width: 128px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.table-wrap.contracts-table .col-status {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.table-wrap.contracts-table .col-contract {
+  width: 200px;
+}
+
+.table-wrap.contracts-table .col-actions {
+  width: 228px;
+}
+
+.table-wrap.contracts-table .table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.table-wrap.contracts-table .table-actions .btn {
+  white-space: nowrap;
+}
+
+.hop-dong-trang-container .card--table-full {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.hop-dong-trang-container .card--table-full .table-wrap {
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border: none;
+  border-radius: 0 0 14px 14px;
 }
 
 .table thead th {

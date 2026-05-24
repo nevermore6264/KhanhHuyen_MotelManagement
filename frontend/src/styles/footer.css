@@ -200,6 +200,8 @@ body.login-body .site-footer--auth .site-footer__inner {
 
 .app-shell-body .site-footer {
   flex-shrink: 0;
+  position: relative;
+  z-index: 0;
 }
 
 @media (max-width: 900px) {

@@ -13,5 +13,5 @@ import lombok.Setter;
 public class PhanHoiQuenMatKhau {
     private String message;
 
-    private String resetLink;
+    private String devOtp;
 }

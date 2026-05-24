@@ -4,6 +4,8 @@
 type Cot<T> = {
   header: string;
   render: (dong: T) => React.ReactNode;
+  /** Class trên th/td — căn cột (vd. col-phong, col-khach) */
+  cellClass?: string;
 };
 
 
@@ -26,7 +28,9 @@ export default function BangDonGian<T>({
         <thead>
           <tr>
             {cotHienThi.map((cot, idx) => (
-              <th key={idx}>{cot.header}</th>
+              <th key={idx} className={cot.cellClass}>
+                {cot.header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -41,7 +45,9 @@ export default function BangDonGian<T>({
             duLieu.map((dong, idx) => (
               <tr key={idx}>
                 {cotHienThi.map((cot, cIdx) => (
-                  <td key={cIdx}>{cot.render(dong)}</td>
+                  <td key={cIdx} className={cot.cellClass}>
+                    {cot.render(dong)}
+                  </td>
                 ))}
               </tr>
             ))

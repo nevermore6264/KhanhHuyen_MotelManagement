@@ -1,8 +1,8 @@
 package com.motelmanagement.service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,6 +24,8 @@ import com.motelmanagement.dto.YeuCauXacThuc;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.PhieuDatLaiMatKhauRepository;
 import com.motelmanagement.security.TienIchJwt;
+import com.motelmanagement.util.MauEmailHeThong;
+import com.motelmanagement.util.MauEmailHeThong.NoiDungEmail;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -36,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class XacThucService {
 
-    private static final int RESET_TOKEN_VALID_MINUTES = 15;
+    private static final int RESET_OTP_VALID_MINUTES = 15;
+    private static final SecureRandom OTP_RANDOM = new SecureRandom();
 
     private final NguoiDungRepository nguoiDungRepository;
     private final PhieuDatLaiMatKhauRepository phieuDatLaiMatKhauRepository;
@@ -81,64 +84,75 @@ public class XacThucService {
 
     @Transactional
     public PhanHoiQuenMatKhau quenMatKhau(YeuCauQuenMatKhau yeuCau) {
-        Optional<NguoiDung> nguoiDungOpt = nguoiDungRepository.findByTenDangNhap(yeuCau.getTenDangNhap().trim());
-        String baseUrl = yeuCau.getResetBaseUrl() != null && !yeuCau.getResetBaseUrl().isBlank()
-                ? yeuCau.getResetBaseUrl().replaceAll("/$", "")
-                : "http://localhost:4002";
+        String email = yeuCau.getEmail().trim();
+        String thongBaoChung =
+                "Nếu email đã đăng ký trong hệ thống, bạn sẽ nhận mã OTP trong hộp thư (kiểm tra cả thư rác).";
+        Optional<NguoiDung> nguoiDungOpt = nguoiDungRepository.findByEmailIgnoreCaseTrimmed(email);
         if (nguoiDungOpt.isEmpty()) {
-            return new PhanHoiQuenMatKhau(
-                    "Nếu tài khoản tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.",
-                    null
-            );
+            return new PhanHoiQuenMatKhau(thongBaoChung, null);
         }
         NguoiDung nguoiDung = nguoiDungOpt.get();
         if (!nguoiDung.isKichHoat()) {
-            return new PhanHoiQuenMatKhau(
-                    "Nếu tài khoản tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.",
-                    null
-            );
+            return new PhanHoiQuenMatKhau(thongBaoChung, null);
+        }
+        if (nguoiDung.getEmail() == null || nguoiDung.getEmail().isBlank()) {
+            return new PhanHoiQuenMatKhau(thongBaoChung, null);
         }
         phieuDatLaiMatKhauRepository.xoaTheoMaNguoiDung(nguoiDung.getId());
-        String token = UUID.randomUUID().toString().replace("-", "");
+        String otp = String.format("%06d", OTP_RANDOM.nextInt(1_000_000));
         PhieuDatLaiMatKhau phieu = new PhieuDatLaiMatKhau();
-        phieu.setMaToken(token);
+        phieu.setMaToken(otp);
         phieu.setNguoiDung(nguoiDung);
-        phieu.setHetHanLuc(LocalDateTime.now().plusMinutes(RESET_TOKEN_VALID_MINUTES));
+        phieu.setHetHanLuc(LocalDateTime.now().plusMinutes(RESET_OTP_VALID_MINUTES));
         phieuDatLaiMatKhauRepository.save(phieu);
-        String resetLink = baseUrl + "/reset-password?token=" + token;
 
-        if (nguoiDung.getEmail() != null && !nguoiDung.getEmail().isBlank() && javaMailSender != null) {
+        if (javaMailSender != null) {
             try {
                 MimeMessage message = javaMailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
                 helper.setFrom(thuocTinhMail.getFrom());
                 helper.setTo(nguoiDung.getEmail().trim());
-                helper.setSubject("Đặt lại mật khẩu - iTro");
-                helper.setText("Xin chào " + nguoiDung.getHoTen() + ",\n\nBạn đã yêu cầu đặt lại mật khẩu. Nhấn vào link sau (có hiệu lực " + RESET_TOKEN_VALID_MINUTES + " phút):\n\n" + resetLink + "\n\nNếu bạn không yêu cầu, hãy bỏ qua email này.\n\nTrân trọng,\niTro", false);
+                helper.setSubject("Mã OTP đặt lại mật khẩu - iTro");
+                NoiDungEmail noiDung =
+                        MauEmailHeThong.datLaiMatKhauOtp(
+                                nguoiDung.getHoTen(), otp, RESET_OTP_VALID_MINUTES);
+                helper.setText(noiDung.plain(), noiDung.html());
                 javaMailSender.send(message);
-                log.info("Reset password email sent to {}", nguoiDung.getEmail());
-                return new PhanHoiQuenMatKhau("Kiểm tra email để đặt lại mật khẩu.", null);
+                log.info("Reset OTP email sent to {}", nguoiDung.getEmail());
+                return new PhanHoiQuenMatKhau(
+                        "Mã OTP đã được gửi đến email của bạn (hiệu lực "
+                                + RESET_OTP_VALID_MINUTES
+                                + " phút).",
+                        null);
             } catch (MessagingException e) {
-                log.warn("Reset password email failed: {}", e.getMessage());
+                log.warn("Reset OTP email failed: {}", e.getMessage());
+                throw new IllegalArgumentException(
+                        "Không gửi được email. Vui lòng thử lại sau hoặc liên hệ quản trị.");
             }
         }
-        return new PhanHoiQuenMatKhau("Dùng link bên dưới để đặt lại mật khẩu (hiệu lực " + RESET_TOKEN_VALID_MINUTES + " phút).", resetLink);
+        log.warn("Mail sender not configured — OTP for {}: {}", nguoiDung.getEmail(), otp);
+        return new PhanHoiQuenMatKhau(
+                "Mã OTP (môi trường dev — chưa cấu hình email): " + otp,
+                otp);
     }
 
 
     @Transactional
     public void datLaiMatKhau(YeuCauDatLaiMatKhau yeuCau) {
-        PhieuDatLaiMatKhau phieu = phieuDatLaiMatKhauRepository.findByMaToken(yeuCau.getToken().trim())
-                .orElseThrow(() -> new IllegalArgumentException("Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn."));
+        String email = yeuCau.getEmail().trim();
+        String otp = yeuCau.getOtp().trim();
+        PhieuDatLaiMatKhau phieu = phieuDatLaiMatKhauRepository
+                .findByEmailAndOtp(email, otp)
+                .orElseThrow(() -> new IllegalArgumentException("Mã OTP không đúng hoặc đã hết hạn."));
         if (phieu.daHetHan()) {
             phieuDatLaiMatKhauRepository.delete(phieu);
-            throw new IllegalArgumentException("Link đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.");
+            throw new IllegalArgumentException("Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
         }
         NguoiDung nguoiDung = phieu.getNguoiDung();
         nguoiDung.setMatKhau(passwordEncoder.encode(yeuCau.getNewPassword()));
         nguoiDungRepository.save(nguoiDung);
         phieuDatLaiMatKhauRepository.delete(phieu);
-        log.info("Password reset for user {}", nguoiDung.getTenDangNhap());
+        log.info("Password reset via OTP for user {}", nguoiDung.getTenDangNhap());
     }
 
     @Transactional

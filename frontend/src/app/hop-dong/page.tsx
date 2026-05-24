@@ -26,6 +26,7 @@ import { buildContractDocx, type ContractForDocx } from "@/lib/contractDocx";
 import { renderAsync } from "docx-preview";
 import ChonKhuCombobox, { type MucKhu } from "@/components/ChonKhuCombobox";
 import HopDongXemModal from "@/components/HopDongXemModal";
+import ModalPortal from "@/components/ModalPortal";
 import {
   chuanHoaDanhSachHopDongTuApi,
   chuanHoaKhachThueTuApi,
@@ -498,8 +499,12 @@ export default function TrangHopDong() {
 
   return (
     <TrangBaoVe>
-      <div className="container hop-dong-trang-container">
-        <h2>{p.title}</h2>
+      <div className="page-shell page-table hop-dong-trang-container">
+        <header className="page-top">
+          <div className="page-top-text">
+            <h1 className="page-heading">{p.title}</h1>
+          </div>
+        </header>
         <div className="card">
           <div className="grid grid-2">
             <input
@@ -521,15 +526,20 @@ export default function TrangHopDong() {
             </div>
           )}
         </div>
-        <div className="card">
+        <div className="card card--table-full">
           <BangDonGian
-            className="table-nowrap contracts-table-fit"
+            className="contracts-table"
             data={filtered}
             columns={[
               { header: s.id, render: (row) => row.id },
-              { header: p.room, render: (row) => row.room?.code },
+              {
+                header: p.room,
+                cellClass: "col-phong",
+                render: (row) => row.room?.code,
+              },
               {
                 header: p.tenant,
+                cellClass: "col-khach",
                 render: (row) => {
                   const parts = (row.coThue ?? []).map((m) =>
                     m.laDaiDien
@@ -543,23 +553,28 @@ export default function TrangHopDong() {
               },
               {
                 header: p.idRep,
+                cellClass: "col-cccd",
                 render: (row) => row.tenant?.idNumber ?? "—",
               },
               {
                 header: p.start,
+                cellClass: "col-date",
                 render: (row) => dinhDangNgay(row.startDate, lang),
               },
               {
                 header: p.end,
+                cellClass: "col-date",
                 render: (row) => dinhDangNgay(row.endDate, lang),
               },
               {
                 header: p.rentMonthly,
+                cellClass: "col-money",
                 render: (row) =>
                   row.rent != null ? dinhDangTien(row.rent, lang) : "—",
               },
               {
                 header: p.status,
+                cellClass: "col-status",
                 render: (row) => (
                   <span
                     className={classBadgeHopDong(row.status)}
@@ -570,6 +585,7 @@ export default function TrangHopDong() {
               },
               {
                 header: p.contractCol,
+                cellClass: "col-contract",
                 render: (row: Contract) => (
                   <div className="table-actions">
                     <button
@@ -593,6 +609,7 @@ export default function TrangHopDong() {
                 ? [
                     {
                       header: s.actions,
+                      cellClass: "col-actions",
                       render: (row: Contract) => (
                         <div className="table-actions">
                           <button className="btn" onClick={() => openExtend(row)}>
@@ -625,6 +642,7 @@ export default function TrangHopDong() {
         />
 
         {showCreate && isAdmin && (
+          <ModalPortal open>
           <Fragment>
           <div className="modal-backdrop">
             <div className="modal-card form-card contract-create-modal">
@@ -879,8 +897,7 @@ export default function TrangHopDong() {
 
           {showChonKhachModal && (
             <div
-              className="modal-backdrop"
-              style={{ zIndex: 1100 }}
+              className="modal-backdrop modal-backdrop--stacked"
               role="presentation"
               onClick={(e) => {
                 if (e.target === e.currentTarget) dongChonKhachKhongLuu();
@@ -1014,9 +1031,11 @@ export default function TrangHopDong() {
             </div>
           )}
           </Fragment>
+          </ModalPortal>
         )}
 
         {extendId != null && (
+          <ModalPortal open>
           <div className="modal-backdrop">
             <div className="modal-card form-card">
               <h3>{p.extendTitle}</h3>
@@ -1040,9 +1059,11 @@ export default function TrangHopDong() {
               </div>
             </div>
           </div>
+          </ModalPortal>
         )}
 
         {confirmEndId != null && (
+          <ModalPortal open>
           <div className="modal-backdrop">
             <div className="modal-card">
               <h3>{p.endTitle}</h3>
@@ -1057,6 +1078,7 @@ export default function TrangHopDong() {
               </div>
             </div>
           </div>
+          </ModalPortal>
         )}
       </div>
     </TrangBaoVe>

@@ -133,6 +133,7 @@ export default function TrangHopDongCuaToi() {
         <h2>{p.title}</h2>
         <div className="card">
           <BangDonGian
+            className="table-nowrap contracts-table"
             data={items}
             columns={[
               { header: s.id, render: (row) => row.id },

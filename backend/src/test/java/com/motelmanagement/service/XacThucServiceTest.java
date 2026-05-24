@@ -134,52 +134,56 @@ class XacThucServiceTest {
     }
 
     @Test
-    void quenMatKhau_khongCoTaiKhoan() {
-        when(nguoiDungRepository.findByTenDangNhap("ghost")).thenReturn(Optional.empty());
+    void quenMatKhau_khongCoEmail() {
+        when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("ghost@test.com"))
+                .thenReturn(Optional.empty());
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
-        y.setTenDangNhap("ghost");
+        y.setEmail("ghost@test.com");
         PhanHoiQuenMatKhau r = xacThucService.quenMatKhau(y);
-        assertEquals("Nếu tài khoản tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.", r.getMessage());
-        assertEquals(null, r.getResetLink());
+        assertTrue(r.getMessage().contains("Nếu email"));
+        assertNull(r.getDevOtp());
     }
 
     @Test
-    void quenMatKhau_taiKhoanCoEmail_nhungKhongCoMailSender_traLink() {
+    void quenMatKhau_taiKhoanCoEmail_khongCoMailSender_traDevOtp() {
         NguoiDung nd = new NguoiDung();
         nd.setId("1");
         nd.setHoTen("A");
         nd.setEmail("a@b.com");
         nd.setKichHoat(true);
-        when(nguoiDungRepository.findByTenDangNhap("u")).thenReturn(Optional.of(nd));
+        when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("a@b.com")).thenReturn(Optional.of(nd));
 
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
-        y.setTenDangNhap("u");
-        y.setResetBaseUrl("http://localhost:3000/");
+        y.setEmail("a@b.com");
         PhanHoiQuenMatKhau r = xacThucService.quenMatKhau(y);
 
-        assertNotNull(r.getResetLink());
-        assertTrue(r.getResetLink().contains("token="));
+        assertNotNull(r.getDevOtp());
+        assertEquals(6, r.getDevOtp().length());
         verify(phieuDatLaiMatKhauRepository).save(any(PhieuDatLaiMatKhau.class));
     }
 
     @Test
-    void datLaiMatKhau_tokenKhongTonTai() {
-        when(phieuDatLaiMatKhauRepository.findByMaToken("bad")).thenReturn(Optional.empty());
+    void datLaiMatKhau_otpKhongTonTai() {
+        when(phieuDatLaiMatKhauRepository.findByEmailAndOtp("a@b.com", "000000"))
+                .thenReturn(Optional.empty());
         YeuCauDatLaiMatKhau y = new YeuCauDatLaiMatKhau();
-        y.setToken("bad");
-        y.setNewPassword("n");
+        y.setEmail("a@b.com");
+        y.setOtp("000000");
+        y.setNewPassword("newpass");
         assertThrows(IllegalArgumentException.class, () -> xacThucService.datLaiMatKhau(y));
     }
 
     @Test
-    void datLaiMatKhau_tokenHetHan() {
+    void datLaiMatKhau_otpHetHan() {
         PhieuDatLaiMatKhau p = new PhieuDatLaiMatKhau();
         p.setHetHanLuc(LocalDateTime.now().minusMinutes(1));
-        when(phieuDatLaiMatKhauRepository.findByMaToken("exp")).thenReturn(Optional.of(p));
+        when(phieuDatLaiMatKhauRepository.findByEmailAndOtp("a@b.com", "123456"))
+                .thenReturn(Optional.of(p));
 
         YeuCauDatLaiMatKhau y = new YeuCauDatLaiMatKhau();
-        y.setToken("exp");
-        y.setNewPassword("n");
+        y.setEmail("a@b.com");
+        y.setOtp("123456");
+        y.setNewPassword("newpass");
         assertThrows(IllegalArgumentException.class, () -> xacThucService.datLaiMatKhau(y));
         verify(phieuDatLaiMatKhauRepository).delete(p);
     }
@@ -192,11 +196,13 @@ class XacThucServiceTest {
         PhieuDatLaiMatKhau p = new PhieuDatLaiMatKhau();
         p.setHetHanLuc(LocalDateTime.now().plusMinutes(10));
         p.setNguoiDung(nd);
-        when(phieuDatLaiMatKhauRepository.findByMaToken("tok")).thenReturn(Optional.of(p));
+        when(phieuDatLaiMatKhauRepository.findByEmailAndOtp("ok@test.com", "123456"))
+                .thenReturn(Optional.of(p));
         when(passwordEncoder.encode("newpass")).thenReturn("newhash");
 
         YeuCauDatLaiMatKhau y = new YeuCauDatLaiMatKhau();
-        y.setToken("tok");
+        y.setEmail("ok@test.com");
+        y.setOtp("123456");
         y.setNewPassword("newpass");
         xacThucService.datLaiMatKhau(y);
 

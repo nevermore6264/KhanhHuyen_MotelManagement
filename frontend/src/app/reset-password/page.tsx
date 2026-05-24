@@ -1,32 +1,23 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
-import { useCaiDat } from "@/components/NhaCungCapCaiDat";
+import { useRouter, useSearchParams } from "next/navigation";
 
-function NoiDungChuyenHuong() {
+function ChuyenHuong() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t: tr } = useCaiDat();
-  const s = tr.pages.shared;
-  const c = tr.common;
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    const query = token ? `?token=${encodeURIComponent(token)}` : "";
-    router.replace(`/dat-lai-mat-khau${query}`);
+    router.replace("/quen-mat-khau");
   }, [router, searchParams]);
 
-  return <div className="page-shell page-table">{s.redirecting}</div>;
+  return null;
 }
 
-export default function TrangChuyenHuongDatLaiMatKhau() {
-  const { t: tr } = useCaiDat();
-  const c = tr.common;
-
+export default function TrangResetPasswordRedirect() {
   return (
-    <Suspense fallback={<div className="page-shell page-table">{c.loading}</div>}>
-      <NoiDungChuyenHuong />
+    <Suspense fallback={null}>
+      <ChuyenHuong />
     </Suspense>
   );
 }
