@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.motelmanagement.config.ThuocTinhMail;
+import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.PhieuDatLaiMatKhau;
 import com.motelmanagement.dto.PhanHoiQuenMatKhau;
@@ -21,6 +22,7 @@ import com.motelmanagement.dto.YeuCauDatLaiMatKhau;
 import com.motelmanagement.dto.YeuCauDoiMatKhau;
 import com.motelmanagement.dto.YeuCauQuenMatKhau;
 import com.motelmanagement.dto.YeuCauXacThuc;
+import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.PhieuDatLaiMatKhauRepository;
 import com.motelmanagement.security.TienIchJwt;
@@ -42,6 +44,7 @@ public class XacThucService {
     private static final SecureRandom OTP_RANDOM = new SecureRandom();
 
     private final NguoiDungRepository nguoiDungRepository;
+    private final KhachThueRepository khachThueRepository;
     private final PhieuDatLaiMatKhauRepository phieuDatLaiMatKhauRepository;
     private final PasswordEncoder passwordEncoder;
     private final TienIchJwt tienIchJwt;
@@ -87,15 +90,14 @@ public class XacThucService {
         String email = yeuCau.getEmail().trim();
         String thongBaoChung =
                 "Nếu email đã đăng ký trong hệ thống, bạn sẽ nhận mã OTP trong hộp thư (kiểm tra cả thư rác).";
-        Optional<NguoiDung> nguoiDungOpt = nguoiDungRepository.findByEmailIgnoreCaseTrimmed(email);
-        if (nguoiDungOpt.isEmpty()) {
+        Optional<TimTaiKhoanTheoEmail> timOpt = timTaiKhoanTheoEmail(email);
+        if (timOpt.isEmpty()) {
             return new PhanHoiQuenMatKhau(thongBaoChung, null);
         }
-        NguoiDung nguoiDung = nguoiDungOpt.get();
+        TimTaiKhoanTheoEmail tim = timOpt.get();
+        NguoiDung nguoiDung = tim.nguoiDung();
+        String emailGui = tim.emailGui();
         if (!nguoiDung.isKichHoat()) {
-            return new PhanHoiQuenMatKhau(thongBaoChung, null);
-        }
-        if (nguoiDung.getEmail() == null || nguoiDung.getEmail().isBlank()) {
             return new PhanHoiQuenMatKhau(thongBaoChung, null);
         }
         phieuDatLaiMatKhauRepository.xoaTheoMaNguoiDung(nguoiDung.getId());
@@ -111,14 +113,14 @@ public class XacThucService {
                 MimeMessage message = javaMailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
                 helper.setFrom(thuocTinhMail.getFrom());
-                helper.setTo(nguoiDung.getEmail().trim());
+                helper.setTo(emailGui);
                 helper.setSubject("Mã OTP đặt lại mật khẩu - iTro");
                 NoiDungEmail noiDung =
                         MauEmailHeThong.datLaiMatKhauOtp(
                                 nguoiDung.getHoTen(), otp, RESET_OTP_VALID_MINUTES);
                 helper.setText(noiDung.plain(), noiDung.html());
                 javaMailSender.send(message);
-                log.info("Reset OTP email sent to {}", nguoiDung.getEmail());
+                log.info("Reset OTP email sent to {}", emailGui);
                 return new PhanHoiQuenMatKhau(
                         "Mã OTP đã được gửi đến email của bạn (hiệu lực "
                                 + RESET_OTP_VALID_MINUTES
@@ -130,7 +132,7 @@ public class XacThucService {
                         "Không gửi được email. Vui lòng thử lại sau hoặc liên hệ quản trị.");
             }
         }
-        log.warn("Mail sender not configured — OTP for {}: {}", nguoiDung.getEmail(), otp);
+        log.warn("Mail sender not configured — OTP for {}: {}", emailGui, otp);
         return new PhanHoiQuenMatKhau(
                 "Mã OTP (môi trường dev — chưa cấu hình email): " + otp,
                 otp);
@@ -174,4 +176,39 @@ public class XacThucService {
         nguoiDungRepository.save(nguoiDung);
         log.info("Password changed for user {}", nguoiDung.getTenDangNhap());
     }
+
+    /**
+     * Tìm tài khoản đăng nhập theo email trên {@code nguoi_dung} hoặc {@code khach_thue}
+     * (khách có liên kết tài khoản).
+     */
+    private Optional<TimTaiKhoanTheoEmail> timTaiKhoanTheoEmail(String email) {
+        String emailChuan = email.trim();
+        if (emailChuan.isBlank()) {
+            return Optional.empty();
+        }
+        Optional<NguoiDung> tuNguoiDung =
+                nguoiDungRepository.findByEmailIgnoreCaseTrimmed(emailChuan);
+        if (tuNguoiDung.isPresent()) {
+            NguoiDung nd = tuNguoiDung.get();
+            String gui =
+                    nd.getEmail() != null && !nd.getEmail().isBlank()
+                            ? nd.getEmail().trim()
+                            : emailChuan;
+            return Optional.of(new TimTaiKhoanTheoEmail(nd, gui));
+        }
+        return khachThueRepository
+                .findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan(emailChuan)
+                .map(this::tuKhachThue);
+    }
+
+    private TimTaiKhoanTheoEmail tuKhachThue(KhachThue khach) {
+        NguoiDung nd = khach.getNguoiDung();
+        String gui =
+                khach.getEmail() != null && !khach.getEmail().isBlank()
+                        ? khach.getEmail().trim()
+                        : nd.getEmail() != null ? nd.getEmail().trim() : "";
+        return new TimTaiKhoanTheoEmail(nd, gui);
+    }
+
+    private record TimTaiKhoanTheoEmail(NguoiDung nguoiDung, String emailGui) {}
 }

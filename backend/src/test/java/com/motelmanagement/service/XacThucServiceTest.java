@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.motelmanagement.config.ThuocTinhMail;
+import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.PhieuDatLaiMatKhau;
 import com.motelmanagement.domain.VaiTro;
@@ -28,6 +29,7 @@ import com.motelmanagement.dto.YeuCauDangKy;
 import com.motelmanagement.dto.YeuCauDatLaiMatKhau;
 import com.motelmanagement.dto.YeuCauQuenMatKhau;
 import com.motelmanagement.dto.YeuCauXacThuc;
+import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.PhieuDatLaiMatKhauRepository;
 import com.motelmanagement.security.TienIchJwt;
@@ -39,6 +41,8 @@ class XacThucServiceTest {
 
     @Mock
     private NguoiDungRepository nguoiDungRepository;
+    @Mock
+    private KhachThueRepository khachThueRepository;
     @Mock
     private PhieuDatLaiMatKhauRepository phieuDatLaiMatKhauRepository;
     @Mock
@@ -137,6 +141,8 @@ class XacThucServiceTest {
     void quenMatKhau_khongCoEmail() {
         when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("ghost@test.com"))
                 .thenReturn(Optional.empty());
+        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("ghost@test.com"))
+                .thenReturn(Optional.empty());
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
         y.setEmail("ghost@test.com");
         PhanHoiQuenMatKhau r = xacThucService.quenMatKhau(y);
@@ -159,6 +165,29 @@ class XacThucServiceTest {
 
         assertNotNull(r.getDevOtp());
         assertEquals(6, r.getDevOtp().length());
+        verify(phieuDatLaiMatKhauRepository).save(any(PhieuDatLaiMatKhau.class));
+    }
+
+    @Test
+    void quenMatKhau_emailChiCoTrenKhachThue_traDevOtp() {
+        NguoiDung nd = new NguoiDung();
+        nd.setId("tenant-1");
+        nd.setHoTen("Khách A");
+        nd.setKichHoat(true);
+        KhachThue khach = new KhachThue();
+        khach.setEmail("tenant@mail.com");
+        khach.setNguoiDung(nd);
+
+        when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("tenant@mail.com"))
+                .thenReturn(Optional.empty());
+        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("tenant@mail.com"))
+                .thenReturn(Optional.of(khach));
+
+        YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
+        y.setEmail("tenant@mail.com");
+        PhanHoiQuenMatKhau r = xacThucService.quenMatKhau(y);
+
+        assertNotNull(r.getDevOtp());
         verify(phieuDatLaiMatKhauRepository).save(any(PhieuDatLaiMatKhau.class));
     }
 

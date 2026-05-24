@@ -1,8 +1,6 @@
 package com.motelmanagement.util;
 
-/**
- * Mẫu nội dung email HTML (inline CSS) tương thích hộp thư phổ biến.
- */
+
 public final class MauEmailHeThong {
 
     private MauEmailHeThong() {}
