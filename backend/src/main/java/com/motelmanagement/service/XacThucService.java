@@ -27,7 +27,7 @@ import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.PhieuDatLaiMatKhauRepository;
 import com.motelmanagement.security.TienIchJwt;
 import com.motelmanagement.util.MauEmailHeThong;
-import com.motelmanagement.util.MauEmailHeThong.NoiDungEmail;
+import com.motelmanagement.util.NoiDungEmail;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

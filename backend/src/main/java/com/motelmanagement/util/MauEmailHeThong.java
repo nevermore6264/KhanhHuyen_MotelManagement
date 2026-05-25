@@ -5,8 +5,6 @@ public final class MauEmailHeThong {
 
     private MauEmailHeThong() {}
 
-    public record NoiDungEmail(String plain, String html) {}
-
     public static NoiDungEmail datLaiMatKhauOtp(String hoTen, String otp, int phutHieuLuc) {
         String ten = (hoTen == null || hoTen.isBlank()) ? "bạn" : hoTen.trim();
         String otpSafe = escapeHtml(otp);
