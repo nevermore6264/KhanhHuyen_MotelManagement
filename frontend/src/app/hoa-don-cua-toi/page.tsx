@@ -128,7 +128,7 @@ export default function TrangHoaDonCuaToi() {
 
   return (
     <TrangBaoVe>
-      <div className="page-shell page-table">
+      <div className="page-shell page-table page-shell-rong-95">
         <h2>{p.title}</h2>
         {message && (
           <div

@@ -115,7 +115,7 @@ export const pagesVi = {
     extend: "Gia hạn",
     endContract: "Kết thúc",
     viewContract: "Xem nội dung hợp đồng",
-    downloadWord: "Tải Word",
+    downloadWord: "Tải",
     downloadWordTitle: "Tải file Word",
     okCreate: "Tạo hợp đồng thành công",
     okExtend: "Gia hạn hợp đồng thành công",
@@ -135,7 +135,8 @@ export const pagesVi = {
     selectAreaFirst: "Chọn khu trước để xem phòng trống",
     noEmptyRooms: "Không có phòng trống trong khu này.",
     tenantsLabel: "Khách thuê (có thể nhiều người)",
-    tenantsHint: "Chọn trong cửa sổ: nhiều người cùng phòng, một người đại diện ký hợp đồng.",
+    tenantsHint:
+      "Chọn trong cửa sổ: nhiều người cùng phòng, một người đại diện ký hợp đồng.",
     selectTenantsBtn: "Chọn khách thuê…",
     notSelectedTenants: "Chưa chọn — bấm nút Chọn khách thuê… phía trên",
     fullName: "Họ tên",
@@ -161,11 +162,13 @@ export const pagesVi = {
     endTitle: "Kết thúc hợp đồng",
     endConfirm: "Bạn có chắc muốn kết thúc hợp đồng này?",
     selectTenantsTitle: "Chọn khách thuê",
-    selectRepHint: "Đánh dấu người tham gia hợp đồng, chọn một người là đại diện ký và chịu trách nhiệm chính.",
+    selectRepHint:
+      "Đánh dấu người tham gia hợp đồng, chọn một người là đại diện ký và chịu trách nhiệm chính.",
     filterTenantPh: "Lọc theo tên, SĐT, CCCD, email hoặc mã…",
     filterTenantsAria: "Lọc danh sách khách thuê",
     tenantUnit: "khách",
-    noTenantsAvailable: "Không có khách thuê khả dụng (đều đang có hợp đồng hiệu lực).",
+    noTenantsAvailable:
+      "Không có khách thuê khả dụng (đều đang có hợp đồng hiệu lực).",
     noFilterMatch: "Không khách nào khớp bộ lọc — thử từ khóa khác.",
     errSelectArea: "Vui lòng chọn khu",
     errSelectRoom: "Vui lòng chọn phòng",
@@ -186,7 +189,7 @@ export const pagesVi = {
     errDownload: "Tải file thất bại.",
     contractCol: "Hợp đồng",
     viewContract: "Xem nội dung hợp đồng",
-    downloadWord: "Tải Word",
+    downloadWord: "Tải",
     downloadWordTitle: "Tải file Word",
   },
   khachThue: {
@@ -480,7 +483,8 @@ export const pagesVi = {
     okAdd: "Thêm bảng giá thành công",
     okUpdate: "Cập nhật bảng giá thành công",
     okDelete: "Đã xóa bảng giá",
-    noPrice: "Chưa có giá. Bấm bên phải để thiết lập giá điện và giá nước (chỉ cần một bộ giá).",
+    noPrice:
+      "Chưa có giá. Bấm bên phải để thiết lập giá điện và giá nước (chỉ cần một bộ giá).",
     addTitle: "Thêm bảng giá",
     savePrice: "Lưu bảng giá",
     saveChanges: "Lưu thay đổi",
@@ -606,8 +610,7 @@ export const pagesVi = {
   },
   thongBao: {
     title: "Thông báo",
-    leadAdmin:
-      "Gửi thông báo tới người dùng và theo dõi trạng thái đã đọc.",
+    leadAdmin: "Gửi thông báo tới người dùng và theo dõi trạng thái đã đọc.",
     leadUser: "Cập nhật từ ban quản lý — đánh dấu đã đọc khi bạn đã xem.",
     markAllRead: "Đánh dấu tất cả đã đọc",
     readAll: "Đọc tất cả",

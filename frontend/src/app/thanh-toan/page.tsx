@@ -177,7 +177,7 @@ export default function TrangThanhToan() {
 
   return (
     <TrangBaoVe>
-      <div className="page-shell page-table">
+      <div className="page-shell page-table page-shell-rong-95">
         <h2>{p.record}</h2>
         <div className="card">
           <p className="text-muted mb-3" style={{ fontSize: "0.9rem" }}>

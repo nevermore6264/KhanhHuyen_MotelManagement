@@ -177,10 +177,6 @@ public class XacThucService {
         log.info("Password changed for user {}", nguoiDung.getTenDangNhap());
     }
 
-    /**
-     * Tìm tài khoản đăng nhập theo email trên {@code nguoi_dung} hoặc {@code khach_thue}
-     * (khách có liên kết tài khoản).
-     */
     private Optional<TimTaiKhoanTheoEmail> timTaiKhoanTheoEmail(String email) {
         String emailChuan = email.trim();
         if (emailChuan.isBlank()) {

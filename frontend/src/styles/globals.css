@@ -2099,6 +2099,88 @@ textarea:disabled:focus {
   font-size: 1.1rem;
 }
 
+.contract-preview-modal__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.contract-preview-modal__actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.contract-preview-modal__actions .btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.contract-preview-modal__btn-download {
+  color: #fff !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  border: 1px solid #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.28);
+}
+
+.contract-preview-modal__btn-download:hover:not(:disabled) {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%) !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+}
+
+.contract-preview-modal__btn-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.contract-preview-modal__btn-close {
+  color: #475569 !important;
+  background: #fff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: none;
+}
+
+.contract-preview-modal__btn-close:hover {
+  color: #0f172a !important;
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+@media (max-width: 560px) {
+  .contract-preview-modal__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contract-preview-modal__actions {
+    width: 100%;
+  }
+
+  .contract-preview-modal__actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
 .contract-preview-modal__scroll {
   flex: 1 1 auto;
   min-height: min(360px, 45vh);
@@ -3171,82 +3253,151 @@ table {
   white-space: nowrap;
 }
 
-.page-shell.hop-dong-trang-container {
-  width: 95%;
-  max-width: 95%;
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box;
-}
-
 .table-wrap.contracts-table .table {
   width: 100%;
-  min-width: 1160px;
+  min-width: 960px;
   table-layout: fixed;
+  border-collapse: collapse;
 }
 
 .table-wrap.contracts-table .table th,
 .table-wrap.contracts-table .table td {
   vertical-align: middle;
+  padding: 11px 12px !important;
   overflow: hidden;
+  text-align: left;
+}
+
+.table-wrap.contracts-table .table th.col-khach,
+.table-wrap.contracts-table .table td.col-khach {
+  vertical-align: top;
 }
 
 .table-wrap.contracts-table .col-phong {
-  width: 76px;
+  width: 7%;
+  min-width: 64px;
   white-space: nowrap;
 }
 
 .table-wrap.contracts-table .col-khach {
-  width: 24%;
-  min-width: 160px;
+  width: 14%;
+  max-width: 220px;
   white-space: normal;
   word-break: normal;
   overflow-wrap: break-word;
   line-height: 1.45;
 }
 
-.table-wrap.contracts-table .col-cccd {
-  width: 132px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+.table-wrap.contracts-table .contracts-khach-list {
+  margin: 0;
+  padding: 0 0 0 1.1em;
+  list-style: disc;
+}
+
+.table-wrap.contracts-table .contracts-khach-list li {
+  margin: 0;
+  padding: 2px 0;
+  line-height: 1.4;
+}
+
+.table-wrap.contracts-table .contracts-khach-dai-dien {
+  font-size: 0.86em;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .table-wrap.contracts-table .col-date {
-  width: 104px;
+  width: 8%;
+  min-width: 92px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .table-wrap.contracts-table th.col-money,
 .table-wrap.contracts-table td.col-money {
-  width: 128px;
+  width: 13%;
+  min-width: 120px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
 .table-wrap.contracts-table .col-status {
-  width: 120px;
+  width: 11%;
+  min-width: 108px;
   white-space: nowrap;
+  text-align: center;
 }
 
-.table-wrap.contracts-table .col-contract {
-  width: 200px;
+.table-wrap.contracts-table th.col-thao-tac,
+.table-wrap.contracts-table td.col-thao-tac {
+  width: 23%;
+  min-width: 300px;
+  max-width: 340px;
+  white-space: nowrap;
+  text-align: left;
 }
 
-.table-wrap.contracts-table .col-actions {
-  width: 228px;
-}
-
-.table-wrap.contracts-table .table-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.table-wrap.contracts-table .contracts-cell-actions {
+  display: inline-flex;
+  flex-flow: row wrap;
+  gap: 6px;
   align-items: center;
+  justify-content: flex-start;
+  max-width: 100%;
 }
 
-.table-wrap.contracts-table .table-actions .btn {
+.table-wrap.contracts-table .contracts-cell-actions .btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 11px;
+  line-height: 1.2;
   white-space: nowrap;
+  border-radius: 8px;
+}
+
+.table-wrap.contracts-table .contracts-cell-actions .btn-secondary.btn-sm {
+  color: #334155 !important;
+  background: #fff !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.table-wrap.contracts-table
+  .contracts-cell-actions
+  .btn-secondary.btn-sm:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+.table-wrap.contracts-table
+  .contracts-cell-actions
+  .btn-sm:not(.btn-secondary):not(.btn-contract-end) {
+  color: #fff !important;
+  background: #0ea5e9 !important;
+  border: 1px solid #0284c7 !important;
+}
+
+.table-wrap.contracts-table .btn-contract-end {
+  color: #fff !important;
+  background: #dc2626 !important;
+  border: 1px solid #b91c1c !important;
+}
+
+.table-wrap.contracts-table .btn-contract-end:hover:not(:disabled) {
+  background: #b91c1c !important;
+  border-color: #991b1b !important;
+}
+
+.table-wrap.contracts-table tbody tr:hover td {
+  background: var(--primary-soft, #e8f4fc);
+}
+
+.table-wrap.contracts-table tbody tr:hover {
+  background: var(--primary-soft, #e8f4fc);
 }
 
 .hop-dong-trang-container .card--table-full {
@@ -3259,7 +3410,13 @@ table {
   width: 100% !important;
   max-width: 100% !important;
   border: none;
+  border-left: none;
+  border-right: none;
   border-radius: 0 0 14px 14px;
+}
+
+.hop-dong-trang-container .card--table-full .table {
+  border-collapse: collapse;
 }
 
 .table thead th {
@@ -3611,4 +3768,14 @@ button.nav-bell:focus-visible {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+[data-page="table"] .page-shell,
+.app-shell-content .page-shell.page-shell-rong-95,
+.app-shell-content .page-shell.hop-dong-trang-container {
+  width: 95% !important;
+  max-width: 95vw !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box;
 }

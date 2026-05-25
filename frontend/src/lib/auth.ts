@@ -1,4 +1,3 @@
-
 export const TOKEN_KEY = "motel_token";
 
 export const ROLE_KEY = "motel_role";
@@ -7,12 +6,10 @@ export const NAME_KEY = "motel_name";
 
 export const USER_ID_KEY = "motel_user_id";
 
-
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
 }
-
 
 export function setAuth(
   token: string,
@@ -27,7 +24,6 @@ export function setAuth(
     localStorage.setItem(USER_ID_KEY, userId);
   }
 }
-
 
 export function clearAuth() {
   if (typeof window === "undefined") return;
@@ -47,9 +43,7 @@ export function dangXuatApp() {
   if (typeof window === "undefined") return;
   try {
     ngatKetNoiRealtime?.();
-  } catch {
-    /* ignore */
-  }
+  } catch {}
   clearAuth();
   window.location.replace("/dang-nhap");
 }
@@ -63,12 +57,10 @@ export function setUserId(id: string) {
   localStorage.setItem(USER_ID_KEY, id);
 }
 
-
 export function getRole(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(ROLE_KEY);
 }
-
 
 export function getName(): string | null {
   if (typeof window === "undefined") return null;

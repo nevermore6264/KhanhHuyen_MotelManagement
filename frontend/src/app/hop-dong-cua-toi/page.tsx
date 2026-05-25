@@ -129,7 +129,7 @@ export default function TrangHopDongCuaToi() {
 
   return (
     <TrangBaoVe>
-      <div className="page-shell page-table">
+      <div className="page-shell page-table page-shell-rong-95">
         <h2>{p.title}</h2>
         <div className="card">
           <BangDonGian
@@ -159,22 +159,14 @@ export default function TrangHopDongCuaToi() {
               {
                 header: p.contractCol,
                 render: (row: Contract) => (
-                  <div className="table-actions">
+                  <div className="table-actions contracts-cell-actions">
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      className="btn btn-secondary btn-sm"
                       onClick={() => viewContractDoc(row)}
                       title={p.viewContract}
                     >
                       <IconEye /> {s.view}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => downloadContractDoc(row)}
-                      title={p.downloadWordTitle}
-                    >
-                      <IconDownload /> {p.downloadWord}
                     </button>
                   </div>
                 ),
@@ -197,6 +189,17 @@ export default function TrangHopDongCuaToi() {
               <IconTimes /> {c.close}
             </>
           }
+          onDownload={
+            previewContract
+              ? () => void downloadContractDoc(previewContract)
+              : undefined
+          }
+          downloadLabel={
+            <>
+              <IconDownload /> {p.downloadWord}
+            </>
+          }
+          downloadDisabled={previewLoading}
         />
       </div>
     </TrangBaoVe>

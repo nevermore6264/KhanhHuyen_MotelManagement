@@ -11,11 +11,7 @@ import FooterHienDai from "./FooterHienDai";
 function loaiTrang(pathname: string): string {
   if (pathname === "/tong-quan") return "dashboard";
   if (pathname === "/bao-cao") return "report";
-  if (
-    pathname === "/tai-khoan" ||
-    pathname === "/cai-dat" ||
-    pathname.endsWith("-cua-toi")
-  ) {
+  if (pathname === "/tai-khoan" || pathname === "/cai-dat") {
     return "account";
   }
   if (pathname === "/tin-nhan") return "chat";

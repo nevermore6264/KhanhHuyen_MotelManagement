@@ -10,6 +10,9 @@ type HopDongXemModalProps = {
   previewContainerRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
   closeLabel?: ReactNode;
+  onDownload?: () => void;
+  downloadLabel?: ReactNode;
+  downloadDisabled?: boolean;
 };
 
 export default function HopDongXemModal({
@@ -19,6 +22,9 @@ export default function HopDongXemModal({
   previewContainerRef,
   onClose,
   closeLabel = "Đóng",
+  onDownload,
+  downloadLabel = "Tải Word",
+  downloadDisabled = false,
 }: HopDongXemModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -46,13 +52,25 @@ export default function HopDongXemModal({
           <h3 id="contract-preview-title">
             Xem hợp đồng — Phòng {roomCode || "—"}
           </h3>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onClose}
-          >
-            {closeLabel}
-          </button>
+          <div className="contract-preview-modal__actions">
+            {onDownload ? (
+              <button
+                type="button"
+                className="btn contract-preview-modal__btn-download"
+                disabled={downloadDisabled || loading}
+                onClick={onDownload}
+              >
+                {downloadLabel}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="btn contract-preview-modal__btn-close"
+              onClick={onClose}
+            >
+              {closeLabel}
+            </button>
+          </div>
         </div>
         <div
           ref={previewContainerRef}

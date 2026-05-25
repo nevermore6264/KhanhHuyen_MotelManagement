@@ -1,13 +1,10 @@
 "use client";
 
-
 type Cot<T> = {
   header: string;
   render: (dong: T) => React.ReactNode;
-  /** Class trên th/td — căn cột (vd. col-phong, col-khach) */
   cellClass?: string;
 };
-
 
 export default function BangDonGian<T>({
   columns: danhSachCot,
@@ -19,7 +16,7 @@ export default function BangDonGian<T>({
   className?: string;
 }) {
   const cotHienThi = danhSachCot.filter(
-    (cot) => cot.header.trim().toLowerCase() !== "id"
+    (cot) => cot.header.trim().toLowerCase() !== "id",
   );
 
   return (

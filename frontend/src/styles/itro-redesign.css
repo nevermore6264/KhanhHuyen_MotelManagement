@@ -465,7 +465,7 @@ textarea:focus {
   justify-content: center !important;
 }
 
-[data-page="table"] .card:has(.table-wrap) {
+[data-page="table"] .card:has(.table-wrap):not(.card--table-full) {
   padding: 22px 24px 0 !important;
   overflow: hidden;
   border-radius: var(--radius-lg) !important;

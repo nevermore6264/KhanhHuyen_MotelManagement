@@ -1,6 +1,13 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import BangDonGian from "@/components/BangDonGian";
 import {
@@ -72,6 +79,28 @@ const tenantOptionLabel = (t: Tenant) => {
   const extra = t.phone || t.idNumber;
   return extra ? `${name} — ${extra}` : name;
 };
+
+function hienThiKhachHopDong(
+  row: Contract,
+  repSuffix: string,
+): ReactNode {
+  const members = row.coThue ?? [];
+  if (!members.length) {
+    return row.tenant?.fullName ?? "—";
+  }
+  return (
+    <ul className="contracts-khach-list">
+      {members.map((m) => (
+        <li key={m.id || m.fullName}>
+          {m.fullName || "—"}
+          {m.laDaiDien ? (
+            <span className="contracts-khach-dai-dien"> {repSuffix}</span>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 const addMonthsToDate = (startYMD: string, months: number): string => {
   if (!startYMD || months < 1) return "";
@@ -540,21 +569,7 @@ export default function TrangHopDong() {
               {
                 header: p.tenant,
                 cellClass: "col-khach",
-                render: (row) => {
-                  const parts = (row.coThue ?? []).map((m) =>
-                    m.laDaiDien
-                      ? `${m.fullName} ${p.repSuffix}`
-                      : m.fullName || "—",
-                  );
-                  return parts.length
-                    ? parts.join(", ")
-                    : row.tenant?.fullName ?? "—";
-                },
-              },
-              {
-                header: p.idRep,
-                cellClass: "col-cccd",
-                render: (row) => row.tenant?.idNumber ?? "—",
+                render: (row) => hienThiKhachHopDong(row, p.repSuffix),
               },
               {
                 header: p.start,
@@ -584,48 +599,39 @@ export default function TrangHopDong() {
                 ),
               },
               {
-                header: p.contractCol,
-                cellClass: "col-contract",
+                header: s.actions,
+                cellClass: "col-thao-tac",
                 render: (row: Contract) => (
-                  <div className="table-actions">
+                  <div className="contracts-cell-actions">
                     <button
-                      className="btn btn-secondary"
+                      type="button"
+                      className="btn btn-secondary btn-sm"
                       onClick={() => viewContractDoc(row)}
                       title={p.viewContract}
                     >
                       <IconEye /> {s.view}
                     </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => downloadContractDoc(row)}
-                      title={p.downloadWordTitle}
-                    >
-                      <IconDownload /> {p.downloadWord}
-                    </button>
+                    {isAdmin ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => openExtend(row)}
+                        >
+                          <IconCalendar /> {p.extend}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-contract-end btn-sm"
+                          onClick={() => confirmEnd(row)}
+                        >
+                          <IconTimes /> {p.endContract}
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 ),
               },
-              ...(isAdmin
-                ? [
-                    {
-                      header: s.actions,
-                      cellClass: "col-actions",
-                      render: (row: Contract) => (
-                        <div className="table-actions">
-                          <button className="btn" onClick={() => openExtend(row)}>
-                            <IconCalendar /> {p.extend}
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => confirmEnd(row)}
-                          >
-                            <IconTimes /> {p.endContract}
-                          </button>
-                        </div>
-                      ),
-                    },
-                  ]
-                : []),
             ]}
           />
         </div>
@@ -639,6 +645,22 @@ export default function TrangHopDong() {
             setPreviewContract(null);
             setPreviewLoading(false);
           }}
+          closeLabel={
+            <>
+              <IconTimes /> {c.close}
+            </>
+          }
+          onDownload={
+            previewContract
+              ? () => void downloadContractDoc(previewContract)
+              : undefined
+          }
+          downloadLabel={
+            <>
+              <IconDownload /> {p.downloadWord}
+            </>
+          }
+          downloadDisabled={previewLoading}
         />
 
         {showCreate && isAdmin && (

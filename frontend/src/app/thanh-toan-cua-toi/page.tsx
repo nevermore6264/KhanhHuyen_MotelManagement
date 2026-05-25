@@ -69,7 +69,7 @@ export default function TrangThanhToanCuaToi() {
 
   return (
     <TrangBaoVe>
-      <div className="page-shell page-table">
+      <div className="page-shell page-table page-shell-rong-95">
         <h2>{p.historyTitle}</h2>
         <div className="card">
           <select
