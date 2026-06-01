@@ -140,6 +140,8 @@ class XacThucServiceTest {
 
     @Test
     void quenMatKhau_khongCoEmail() {
+        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("ghost@test.com"))
+                .thenReturn(Optional.empty());
         when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("ghost@test.com"))
                 .thenReturn(Optional.empty());
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
@@ -156,6 +158,8 @@ class XacThucServiceTest {
         nd.setHoTen("A");
         nd.setEmail("a@b.com");
         nd.setKichHoat(true);
+        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("a@b.com"))
+                .thenReturn(Optional.empty());
         when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("a@b.com")).thenReturn(Optional.of(nd));
 
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
@@ -177,9 +181,8 @@ class XacThucServiceTest {
         khach.setEmail("tenant@mail.com");
         khach.setNguoiDung(nd);
 
-        when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("tenant@mail.com"))
-                .thenReturn(Optional.of(nd));
-        when(khachThueRepository.findByNguoiDung_Id("tenant-1")).thenReturn(khach);
+        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("tenant@mail.com"))
+                .thenReturn(Optional.of(khach));
 
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
         y.setEmail("tenant@mail.com");

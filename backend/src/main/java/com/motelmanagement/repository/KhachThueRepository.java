@@ -19,11 +19,9 @@ public interface KhachThueRepository extends JpaRepository<KhachThue, String> {
     List<KhachThue> findByNguoiDungIsNull();
 
     @Query(
-            "SELECT k FROM KhachThue k WHERE k.nguoiDung IS NOT NULL AND ("
-                    + "(k.email IS NOT NULL AND LOWER(TRIM(k.email)) = LOWER(TRIM(:email)))"
-                    + " OR (k.nguoiDung.email IS NOT NULL"
-                    + " AND LOWER(TRIM(k.nguoiDung.email)) = LOWER(TRIM(:email)))"
-                    + " OR LOWER(TRIM(k.nguoiDung.tenDangNhap)) = LOWER(TRIM(:email)))")
+            "SELECT k FROM KhachThue k WHERE k.nguoiDung IS NOT NULL"
+                    + " AND k.email IS NOT NULL"
+                    + " AND LOWER(TRIM(k.email)) = LOWER(TRIM(:email))")
     Optional<KhachThue> findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan(
             @Param("email") String email);
 }
