@@ -17,9 +17,10 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
     Optional<NguoiDung> findByTenDangNhap(String tenDangNhap);
 
     @Query(
-            "SELECT n FROM NguoiDung n WHERE LOWER(TRIM(n.email)) = LOWER(TRIM(:email))"
+            "SELECT n FROM NguoiDung n WHERE"
+                    + " (n.email IS NOT NULL AND LOWER(TRIM(n.email)) = LOWER(TRIM(:email)))"
                     + " OR LOWER(TRIM(n.tenDangNhap)) = LOWER(TRIM(:email))")
-    Optional<NguoiDung> findByEmailIgnoreCaseTrimmed(@Param("email") String email);
+    Optional<NguoiDung> findByEmailHoacTenDangNhapIgnoreCaseTrimmed(@Param("email") String email);
 
     List<NguoiDung> findByVaiTroIn(Collection<VaiTro> vaiTro);
 

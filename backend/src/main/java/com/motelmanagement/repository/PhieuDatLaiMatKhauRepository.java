@@ -19,7 +19,7 @@ public interface PhieuDatLaiMatKhauRepository extends JpaRepository<PhieuDatLaiM
                     + " AND (EXISTS (SELECT k FROM KhachThue k WHERE k.nguoiDung = n"
                     + " AND k.email IS NOT NULL"
                     + " AND LOWER(TRIM(k.email)) = LOWER(TRIM(:email)))"
-                    + " OR LOWER(TRIM(n.email)) = LOWER(TRIM(:email))"
+                    + " OR (n.email IS NOT NULL AND LOWER(TRIM(n.email)) = LOWER(TRIM(:email)))"
                     + " OR LOWER(TRIM(n.tenDangNhap)) = LOWER(TRIM(:email)))")
     Optional<PhieuDatLaiMatKhau> findByEmailAndOtp(
             @Param("email") String email, @Param("otp") String otp);

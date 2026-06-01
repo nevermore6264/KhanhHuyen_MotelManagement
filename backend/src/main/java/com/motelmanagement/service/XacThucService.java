@@ -181,22 +181,30 @@ public class XacThucService {
         if (emailChuan.isBlank()) {
             return Optional.empty();
         }
+
         Optional<TimTaiKhoanTheoEmail> tuKhach =
                 khachThueRepository
                         .findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan(emailChuan)
-                        .map(
-                                khach ->
-                                        new TimTaiKhoanTheoEmail(
-                                                khach.getNguoiDung(), khach.getEmail().trim()));
+                        .flatMap(this::tuTimTaiKhoanTuKhach);
         if (tuKhach.isPresent()) {
             return tuKhach;
         }
+
         return nguoiDungRepository
-                .findByEmailIgnoreCaseTrimmed(emailChuan)
-                .map(nd -> new TimTaiKhoanTheoEmail(nd, emailGuiCho(nd, emailChuan)));
+                .findByEmailHoacTenDangNhapIgnoreCaseTrimmed(emailChuan)
+                .map(nd -> new TimTaiKhoanTheoEmail(nd, emailGuiChoAdmin(nd, emailChuan)));
     }
 
-    private String emailGuiCho(NguoiDung nd, String emailNhap) {
+    private Optional<TimTaiKhoanTheoEmail> tuTimTaiKhoanTuKhach(KhachThue khach) {
+        NguoiDung nguoiDung = khach.getNguoiDung();
+        String emailKhach = khach.getEmail();
+        if (nguoiDung == null || emailKhach == null || emailKhach.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.of(new TimTaiKhoanTheoEmail(nguoiDung, emailKhach.trim()));
+    }
+
+    private String emailGuiChoAdmin(NguoiDung nd, String emailNhap) {
         if (nd.getEmail() != null && !nd.getEmail().isBlank()) {
             return nd.getEmail().trim();
         }
