@@ -73,6 +73,12 @@ public class NguoiDungController {
         if (dto.getMaKhachThue() != null && daLuu.getVaiTro() == VaiTro.TENANT) {
             khachThueRepository.findById(dto.getMaKhachThue()).ifPresent(khachThue -> {
                 khachThue.setNguoiDung(daLuu);
+                if ((daLuu.getEmail() == null || daLuu.getEmail().isBlank())
+                        && khachThue.getEmail() != null
+                        && !khachThue.getEmail().isBlank()) {
+                    daLuu.setEmail(khachThue.getEmail().trim());
+                    nguoiDungRepository.save(daLuu);
+                }
                 khachThueRepository.save(khachThue);
             });
         }
@@ -86,6 +92,12 @@ public class NguoiDungController {
                 .map(hienTai -> {
                     hienTai.setHoTen(nguoiDung.getHoTen());
                     hienTai.setSoDienThoai(nguoiDung.getSoDienThoai());
+                    if (nguoiDung.getEmail() != null) {
+                        hienTai.setEmail(
+                                nguoiDung.getEmail().isBlank()
+                                        ? null
+                                        : nguoiDung.getEmail().trim());
+                    }
                     hienTai.setVaiTro(nguoiDung.getVaiTro());
                     hienTai.setKichHoat(nguoiDung.isKichHoat());
                     if (nguoiDung.getMatKhau() != null && !nguoiDung.getMatKhau().isBlank()) {

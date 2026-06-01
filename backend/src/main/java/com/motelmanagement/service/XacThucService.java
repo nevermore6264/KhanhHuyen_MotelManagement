@@ -181,28 +181,20 @@ public class XacThucService {
         if (emailChuan.isBlank()) {
             return Optional.empty();
         }
-        Optional<NguoiDung> tuNguoiDung =
-                nguoiDungRepository.findByEmailIgnoreCaseTrimmed(emailChuan);
-        if (tuNguoiDung.isPresent()) {
-            NguoiDung nd = tuNguoiDung.get();
-            String gui =
-                    nd.getEmail() != null && !nd.getEmail().isBlank()
-                            ? nd.getEmail().trim()
-                            : emailChuan;
-            return Optional.of(new TimTaiKhoanTheoEmail(nd, gui));
-        }
-        return khachThueRepository
-                .findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan(emailChuan)
-                .map(this::tuKhachThue);
+        return nguoiDungRepository
+                .findByEmailIgnoreCaseTrimmed(emailChuan)
+                .map(nd -> new TimTaiKhoanTheoEmail(nd, emailGuiCho(nd, emailChuan)));
     }
 
-    private TimTaiKhoanTheoEmail tuKhachThue(KhachThue khach) {
-        NguoiDung nd = khach.getNguoiDung();
-        String gui =
-                khach.getEmail() != null && !khach.getEmail().isBlank()
-                        ? khach.getEmail().trim()
-                        : nd.getEmail() != null ? nd.getEmail().trim() : "";
-        return new TimTaiKhoanTheoEmail(nd, gui);
+    private String emailGuiCho(NguoiDung nd, String emailNhap) {
+        if (nd.getEmail() != null && !nd.getEmail().isBlank()) {
+            return nd.getEmail().trim();
+        }
+        KhachThue khach = khachThueRepository.findByNguoiDung_Id(nd.getId());
+        if (khach != null && khach.getEmail() != null && !khach.getEmail().isBlank()) {
+            return khach.getEmail().trim();
+        }
+        return emailNhap;
     }
 
     private record TimTaiKhoanTheoEmail(NguoiDung nguoiDung, String emailGui) {}

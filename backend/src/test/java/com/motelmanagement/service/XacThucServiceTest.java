@@ -2,6 +2,7 @@ package com.motelmanagement.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -141,8 +142,6 @@ class XacThucServiceTest {
     void quenMatKhau_khongCoEmail() {
         when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("ghost@test.com"))
                 .thenReturn(Optional.empty());
-        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("ghost@test.com"))
-                .thenReturn(Optional.empty());
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
         y.setEmail("ghost@test.com");
         PhanHoiQuenMatKhau r = xacThucService.quenMatKhau(y);
@@ -179,9 +178,8 @@ class XacThucServiceTest {
         khach.setNguoiDung(nd);
 
         when(nguoiDungRepository.findByEmailIgnoreCaseTrimmed("tenant@mail.com"))
-                .thenReturn(Optional.empty());
-        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("tenant@mail.com"))
-                .thenReturn(Optional.of(khach));
+                .thenReturn(Optional.of(nd));
+        when(khachThueRepository.findByNguoiDung_Id("tenant-1")).thenReturn(khach);
 
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
         y.setEmail("tenant@mail.com");
