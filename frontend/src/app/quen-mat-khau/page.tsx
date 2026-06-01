@@ -117,7 +117,7 @@ function NoiDungQuenMatKhau() {
         email: emailChuan,
       });
       setEmail(emailChuan);
-      setThongBao(phanHoi.data.message || a.otpSent);
+      setThongBao(phanHoi.data.devOtp ? phanHoi.data.message || a.otpSent : a.otpSent);
       if (phanHoi.data.devOtp) {
         setOtp(String(phanHoi.data.devOtp));
       }

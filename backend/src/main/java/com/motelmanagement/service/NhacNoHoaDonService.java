@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.motelmanagement.config.ThuocTinhMail;
@@ -23,8 +22,9 @@ import com.motelmanagement.repository.HoaDonRepository;
 import com.motelmanagement.repository.HopDongRepository;
 import com.motelmanagement.repository.NhacNoHoaDonEmailRepository;
 
+import com.motelmanagement.util.GiupGuiEmail;
+
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -200,14 +200,16 @@ public class NhacNoHoaDonService {
 
         if (javaMailSender != null) {
             try {
-                MimeMessage message = javaMailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                helper.setFrom(thuocTinhMail.getFrom());
-                helper.setTo(emailNhan.trim());
-                helper.setSubject(String.format("Nhắc nợ - Hóa đơn phòng %s kỳ %d/%d",
-                        maPhong != null ? maPhong : "", hoaDon.getThang(), hoaDon.getNam()));
-                helper.setText(noiDung, noiDungHtml);
-                javaMailSender.send(message);
+                String tieuDe = String.format(
+                        "Nhắc nợ - Hóa đơn phòng %s kỳ %d/%d",
+                        maPhong != null ? maPhong : "", hoaDon.getThang(), hoaDon.getNam());
+                GiupGuiEmail.guiHtml(
+                        javaMailSender,
+                        thuocTinhMail.getFrom(),
+                        emailNhan.trim(),
+                        tieuDe,
+                        noiDung,
+                        noiDungHtml);
                 log.info("Email sent to {}", emailNhan);
             } catch (MessagingException e) {
                 log.warn("Email send failed: {}", e.getMessage());

@@ -21,6 +21,10 @@ public final class MauEmailHeThong {
 
         String html = String.format(
                 """
+                <!DOCTYPE html>
+                <html lang="vi">
+                <head><meta charset="UTF-8"/></head>
+                <body>
                 <div style="font-family: Arial, Helvetica, sans-serif; background:#f0f9ff; margin:0; padding:28px 16px;">
                   <div style="max-width:560px; margin:0 auto;">
                     <div style="background:linear-gradient(135deg, #0284c7 0%%, #0ea5e9 55%%, #38bdf8 100%%); border-radius:14px 14px 0 0; padding:22px 24px; text-align:center;">
@@ -55,6 +59,8 @@ public final class MauEmailHeThong {
                     </p>
                   </div>
                 </div>
+                </body>
+                </html>
                 """,
                 tenSafe, otpSafe, phutHieuLuc);
 

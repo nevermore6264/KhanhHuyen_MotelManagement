@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +25,11 @@ import com.motelmanagement.repository.KhachThueRepository;
 import com.motelmanagement.repository.NguoiDungRepository;
 import com.motelmanagement.repository.PhieuDatLaiMatKhauRepository;
 import com.motelmanagement.security.TienIchJwt;
+import com.motelmanagement.util.GiupGuiEmail;
 import com.motelmanagement.util.MauEmailHeThong;
 import com.motelmanagement.util.NoiDungEmail;
 
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,16 +109,16 @@ public class XacThucService {
 
         if (javaMailSender != null) {
             try {
-                MimeMessage message = javaMailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                helper.setFrom(thuocTinhMail.getFrom());
-                helper.setTo(emailGui);
-                helper.setSubject("Mã OTP đặt lại mật khẩu - iTro");
                 NoiDungEmail noiDung =
                         MauEmailHeThong.datLaiMatKhauOtp(
                                 nguoiDung.getHoTen(), otp, RESET_OTP_VALID_MINUTES);
-                helper.setText(noiDung.plain(), noiDung.html());
-                javaMailSender.send(message);
+                GiupGuiEmail.guiHtml(
+                        javaMailSender,
+                        thuocTinhMail.getFrom(),
+                        emailGui,
+                        "Mã OTP đặt lại mật khẩu - iTro",
+                        noiDung.plain(),
+                        noiDung.html());
                 log.info("Reset OTP email sent to {}", emailGui);
                 return new PhanHoiQuenMatKhau(
                         "Mã OTP đã được gửi đến email của bạn (hiệu lực "
