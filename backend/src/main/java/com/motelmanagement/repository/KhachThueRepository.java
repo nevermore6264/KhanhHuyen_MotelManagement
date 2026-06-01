@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.motelmanagement.domain.KhachThue;
+import com.motelmanagement.dto.KhachThueTimTheoEmailDto;
 
 
 public interface KhachThueRepository extends JpaRepository<KhachThue, String> {
@@ -19,9 +20,11 @@ public interface KhachThueRepository extends JpaRepository<KhachThue, String> {
     List<KhachThue> findByNguoiDungIsNull();
 
     @Query(
-            "SELECT k FROM KhachThue k JOIN FETCH k.nguoiDung n"
-                    + " WHERE k.email IS NOT NULL"
+            "SELECT new com.motelmanagement.dto.KhachThueTimTheoEmailDto("
+                    + "k.nguoiDung.id, TRIM(k.email)) FROM KhachThue k"
+                    + " WHERE k.nguoiDung IS NOT NULL"
+                    + " AND k.email IS NOT NULL"
                     + " AND LOWER(TRIM(k.email)) = LOWER(TRIM(:email))")
-    Optional<KhachThue> findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan(
+    Optional<KhachThueTimTheoEmailDto> findFirstTaiKhoanByEmailIgnoreCaseTrimmed(
             @Param("email") String email);
 }

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.motelmanagement.config.ThuocTinhMail;
-import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.PhieuDatLaiMatKhau;
 import com.motelmanagement.dto.PhanHoiQuenMatKhau;
@@ -184,8 +183,16 @@ public class XacThucService {
 
         Optional<TimTaiKhoanTheoEmail> tuKhach =
                 khachThueRepository
-                        .findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan(emailChuan)
-                        .flatMap(this::tuTimTaiKhoanTuKhach);
+                        .findFirstTaiKhoanByEmailIgnoreCaseTrimmed(emailChuan)
+                        .flatMap(
+                                row ->
+                                        nguoiDungRepository
+                                                .findById(row.getNguoiDungId())
+                                                .map(
+                                                        nd ->
+                                                                new TimTaiKhoanTheoEmail(
+                                                                        nd,
+                                                                        row.getEmail().trim())));
         if (tuKhach.isPresent()) {
             return tuKhach;
         }
@@ -193,15 +200,6 @@ public class XacThucService {
         return nguoiDungRepository
                 .findByEmailHoacTenDangNhapIgnoreCaseTrimmed(emailChuan)
                 .map(nd -> new TimTaiKhoanTheoEmail(nd, emailGuiChoAdmin(nd, emailChuan)));
-    }
-
-    private Optional<TimTaiKhoanTheoEmail> tuTimTaiKhoanTuKhach(KhachThue khach) {
-        NguoiDung nguoiDung = khach.getNguoiDung();
-        String emailKhach = khach.getEmail();
-        if (nguoiDung == null || emailKhach == null || emailKhach.isBlank()) {
-            return Optional.empty();
-        }
-        return Optional.of(new TimTaiKhoanTheoEmail(nguoiDung, emailKhach.trim()));
     }
 
     private String emailGuiChoAdmin(NguoiDung nd, String emailNhap) {

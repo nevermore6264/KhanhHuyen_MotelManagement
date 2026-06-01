@@ -24,6 +24,7 @@ import com.motelmanagement.domain.KhachThue;
 import com.motelmanagement.domain.NguoiDung;
 import com.motelmanagement.domain.PhieuDatLaiMatKhau;
 import com.motelmanagement.domain.VaiTro;
+import com.motelmanagement.dto.KhachThueTimTheoEmailDto;
 import com.motelmanagement.dto.PhanHoiQuenMatKhau;
 import com.motelmanagement.dto.PhanHoiXacThuc;
 import com.motelmanagement.dto.YeuCauDangKy;
@@ -140,7 +141,7 @@ class XacThucServiceTest {
 
     @Test
     void quenMatKhau_khongCoEmail() {
-        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("ghost@test.com"))
+        when(khachThueRepository.findFirstTaiKhoanByEmailIgnoreCaseTrimmed("ghost@test.com"))
                 .thenReturn(Optional.empty());
         when(nguoiDungRepository.findByEmailHoacTenDangNhapIgnoreCaseTrimmed("ghost@test.com"))
                 .thenReturn(Optional.empty());
@@ -158,7 +159,7 @@ class XacThucServiceTest {
         nd.setHoTen("A");
         nd.setEmail("a@b.com");
         nd.setKichHoat(true);
-        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("a@b.com"))
+        when(khachThueRepository.findFirstTaiKhoanByEmailIgnoreCaseTrimmed("a@b.com"))
                 .thenReturn(Optional.empty());
         when(nguoiDungRepository.findByEmailHoacTenDangNhapIgnoreCaseTrimmed("a@b.com"))
                 .thenReturn(Optional.of(nd));
@@ -179,12 +180,9 @@ class XacThucServiceTest {
         nd.setHoTen("Khách A");
         nd.setKichHoat(true);
         nd.setEmail(null);
-        KhachThue khach = new KhachThue();
-        khach.setEmail("tenant@mail.com");
-        khach.setNguoiDung(nd);
-
-        when(khachThueRepository.findFirstByEmailIgnoreCaseTrimmedCoTaiKhoan("tenant@mail.com"))
-                .thenReturn(Optional.of(khach));
+        when(khachThueRepository.findFirstTaiKhoanByEmailIgnoreCaseTrimmed("tenant@mail.com"))
+                .thenReturn(Optional.of(new KhachThueTimTheoEmailDto("tenant-1", "tenant@mail.com")));
+        when(nguoiDungRepository.findById("tenant-1")).thenReturn(Optional.of(nd));
 
         YeuCauQuenMatKhau y = new YeuCauQuenMatKhau();
         y.setEmail("tenant@mail.com");
