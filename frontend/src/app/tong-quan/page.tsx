@@ -12,6 +12,7 @@ import {
   PointElement,
   Tooltip,
   Legend,
+  type TooltipItem,
 } from "chart.js";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import TrangBaoVe from "@/components/TrangBaoVe";
@@ -398,8 +399,8 @@ export default function TrangTongQuan() {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx: { parsed: { y: number } }) =>
-              `${formatNumber(ctx.parsed.y)}`,
+            label: (ctx: TooltipItem<"bar">) =>
+              `${formatNumber(ctx.parsed.y ?? 0)}`,
           },
         },
       },
@@ -498,7 +499,7 @@ export default function TrangTongQuan() {
         legend: { display: false },
         tooltip: {
           backgroundColor: "#0f172a",
-          titleFont: { size: 12, weight: "600" as const },
+          titleFont: { size: 12, weight: "bold" as const },
           bodyFont: { size: 12 },
           padding: 10,
           cornerRadius: 6,

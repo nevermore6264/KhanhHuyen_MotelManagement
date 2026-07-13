@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
@@ -40,7 +40,7 @@ const parseNhapTien = (value: string) => {
 const isLockedStatus = (value?: string) =>
   value === "OCCUPIED" || value === "MAINTENANCE";
 
-export default function TrangPhong() {
+function TrangPhongNoiDung() {
   const [danhSachPhong, setDanhSachPhong] = useState<Room[]>([]);
   const [danhSachKhu, setDanhSachKhu] = useState<Area[]>([]);
   const [maPhong, setMaPhong] = useState("");
@@ -577,5 +577,13 @@ export default function TrangPhong() {
         )}
       </div>
     </TrangBaoVe>
+  );
+}
+
+export default function TrangPhong() {
+  return (
+    <Suspense fallback={null}>
+      <TrangPhongNoiDung />
+    </Suspense>
   );
 }

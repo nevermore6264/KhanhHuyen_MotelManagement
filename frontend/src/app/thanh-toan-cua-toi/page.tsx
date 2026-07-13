@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import BangDonGian from "@/components/BangDonGian";
@@ -15,7 +15,7 @@ import { useCaiDat } from "@/components/NhaCungCapCaiDat";
 import { nhanPhuongThucThanhToan } from "@/lib/trangThai";
 import { dinhDangTien, dinhDangNgay } from "@/lib/locale";
 
-export default function TrangThanhToanCuaToi() {
+function TrangThanhToanCuaToiNoiDung() {
   const searchParams = useSearchParams();
   const appliedUrlRef = useRef(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -109,5 +109,13 @@ export default function TrangThanhToanCuaToi() {
         </div>
       </div>
     </TrangBaoVe>
+  );
+}
+
+export default function TrangThanhToanCuaToi() {
+  return (
+    <Suspense fallback={null}>
+      <TrangThanhToanCuaToiNoiDung />
+    </Suspense>
   );
 }

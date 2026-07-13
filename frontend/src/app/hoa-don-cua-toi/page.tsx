@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import TrangBaoVe from "@/components/TrangBaoVe";
 import BangDonGian from "@/components/BangDonGian";
@@ -17,7 +17,7 @@ import { classBadgeHoaDon } from "@/lib/badgeTrangThai";
 
 const canPay = (status?: string) => status === "UNPAID" || status === "PARTIAL";
 
-export default function TrangHoaDonCuaToi() {
+function TrangHoaDonCuaToiNoiDung() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<Invoice[]>([]);
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -447,5 +447,13 @@ export default function TrangHoaDonCuaToi() {
         )}
       </div>
     </TrangBaoVe>
+  );
+}
+
+export default function TrangHoaDonCuaToi() {
+  return (
+    <Suspense fallback={null}>
+      <TrangHoaDonCuaToiNoiDung />
+    </Suspense>
   );
 }

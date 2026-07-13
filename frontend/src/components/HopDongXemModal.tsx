@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, type ReactNode, type RefObject } from "react";
+import { useEffect, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 
 type HopDongXemModalProps = {
   open: boolean;
   roomCode?: string;
   loading: boolean;
-  previewContainerRef: RefObject<HTMLDivElement | null>;
+  previewContainerRef: Ref<HTMLDivElement>;
   onClose: () => void;
   closeLabel?: ReactNode;
   onDownload?: () => void;
